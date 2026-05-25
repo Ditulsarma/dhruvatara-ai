@@ -46,6 +46,9 @@ from auth_module import (
 app = Flask(__name__)
 app.secret_key = 'DhruvataraAI_2026_Secure_Secret_Key_8x7k9m2p'
 
+# ─── Show actual errors in browser (for debugging) ───
+app.config['PROPAGATE_EXCEPTIONS'] = True
+
 # ─── Logging for Railway debugging ───
 import logging
 import traceback
@@ -62,32 +65,19 @@ except Exception as e:
     logger.error(f"Database init failed: {e}")
     logger.error(traceback.format_exc())
 
-# ─── Global error handler ───
-@app.errorhandler(500)
-def internal_error(e):
-    logger.error(f"500 error: {e}")
-    return "Internal Server Error. Please try again later.", 500
-
-@app.errorhandler(404)
-def not_found(e):
-    return "Page not found.", 404
-
-# ─── Health check endpoint ───
+# ─── Health check endpoint (no DB needed) ───
 @app.route("/health")
 def health():
     return "OK", 200
 
-# ─── Debug endpoint (shows app status) ───
-@app.route("/debug")
-def debug():
+# ─── Traceback debug endpoint ───
+@app.route("/traceback")
+def show_traceback():
     try:
-        import sqlite3
-        conn = sqlite3.connect('dhrubatara.db')
-        tables = conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
-        conn.close()
-        return f"OK - DB has {len(tables)} tables: {[t[0] for t in tables]}", 200
+        places = get_locations()
+        return render_template("index.html", places=places, timezones=get_all_timezones())
     except Exception as e:
-        return f"DB Error: {e}", 500
+        return f"<pre>ERROR: {e}\n\n{traceback.format_exc()}</pre>", 500
 
 # ─── Image Upload Configuration ───
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads')
