@@ -48,7 +48,9 @@ app.secret_key = 'DhruvataraAI_2026_Secure_Secret_Key_8x7k9m2p'
 
 # ─── Logging for Railway debugging ───
 import logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s')
+import traceback
+import sys
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s', stream=sys.stdout)
 logger = logging.getLogger(__name__)
 
 # ─── Auto-initialize database on startup ───
@@ -58,22 +60,34 @@ try:
     logger.info("Database initialized successfully")
 except Exception as e:
     logger.error(f"Database init failed: {e}")
+    logger.error(traceback.format_exc())
 
-# ─── Global error handlers ───
+# ─── Global error handler ───
 @app.errorhandler(500)
 def internal_error(e):
     logger.error(f"500 error: {e}")
     return "Internal Server Error. Please try again later.", 500
 
-@app.errorhandler(Exception)
-def handle_exception(e):
-    logger.error(f"Unhandled exception: {e}")
-    return "Internal Server Error. Please try again later.", 500
+@app.errorhandler(404)
+def not_found(e):
+    return "Page not found.", 404
 
 # ─── Health check endpoint ───
 @app.route("/health")
 def health():
     return "OK", 200
+
+# ─── Debug endpoint (shows app status) ───
+@app.route("/debug")
+def debug():
+    try:
+        import sqlite3
+        conn = sqlite3.connect('dhrubatara.db')
+        tables = conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+        conn.close()
+        return f"OK - DB has {len(tables)} tables: {[t[0] for t in tables]}", 200
+    except Exception as e:
+        return f"DB Error: {e}", 500
 
 # ─── Image Upload Configuration ───
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads')
@@ -512,19 +526,25 @@ def get_all_timezones():
 @app.context_processor
 def inject_images():
     """Inject sidebar, footer, and plans images into all templates."""
-    sidebar_images = get_images_by_placement('sidebar')
-    footer_images = get_images_by_placement('footer')
-    plans_images = get_images_by_placement('plans')
-    general_images = get_images_by_placement('general')
-    # Combine ALL images for footer display across all pages
-    all_footer_images = sidebar_images + footer_images + plans_images + general_images
-    return dict(
-        sidebar_images=sidebar_images,
-        footer_images=footer_images,
-        plans_images=plans_images,
-        general_images=general_images,
-        all_footer_images=all_footer_images
-    )
+    try:
+        sidebar_images = get_images_by_placement('sidebar')
+        footer_images = get_images_by_placement('footer')
+        plans_images = get_images_by_placement('plans')
+        general_images = get_images_by_placement('general')
+        all_footer_images = sidebar_images + footer_images + plans_images + general_images
+        return dict(
+            sidebar_images=sidebar_images,
+            footer_images=footer_images,
+            plans_images=plans_images,
+            general_images=general_images,
+            all_footer_images=all_footer_images
+        )
+    except Exception as e:
+        logger.error(f"Context processor error: {e}")
+        return dict(
+            sidebar_images=[], footer_images=[], plans_images=[],
+            general_images=[], all_footer_images=[]
+        )
 
 # ─── Jinja2 Filter: Check if image should show on current page ───
 @app.template_filter('should_show')
@@ -538,7 +558,12 @@ def should_show_filter(image, page_name):
 
 @app.route("/")
 def home():
-    return render_template("index.html", places=get_locations(), timezones=get_all_timezones())
+    try:
+        places = get_locations()
+    except Exception as e:
+        logger.error(f"get_locations failed: {e}")
+        places = []
+    return render_template("index.html", places=places, timezones=get_all_timezones())
 
 @app.route("/api/search-places")
 def api_search_places():
