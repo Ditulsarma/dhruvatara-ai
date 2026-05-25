@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-# Install build dependencies + runtime libs for pyswisseph
+# Install build dependencies + runtime libs for pyswisseph + Playwright
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libsqlite3-0 \
@@ -14,7 +14,11 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Remove build deps to keep image small
+# Install Playwright system deps + Chromium browser
+RUN playwright install-deps chromium \
+    && playwright install chromium
+
+# Remove build-only deps to keep image small
 RUN apt-get remove -y gcc python3-dev libsqlite3-dev \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*

@@ -46,6 +46,10 @@ from auth_module import (
 app = Flask(__name__)
 app.secret_key = 'DhruvataraAI_2026_Secure_Secret_Key_8x7k9m2p'
 
+# ─── Auto-initialize database on startup ───
+from setup_db import setup_database
+setup_database()
+
 # ─── Image Upload Configuration ───
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
