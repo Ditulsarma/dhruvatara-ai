@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="as">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ফিচাৰ লক | ধ্ৰুৱতৰা AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --orange: #FF6600; --orange-dark: #E55D00; --deep-blue: #1a237e;
+            --gold: #D4A017; --bg: #FFF8F0; --card-bg: #FFFFFF;
+            --text: #2c3e50; --text-light: #5a6c7d; --border: #e8e0d5;
+            --shadow: 0 8px 32px rgba(0,0,0,0.08); --radius: 16px; --radius-sm: 10px;
+            --transition: 0.3s ease;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans Bengali', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #FFF8F0 0%, #FFF3E0 30%, #FFECB3 60%, #FFF8F0 100%);
+            min-height: 100vh; display: flex; flex-direction: column;
+        }
+        .page-wrapper {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .container { text-align: center; max-width: 480px; }
+        .icon { font-size: 80px; display: block; margin-bottom: 16px; }
+        h1 { font-size: 1.6rem; color: var(--deep-blue); margin-bottom: 8px; }
+        p { color: var(--text-light); font-size: 0.95rem; margin-bottom: 24px; line-height: 1.6; }
+        .btn {
+            display: inline-block; padding: 12px 28px; border-radius: 25px;
+            font-size: 0.95rem; font-weight: 700; font-family: inherit; cursor: pointer;
+            text-decoration: none; transition: var(--transition);
+        }
+        .btn-primary { background: linear-gradient(135deg, var(--orange), var(--orange-dark)); color: white; box-shadow: 0 4px 16px rgba(255,102,0,0.3); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,102,0,0.4); }
+        .btn-outline { background: white; color: var(--orange); border: 2px solid var(--orange); margin-left: 10px; }
+        .btn-outline:hover { background: var(--orange); color: white; }
+    </style>
+</head>
+<body>
+<div class="page-wrapper">
+<div class="container">
+    <span class="icon">🔒</span>
+    <h1>এই ফিচাৰটো লক কৰা আছে</h1>
+    <p>এই বৈশিষ্ট্য ব্যৱহাৰ কৰিবলৈ আপোনাৰ চাবস্ক্ৰিপশ্যন প্লেন আপগ্ৰেড কৰিব লাগিব। অধিক জানিবলৈ এডমিনৰ সৈতে যোগাযোগ কৰক।</p>
+    <div>
+        <a href="/dashboard" class="btn btn-primary">← ডেশ্ববৰ্ডলৈ উভতক</a>
+        <a href="/kundli" class="btn btn-outline">✨ কুণ্ডলী চাওক</a>
+    </div>
+</div>
+</div>
+
+{% if all_footer_images %}
+<div style="text-align:center;padding:8px 12px;background:rgba(255,255,255,0.85);border-top:1px solid var(--border);">
+    {% for img in all_footer_images %}
+    <img src="/api/images/{{ img.id }}" alt="{{ img.alt_text }}" style="width:{{ img.width }}px;height:{{ img.height }}px;object-fit:contain;margin:2px 6px;border-radius:4px;display:inline-block;max-height:50px;">
+    {% endfor %}
+</div>
+{% endif %}
+</body>
+</html>

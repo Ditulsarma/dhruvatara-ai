@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="as">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ভেৰিফিকেচন | ধ্ৰুৱতৰা AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --orange: #FF6600; --orange-dark: #E55D00; --deep-blue: #1a237e;
+            --gold: #D4A017; --bg: #FFF8F0; --card-bg: #FFFFFF;
+            --text: #2c3e50; --text-light: #5a6c7d; --border: #e8e0d5;
+            --shadow: 0 8px 32px rgba(0,0,0,0.08); --radius: 16px; --radius-sm: 10px;
+            --green: #2E7D32; --red: #C62828; --transition: 0.3s ease;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans Bengali', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #FFF8F0 0%, #FFF3E0 30%, #FFECB3 60%, #FFF8F0 100%);
+            min-height: 100vh; display: flex; flex-direction: column;
+        }
+        .page-wrapper {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .container { width: 100%; max-width: 440px; }
+        .logo { text-align: center; margin-bottom: 24px; }
+        .logo .icon { font-size: 48px; display: block; margin-bottom: 4px; }
+        .logo h1 {
+            font-size: 1.8rem; font-weight: 800;
+            background: linear-gradient(135deg, var(--orange), var(--deep-blue));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .card {
+            background: var(--card-bg); border-radius: var(--radius);
+            box-shadow: var(--shadow); padding: 32px 28px;
+            border: 1px solid var(--border);
+        }
+        .card h2 { text-align: center; color: var(--deep-blue); margin-bottom: 20px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block; font-weight: 600; font-size: 0.85rem;
+            color: var(--text); margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%; padding: 11px 14px; border: 2px solid var(--border);
+            border-radius: var(--radius-sm); font-size: 0.9rem; font-family: inherit;
+            background: #FAFAFA; transition: var(--transition); outline: none;
+            text-align: center; letter-spacing: 4px; font-size: 1.2rem;
+        }
+        .form-group input:focus { border-color: var(--orange); background: #FFF; }
+        .btn {
+            width: 100%; padding: 12px; border: none; border-radius: var(--radius-sm);
+            font-size: 1rem; font-weight: 700; font-family: inherit; cursor: pointer;
+            transition: var(--transition);
+        }
+        .btn-primary { background: linear-gradient(135deg, var(--orange), var(--orange-dark)); color: white; box-shadow: 0 4px 16px rgba(255,102,0,0.3); }
+        .btn-primary:hover { transform: translateY(-2px); }
+        .btn-outline { background: white; color: var(--orange); border: 2px solid var(--orange); margin-top: 8px; }
+        .alert {
+            padding: 10px 14px; border-radius: var(--radius-sm); margin-bottom: 16px;
+            font-size: 0.85rem; font-weight: 500;
+        }
+        .alert-error { background: #FFEBEE; color: var(--red); border: 1px solid #FFCDD2; }
+        .alert-success { background: #E8F5E9; color: var(--green); border: 1px solid #C8E6C9; }
+        .alert-info { background: #E3F2FD; color: #1565C0; border: 1px solid #BBDEFB; }
+        .links { text-align: center; margin-top: 16px; }
+        .links a { color: var(--orange); text-decoration: none; font-weight: 600; }
+        .verified-badge {
+            display: inline-block; background: var(--green); color: white;
+            padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+<div class="page-wrapper">
+<div class="container">
+    <div class="logo">
+        <span class="icon">🌟</span>
+        <h1>ধ্ৰুৱতৰা AI</h1>
+    </div>
+    <div class="card">
+        <h2>📧 ভেৰিফিকেচন</h2>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ 'error' if category == 'error' else 'success' if category == 'success' else 'info' }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <!-- Email Verification -->
+        {% if not user.is_verified_email %}
+        <div style="margin-bottom:20px;padding:16px;background:#FFF8F0;border-radius:var(--radius-sm);border:1px solid var(--border);">
+            <h4 style="margin-bottom:8px;">📧 ইমেইল ভেৰিফিকেচন</h4>
+            <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:12px;">আপোনাৰ ইমেইল {{ user.email }} লৈ এটা OTP পঠিওৱা হৈছে।</p>
+            <form method="POST" action="/verify/email">
+                <div class="form-group">
+                    <label>OTP লিখক</label>
+                    <input type="text" name="email_otp" required placeholder="------" maxlength="6" pattern="[0-9]{6}">
+                </div>
+                <button type="submit" class="btn btn-primary">✅ ইমেইল ভেৰিফাই কৰক</button>
+            </form>
+            <form method="POST" action="/verify/resend-otp" style="margin-top:8px;">
+                <button type="submit" class="btn btn-outline">📤 OTP পুনৰ পঠিয়াওক</button>
+            </form>
+        </div>
+        {% else %}
+        <div style="margin-bottom:16px;text-align:center;">
+            <span class="verified-badge">✅ ইমেইল ভেৰিফাইড</span>
+        </div>
+        {% endif %}
+
+        <!-- Mobile Verification -->
+        {% if user.mobile and not user.is_verified_mobile %}
+        <div style="padding:16px;background:#FFF8F0;border-radius:var(--radius-sm);border:1px solid var(--border);">
+            <h4 style="margin-bottom:8px;">📱 মোবাইল ভেৰিফিকেচন</h4>
+            <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:12px;">আপোনাৰ মোবাইল {{ user.mobile }} লৈ এটা OTP পঠিওৱা হৈছে।</p>
+            <form method="POST" action="/verify/mobile">
+                <div class="form-group">
+                    <label>OTP লিখক</label>
+                    <input type="text" name="mobile_otp" required placeholder="------" maxlength="6" pattern="[0-9]{6}">
+                </div>
+                <button type="submit" class="btn btn-primary">✅ মোবাইল ভেৰিফাই কৰক</button>
+            </form>
+        </div>
+        {% elif user.mobile and user.is_verified_mobile %}
+        <div style="text-align:center;">
+            <span class="verified-badge">✅ মোবাইল ভেৰিফাইড</span>
+        </div>
+        {% endif %}
+
+        <div class="links" style="margin-top:20px;">
+            <a href="/dashboard">← ডেশ্ববৰ্ডলৈ উভতক</a>
+        </div>
+    </div>
+</div>
+</div>
+
+{% if all_footer_images %}
+<div style="text-align:center;padding:8px 12px;background:rgba(255,255,255,0.85);border-top:1px solid var(--border);">
+    {% for img in all_footer_images %}
+    <img src="/api/images/{{ img.id }}" alt="{{ img.alt_text }}" style="width:{{ img.width }}px;height:{{ img.height }}px;object-fit:contain;margin:2px 6px;border-radius:4px;display:inline-block;max-height:50px;">
+    {% endfor %}
+</div>
+{% endif %}
+</body>
+</html>

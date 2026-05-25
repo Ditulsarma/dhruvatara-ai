@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="as">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>লগিন | ধ্ৰুৱতৰা AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --orange: #FF6600; --orange-dark: #E55D00; --deep-blue: #1a237e;
+            --gold: #D4A017; --bg: #FFF8F0; --card-bg: #FFFFFF;
+            --text: #2c3e50; --text-light: #5a6c7d; --border: #e8e0d5;
+            --shadow: 0 8px 32px rgba(0,0,0,0.08); --radius: 16px; --radius-sm: 10px;
+            --green: #2E7D32; --red: #C62828; --transition: 0.3s ease;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans Bengali', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #FFF8F0 0%, #FFF3E0 30%, #FFECB3 60%, #FFF8F0 100%);
+            min-height: 100vh; display: flex; flex-direction: column;
+        }
+        .page-wrapper {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .bg-pattern {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 0; opacity: 0.03;
+            background-image: radial-gradient(circle at 20% 50%, var(--orange) 1px, transparent 1px),
+                              radial-gradient(circle at 80% 20%, var(--deep-blue) 1px, transparent 1px);
+            background-size: 60px 60px, 80px 80px;
+        }
+        .container {
+            position: relative; z-index: 1; width: 100%; max-width: 440px;
+        }
+        .logo { text-align: center; margin-bottom: 24px; }
+        .logo .icon { font-size: 48px; display: block; margin-bottom: 4px; }
+        .logo h1 {
+            font-size: 1.8rem; font-weight: 800;
+            background: linear-gradient(135deg, var(--orange), var(--deep-blue));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .card {
+            background: var(--card-bg); border-radius: var(--radius);
+            box-shadow: var(--shadow); padding: 32px 28px;
+            border: 1px solid var(--border);
+        }
+        .card h2 { text-align: center; color: var(--deep-blue); margin-bottom: 24px; font-size: 1.3rem; }
+        .tabs { display: flex; gap: 0; margin-bottom: 24px; border-radius: var(--radius-sm); overflow: hidden; border: 2px solid var(--border); }
+        .tab-btn {
+            flex: 1; padding: 10px; border: none; font-family: inherit;
+            font-size: 0.9rem; font-weight: 600; cursor: pointer;
+            background: #f5f5f5; color: var(--text-light); transition: var(--transition);
+        }
+        .tab-btn.active { background: var(--orange); color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block; font-weight: 600; font-size: 0.85rem;
+            color: var(--text); margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%; padding: 11px 14px; border: 2px solid var(--border);
+            border-radius: var(--radius-sm); font-size: 0.9rem; font-family: inherit;
+            background: #FAFAFA; transition: var(--transition); outline: none;
+        }
+        .form-group input:focus { border-color: var(--orange); background: #FFF; box-shadow: 0 0 0 3px rgba(255,102,0,0.08); }
+        .btn {
+            width: 100%; padding: 12px; border: none; border-radius: var(--radius-sm);
+            font-size: 1rem; font-weight: 700; font-family: inherit; cursor: pointer;
+            transition: var(--transition); display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-primary { background: linear-gradient(135deg, var(--orange), var(--orange-dark)); color: white; box-shadow: 0 4px 16px rgba(255,102,0,0.3); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,102,0,0.4); }
+        .btn-outline { background: white; color: var(--orange); border: 2px solid var(--orange); margin-top: 8px; }
+        .btn-outline:hover { background: var(--orange); color: white; }
+        .alert {
+            padding: 10px 14px; border-radius: var(--radius-sm); margin-bottom: 16px;
+            font-size: 0.85rem; font-weight: 500;
+        }
+        .alert-error { background: #FFEBEE; color: var(--red); border: 1px solid #FFCDD2; }
+        .alert-success { background: #E8F5E9; color: var(--green); border: 1px solid #C8E6C9; }
+        .alert-info { background: #E3F2FD; color: #1565C0; border: 1px solid #BBDEFB; }
+        .links { text-align: center; margin-top: 16px; font-size: 0.85rem; }
+        .links a { color: var(--orange); text-decoration: none; font-weight: 600; }
+        .links a:hover { text-decoration: underline; }
+        .divider-text { text-align: center; margin: 16px 0; color: var(--text-light); font-size: 0.8rem; position: relative; }
+        .divider-text::before, .divider-text::after {
+            content: ''; position: absolute; top: 50%; width: 35%; height: 1px; background: var(--border);
+        }
+        .divider-text::before { left: 0; }
+        .divider-text::after { right: 0; }
+        .otp-section { display: none; margin-top: 12px; padding: 12px; background: #FFF8F0; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+        .otp-section.show { display: block; }
+        .otp-row { display: flex; gap: 8px; }
+        .otp-row input { flex: 1; }
+        .otp-row button { white-space: nowrap; padding: 11px 16px; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+<div class="bg-pattern"></div>
+<div class="page-wrapper">
+<div class="container">
+    <div class="logo">
+        <span class="icon">🌟</span>
+        <h1>ধ্ৰুৱতৰা AI</h1>
+    </div>
+    <div class="card">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('login')">🔑 লগিন</button>
+            <button class="tab-btn" onclick="switchTab('register')">📝 পঞ্জীয়ন</button>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ 'error' if category == 'error' else 'success' if category == 'success' else 'info' }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <!-- Login Tab -->
+        <div id="tab-login" class="tab-content active">
+            <h2>🔑 লগিন কৰক</h2>
+            <form method="POST" action="/login">
+                <div class="form-group">
+                    <label>📧 ইমেইল</label>
+                    <input type="email" name="email" required placeholder="আপোনাৰ ইমেইল">
+                </div>
+                <div class="form-group">
+                    <label>🔒 পাছৱৰ্ড</label>
+                    <input type="password" name="password" required placeholder="আপোনাৰ পাছৱৰ্ড">
+                </div>
+                <button type="submit" class="btn btn-primary">🔓 লগিন কৰক</button>
+            </form>
+            <div class="links" style="margin-top:12px;">
+                <a href="/forgot-password">পাছৱৰ্ড পাহৰিলে?</a>
+            </div>
+            <div class="divider-text">অথবা</div>
+            <div class="links">
+                <a href="/admin/login">🔐 এডমিন লগিন</a>
+            </div>
+        </div>
+
+        <!-- Register Tab -->
+        <div id="tab-register" class="tab-content">
+            <h2>📝 পঞ্জীয়ন কৰক</h2>
+            <form method="POST" action="/register" id="registerForm">
+                <div class="form-group">
+                    <label>👤 সম্পূৰ্ণ নাম</label>
+                    <input type="text" name="name" required placeholder="আপোনাৰ সম্পূৰ্ণ নাম">
+                </div>
+                <div class="form-group">
+                    <label>📧 ইমেইল</label>
+                    <input type="email" name="email" id="regEmail" required placeholder="আপোনাৰ ইমেইল">
+                </div>
+                <div class="form-group">
+                    <label>📱 মোবাইল নম্বৰ (ঐচ্ছিক)</label>
+                    <input type="tel" name="mobile" id="regMobile" placeholder="যেনে: 9876543210" pattern="[0-9]{10}" title="১০ সংখ্যাৰ মোবাইল নম্বৰ">
+                </div>
+                <div class="form-group">
+                    <label>🔒 পাছৱৰ্ড</label>
+                    <input type="password" name="password" id="regPassword" required placeholder="ন্যূনতম ৬ আখৰৰ পাছৱৰ্ড" minlength="6">
+                </div>
+                <div class="form-group">
+                    <label>🔒 পাছৱৰ্ড নিশ্চিত কৰক</label>
+                    <input type="password" name="confirm_password" required placeholder="পুনৰ পাছৱৰ্ড লিখক" minlength="6">
+                </div>
+                <button type="submit" class="btn btn-primary">📝 পঞ্জীয়ন কৰক</button>
+            </form>
+            <div class="links">
+                ইতিমধ্যে একাউণ্ট আছে? <a href="#" onclick="switchTab('login')">লগিন কৰক</a>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+        document.getElementById(`tab-${tab}`).classList.add('active');
+    }
+
+    // Show register tab if there's an error from registration
+    {% if request.endpoint == 'register' %}
+    switchTab('register');
+    {% endif %}
+
+    // Password match validation
+    document.getElementById('registerForm')?.addEventListener('submit', function(e) {
+        const pw = document.getElementById('regPassword').value;
+        const cpw = document.querySelector('[name="confirm_password"]').value;
+        if (pw !== cpw) {
+            e.preventDefault();
+            alert('পাছৱৰ্ড মিলা নাই। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।');
+        }
+    });
+</script>
+
+{% if all_footer_images %}
+<div style="text-align:center;padding:10px 12px;background:rgba(255,255,255,0.85);border-top:1px solid var(--border);">
+    {% for img in all_footer_images %}
+    <img src="/api/images/{{ img.id }}" alt="{{ img.alt_text }}" style="width:{{ img.width }}px;height:{{ img.height }}px;object-fit:contain;margin:2px 6px;border-radius:4px;display:inline-block;max-height:60px;">
+    {% endfor %}
+</div>
+{% endif %}
+</body>
+</html>

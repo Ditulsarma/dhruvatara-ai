@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="as">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ধ্ৰুৱতৰা AI | বৈদিক জ্যোতিষ প্লেটফৰ্ম</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --orange: #FF6600;
+            --orange-dark: #E55D00;
+            --deep-blue: #1a237e;
+            --gold: #D4A017;
+            --bg: #FFF8F0;
+            --card-bg: #FFFFFF;
+            --text: #2c3e50;
+            --text-light: #5a6c7d;
+            --border: #e8e0d5;
+            --shadow: 0 8px 32px rgba(0,0,0,0.08);
+            --shadow-lg: 0 16px 48px rgba(0,0,0,0.12);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans Bengali', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #FFF8F0 0%, #FFF3E0 30%, #FFECB3 60%, #FFF8F0 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .bg-pattern {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 0; opacity: 0.03;
+            background-image:
+                radial-gradient(circle at 20% 50%, var(--orange) 1px, transparent 1px),
+                radial-gradient(circle at 80% 20%, var(--deep-blue) 1px, transparent 1px),
+                radial-gradient(circle at 50% 80%, var(--gold) 1px, transparent 1px);
+            background-size: 60px 60px, 80px 80px, 70px 70px;
+            animation: bgFloat 20s ease-in-out infinite;
+        }
+        @keyframes bgFloat {
+            0%, 100% { transform: translate(0, 0); }
+            33% { transform: translate(10px, -10px); }
+            66% { transform: translate(-5px, 5px); }
+        }
+
+        .header {
+            position: relative; z-index: 1;
+            text-align: center; padding: 40px 20px 20px;
+        }
+        .header .logo-icon {
+            font-size: 56px; margin-bottom: 8px;
+            animation: pulse 3s ease-in-out infinite;
+            display: inline-block;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+        .header h1 {
+            font-size: 2.6rem; font-weight: 800;
+            background: linear-gradient(135deg, var(--orange), var(--deep-blue));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+        .header .tagline {
+            font-size: 1rem; color: var(--text-light);
+            margin-top: 4px; font-weight: 500;
+        }
+        .header .tagline span {
+            color: var(--orange); font-weight: 700;
+        }
+
+        .main-container {
+            position: relative; z-index: 1;
+            max-width: 560px; margin: 0 auto 40px;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 32px 28px;
+            border: 1px solid var(--border);
+            transition: var(--transition);
+        }
+        .card:hover { box-shadow: var(--shadow-lg); }
+
+        .card-header {
+            text-align: center; margin-bottom: 28px;
+        }
+        .card-header h2 {
+            font-size: 1.4rem; font-weight: 700; color: var(--deep-blue);
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .card-header .divider {
+            width: 50px; height: 3px; background: var(--orange);
+            margin: 10px auto 0; border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group label {
+            display: block; font-weight: 600; font-size: 0.9rem;
+            color: var(--text); margin-bottom: 6px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .form-group label .icon { font-size: 1.1rem; }
+        .form-group input,
+        .form-group select {
+            width: 100%; padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem; font-family: inherit;
+            color: var(--text); background: #FAFAFA;
+            transition: var(--transition);
+            outline: none;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--orange);
+            background: #FFF;
+            box-shadow: 0 0 0 4px rgba(255,102,0,0.08);
+        }
+        .form-group input::placeholder { color: #bbb; }
+
+        .place-dropdown {
+            position: absolute; z-index: 1000;
+            background: white; border: 2px solid var(--orange);
+            border-radius: var(--radius-sm); max-height: 220px;
+            overflow-y: auto; width: calc(100% - 40px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            margin-top: 2px;
+        }
+        .place-dropdown .place-item {
+            padding: 10px 14px; cursor: pointer;
+            font-size: 0.88rem; border-bottom: 1px solid #f0f0f0;
+            transition: var(--transition);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .place-dropdown .place-item:hover { background: #FFF3E0; }
+        .place-dropdown .place-item:last-child { border-bottom: none; }
+        .place-dropdown .place-coords {
+            font-size: 0.7rem; color: var(--text-light);
+        }
+        .place-dropdown .no-result {
+            padding: 12px 14px; font-size: 0.85rem;
+            color: var(--text-light); text-align: center;
+        }
+
+        .btn {
+            width: 100%; padding: 14px;
+            border: none; border-radius: var(--radius-sm);
+            font-size: 1.05rem; font-weight: 700; font-family: inherit;
+            cursor: pointer; transition: var(--transition);
+            display: flex; align-items: center; justify-content: center;
+            gap: 8px; letter-spacing: 0.3px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+            color: white; box-shadow: 0 4px 16px rgba(255,102,0,0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255,102,0,0.4);
+        }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-sparkle {
+            position: relative; overflow: hidden;
+        }
+        .btn-sparkle::after {
+            content: ''; position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.2) 50%, transparent 60%);
+            animation: shimmer 2.5s infinite;
+        }
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) rotate(45deg); }
+        }
+
+        .features {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 12px; margin-top: 24px;
+        }
+        .feature-item {
+            background: var(--bg); border-radius: var(--radius-sm);
+            padding: 14px 12px; text-align: center;
+            border: 1px solid var(--border);
+            transition: var(--transition);
+        }
+        .feature-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        .feature-item .f-icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+        .feature-item .f-text { font-size: 0.78rem; font-weight: 600; color: var(--text); }
+        .feature-item.locked { opacity: 0.4; pointer-events: none; }
+        .feature-item.locked .f-text { color: #999; }
+
+        .top-nav {
+            background: white; border-bottom: 1px solid var(--border);
+            padding: 10px 24px; display: flex; align-items: center;
+            justify-content: space-between; position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .top-nav .brand { font-weight: 800; font-size: 1.1rem; color: var(--orange); }
+        .top-nav .brand span { color: var(--deep-blue); }
+        .nav-actions { display: flex; gap: 10px; align-items: center; }
+        .btn-sm {
+            padding: 7px 16px; border-radius: 20px; font-size: 0.8rem;
+            font-weight: 600; font-family: inherit; cursor: pointer;
+            border: none; transition: var(--transition); text-decoration: none;
+            display: inline-flex; align-items: center; gap: 5px;
+        }
+        .btn-outline-sm { background: white; color: var(--orange); border: 2px solid var(--orange); }
+        .btn-outline-sm:hover { background: var(--orange); color: white; }
+
+        .footer {
+            text-align: center; padding: 20px;
+            color: var(--text-light); font-size: 0.8rem;
+            position: relative; z-index: 1;
+        }
+        .footer span { color: var(--orange); font-weight: 600; }
+
+        @media (max-width: 480px) {
+            .header h1 { font-size: 2rem; }
+            .card { padding: 24px 18px; }
+            .features { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .feature-item { padding: 10px 8px; }
+            .feature-item .f-text { font-size: 0.7rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg-pattern"></div>
+
+{% if session.get('user_id') %}
+<nav class="top-nav">
+    <div class="brand">🌟 ধ্ৰুৱতৰা <span>AI</span></div>
+    <div class="nav-actions">
+        <a href="/dashboard" class="btn-sm btn-outline-sm">📊 ডেশ্ববৰ্ড</a>
+        <a href="/logout" class="btn-sm btn-outline-sm">🚪 লগআউট</a>
+    </div>
+</nav>
+{% endif %}
+
+<header class="header">
+    <div class="logo-icon">🌟</div>
+    <h1>ধ্ৰুৱতৰা AI</h1>
+    <p class="tagline"><span>বৈদিক জ্যোতিষ</span> প্লেটফৰ্ম</p>
+</header>
+
+<div class="main-container">
+    <div class="card">
+        <div class="card-header">
+            <h2>🔮 কুণ্ডলী প্ৰস্তুত কৰক</h2>
+            <div class="divider"></div>
+        </div>
+
+        {% if session.get('user_id') %}
+        <!-- Saved Kundlis Search Box -->
+        <div class="form-group" style="position:relative;">
+            <label><span class="icon">🔍</span> সংৰক্ষিত কুণ্ডলী সন্ধান কৰক</label>
+            <input type="text" id="kundliSearch" autocomplete="off" placeholder="নাম লিখি সন্ধান কৰক...">
+            <div id="kundliDropdown" class="place-dropdown" style="display:none;"></div>
+        </div>
+        {% endif %}
+
+        <form action="/calculate" method="POST" id="kundliForm">
+            <div class="form-group">
+                <label><span class="icon">👤</span> আপোনাৰ নাম</label>
+                <input type="text" name="name" id="nameInput" required placeholder="যেনে: দিপুল শৰ্মা">
+            </div>
+
+            <div class="form-group">
+                <label><span class="icon">⚧</span> লিংগ</label>
+                <select name="gender" id="genderInput" required>
+                    <option value="" disabled selected>— লিংগ বাছক —</option>
+                    <option value="male">পুৰুষ (জাতক)</option>
+                    <option value="female">মহিলা (জাতিকা)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label><span class="icon">📅</span> জন্মৰ তাৰিখ</label>
+                <input type="date" name="dob" id="dobInput" required>
+            </div>
+
+            <div class="form-group">
+                <label><span class="icon">⏰</span> জন্মৰ সময়</label>
+                <input type="time" name="tob" id="tobInput" required>
+            </div>
+
+            <div class="form-group">
+                <label><span class="icon">📍</span> জন্মৰ স্থান</label>
+                <input type="text" id="placeSearch" name="place" autocomplete="off" required placeholder="স্থানৰ নাম লিখক (যেনে: Guwahati)...">
+                <div id="placeDropdown" class="place-dropdown" style="display:none;"></div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div class="form-group">
+                    <label><span class="icon">🌐</span> Latitude</label>
+                    <input type="number" step="any" id="latInput" name="lat" value="26.1445" required placeholder="যেনে: 26.1445">
+                </div>
+                <div class="form-group">
+                    <label><span class="icon">🌐</span> Longitude</label>
+                    <input type="number" step="any" id="lonInput" name="lon" value="91.7362" required placeholder="যেনে: 91.7362">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label><span class="icon">🕐</span> Time Zone (UTC Offset)</label>
+                <select name="timezone" id="timezoneSelect" required>
+                    {% for tz in timezones %}
+                    <option value="{{ tz.offset }}" {% if tz.offset == 5.5 %}selected{% endif %}>{{ tz.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-sparkle">
+                ✨ কুণ্ডলী প্ৰস্তুত কৰক
+            </button>
+        </form>
+
+        <div class="features">
+            {% if user_features %}
+                {% for f in feature_defs %}
+                {% set fkey = f.feature_key %}
+                {% set icons = {
+                    'kundli_calculate': '🔮', 'varga_charts': '📊', 'panchanga': '🕉️',
+                    'dosha_analysis': '⚠️', 'yoga_analysis': '✨', 'dasha': '⏳',
+                    'ai_interpretation': '🤖', 'pdf_report': '📄', 'nakshatra_phala': '⭐',
+                    'lagna_phala': '🌅', 'rashi_phala': '♈', 'sannari_chakra': '🔄',
+                    'navatara_chakra': '🌐', 'tripap_rista': '⚡', 'custom_pdf': '📑'
+                } %}
+                <div class="feature-item {% if not user_features.get(fkey, False) %}locked{% endif %}">
+                    <span class="f-icon">{{ icons.get(fkey, '✨') }}</span>
+                    <span class="f-text">{{ f.feature_name_asm }}</span>
+                    {% if not user_features.get(fkey, False) %}<span style="font-size:0.6rem;color:#999;">🔒</span>{% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <!-- Default static features for non-logged-in users -->
+                <div class="feature-item"><span class="f-icon">📊</span><span class="f-text">বিভাগীয় কুণ্ডলী</span></div>
+                <div class="feature-item"><span class="f-icon">🕉️</span><span class="f-text">পঞ্চাঙ্গ</span></div>
+                <div class="feature-item"><span class="f-icon">⚠️</span><span class="f-text">দোষ বিশ্লেষণ</span></div>
+                <div class="feature-item"><span class="f-icon">✨</span><span class="f-text">যোগ বিশ্লেষণ</span></div>
+                <div class="feature-item"><span class="f-icon">⏳</span><span class="f-text">বিংশোত্তৰী দশা</span></div>
+                <div class="feature-item"><span class="f-icon">🤖</span><span class="f-text">AI বিশ্লেষণ</span></div>
+                <div class="feature-item"><span class="f-icon">📄</span><span class="f-text">PDF ৰিপৰ্ট</span></div>
+                <div class="feature-item"><span class="f-icon">🌐</span><span class="f-text">API সমৰ্থন</span></div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<footer class="footer">
+    {% for img in all_footer_images %}
+    <img src="/api/images/{{ img.id }}" alt="{{ img.alt_text }}" style="width:{{ img.width }}px;height:{{ img.height }}px;object-fit:contain;margin:4px 6px;border-radius:4px;display:inline-block;">
+    {% endfor %}
+    <p>© ২০২৬ <span>ধ্ৰুৱতৰা AI</span> • সকলো অধিকাৰ সংৰক্ষিত</p>
+</footer>
+
+<script>
+    const placeSearch = document.getElementById('placeSearch');
+    const placeDropdown = document.getElementById('placeDropdown');
+    const latInput = document.getElementById('latInput');
+    const lonInput = document.getElementById('lonInput');
+    let searchTimeout;
+
+    placeSearch.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const q = this.value.trim();
+        if (q.length < 2) {
+            placeDropdown.style.display = 'none';
+            return;
+        }
+        searchTimeout = setTimeout(() => {
+            fetch('/api/search-places?q=' + encodeURIComponent(q))
+                .then(r => r.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        placeDropdown.innerHTML = '<div class="no-result">🔍 কোনো স্থান পোৱা নগল</div>';
+                    } else {
+                        placeDropdown.innerHTML = data.map(p =>
+                            `<div class="place-item" onclick="selectPlace('${p.name.replace(/'/g, "\\'")}', ${p.lat}, ${p.lon})">
+                                <span>📍 ${p.name}</span>
+                                <span class="place-coords">${p.lat.toFixed(4)}, ${p.lon.toFixed(4)}</span>
+                            </div>`
+                        ).join('');
+                    }
+                    placeDropdown.style.display = 'block';
+                });
+        }, 200);
+    });
+
+    function selectPlace(name, lat, lon) {
+        placeSearch.value = name;
+        latInput.value = lat;
+        lonInput.value = lon;
+        placeDropdown.style.display = 'none';
+    }
+
+    // Hide dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!placeSearch.contains(e.target) && !placeDropdown.contains(e.target)) {
+            placeDropdown.style.display = 'none';
+        }
+    });
+
+    // ─── Saved Kundlis Search & Auto-Fill ───
+    const kundliSearch = document.getElementById('kundliSearch');
+    const kundliDropdown = document.getElementById('kundliDropdown');
+    const nameInput = document.getElementById('nameInput');
+    const genderInput = document.getElementById('genderInput');
+    const dobInput = document.getElementById('dobInput');
+    const tobInput = document.getElementById('tobInput');
+    const timezoneSelect = document.getElementById('timezoneSelect');
+    let kundliSearchTimeout;
+
+    if (kundliSearch) {
+        kundliSearch.addEventListener('input', function() {
+            clearTimeout(kundliSearchTimeout);
+            const q = this.value.trim();
+            if (q.length < 1) {
+                kundliDropdown.style.display = 'none';
+                return;
+            }
+            kundliSearchTimeout = setTimeout(() => {
+                fetch('/api/search-kundlis?q=' + encodeURIComponent(q))
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.length === 0) {
+                            kundliDropdown.innerHTML = '<div class="no-result">🔍 কোনো সংৰক্ষিত কুণ্ডলী পোৱা নগল</div>';
+                        } else {
+                            kundliDropdown.innerHTML = data.map(k =>
+                                `<div class="place-item" onclick="selectKundli(${k.id})" style="justify-content:space-between;">
+                                    <span>👤 ${k.name}</span>
+                                    <span class="place-coords">${k.dob} | ${k.tob}</span>
+                                    <span style="cursor:pointer;color:#c62828;font-size:0.8rem;" onclick="event.stopPropagation();deleteKundli(${k.id})" title="বিলোপ কৰক">🗑️</span>
+                                </div>`
+                            ).join('');
+                        }
+                        kundliDropdown.style.display = 'block';
+                    });
+            }, 200);
+        });
+
+        // Hide kundli dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (kundliSearch && !kundliSearch.contains(e.target) && kundliDropdown && !kundliDropdown.contains(e.target)) {
+                kundliDropdown.style.display = 'none';
+            }
+        });
+    }
+
+    function selectKundli(kundliId) {
+        fetch('/api/get-kundli/' + kundliId)
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    alert('কুণ্ডলী পোৱা নগল।');
+                    return;
+                }
+                // Auto-fill the form
+                nameInput.value = data.name;
+                genderInput.value = data.gender;
+                dobInput.value = data.dob;
+                tobInput.value = data.tob;
+                placeSearch.value = data.place;
+                latInput.value = data.lat;
+                lonInput.value = data.lon;
+                // Set timezone
+                if (timezoneSelect) {
+                    for (let opt of timezoneSelect.options) {
+                        if (parseFloat(opt.value) === data.timezone) {
+                            opt.selected = true;
+                            break;
+                        }
+                    }
+                }
+                kundliDropdown.style.display = 'none';
+                kundliSearch.value = '';
+            });
+    }
+
+    function deleteKundli(kundliId) {
+        if (!confirm('আপুনি নিশ্চিতভাৱে এই কুণ্ডলী বিলোপ কৰিব বিচাৰে নেকি?')) return;
+        fetch('/api/delete-kundli/' + kundliId, { method: 'DELETE' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    // Refresh the dropdown
+                    kundliSearch.dispatchEvent(new Event('input'));
+                }
+            });
+    }
+</script>
+
+</body>
+</html>

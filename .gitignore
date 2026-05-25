@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Virtual Environment
+venv/
+env/
+.venv/
+ENV/
+
+# VS Code
+.vscode/
+
+# Database (SQLite)
+*.db
+
+# Uploaded files (keep folder, ignore contents)
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Environment variables
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+debug-logs/
+
+# Temp files
+temp/
+tmp/
+*.tmp

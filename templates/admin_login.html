@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="as">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>এডমিন লগিন | ধ্ৰুৱতৰা AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --orange: #FF6600; --orange-dark: #E55D00; --deep-blue: #1a237e;
+            --gold: #D4A017; --bg: #FFF8F0; --card-bg: #FFFFFF;
+            --text: #2c3e50; --text-light: #5a6c7d; --border: #e8e0d5;
+            --shadow: 0 8px 32px rgba(0,0,0,0.08); --radius: 16px; --radius-sm: 10px;
+            --red: #C62828; --green: #2E7D32; --transition: 0.3s ease;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans Bengali', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a237e 0%, #0d1642 50%, #1a237e 100%);
+            min-height: 100vh; display: flex; flex-direction: column;
+        }
+        .page-wrapper {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .container { width: 100%; max-width: 400px; }
+        .logo { text-align: center; margin-bottom: 24px; }
+        .logo .icon { font-size: 48px; display: block; margin-bottom: 4px; }
+        .logo h1 { font-size: 1.6rem; font-weight: 800; color: var(--orange); }
+        .logo p { color: rgba(255,255,255,0.6); font-size: 0.85rem; }
+        .card {
+            background: var(--card-bg); border-radius: var(--radius);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3); padding: 32px 28px;
+        }
+        .card h2 { text-align: center; color: var(--deep-blue); margin-bottom: 24px; font-size: 1.2rem; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block; font-weight: 600; font-size: 0.85rem;
+            color: var(--text); margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%; padding: 11px 14px; border: 2px solid var(--border);
+            border-radius: var(--radius-sm); font-size: 0.9rem; font-family: inherit;
+            background: #FAFAFA; transition: var(--transition); outline: none;
+        }
+        .form-group input:focus { border-color: var(--orange); background: #FFF; box-shadow: 0 0 0 3px rgba(255,102,0,0.08); }
+        .btn {
+            width: 100%; padding: 12px; border: none; border-radius: var(--radius-sm);
+            font-size: 1rem; font-weight: 700; font-family: inherit; cursor: pointer;
+            transition: var(--transition);
+        }
+        .btn-primary { background: linear-gradient(135deg, var(--deep-blue), #283593); color: white; box-shadow: 0 4px 16px rgba(26,35,126,0.3); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,35,126,0.4); }
+        .alert {
+            padding: 10px 14px; border-radius: var(--radius-sm); margin-bottom: 16px;
+            font-size: 0.85rem; font-weight: 500;
+        }
+        .alert-error { background: #FFEBEE; color: var(--red); border: 1px solid #FFCDD2; }
+        .links { text-align: center; margin-top: 16px; }
+        .links a { color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.85rem; }
+        .links a:hover { color: white; text-decoration: underline; }
+    </style>
+</head>
+<body>
+<div class="page-wrapper">
+<div class="container">
+    <div class="logo">
+        <span class="icon">🌟</span>
+        <h1>ধ্ৰুৱতৰা AI</h1>
+        <p>এডমিন পেনেল</p>
+    </div>
+    <div class="card">
+        <h2>🔐 এডমিন লগিন</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ 'error' if category == 'error' else 'success' }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+        <form method="POST" action="/admin/login">
+            <div class="form-group">
+                <label>👤 ইউজাৰনেম</label>
+                <input type="text" name="username" required placeholder="এডমিন ইউজাৰনেম">
+            </div>
+            <div class="form-group">
+                <label>🔒 পাছৱৰ্ড</label>
+                <input type="password" name="password" required placeholder="এডমিন পাছৱৰ্ড">
+            </div>
+            <button type="submit" class="btn btn-primary">🔓 লগিন কৰক</button>
+        </form>
+    </div>
+    <div class="links">
+        <a href="/login">← ব্যৱহাৰকাৰী লগিনলৈ উভতক</a>
+    </div>
+</div>
+</div>
+
+{% if all_footer_images %}
+<div style="text-align:center;padding:8px 12px;background:rgba(13,22,66,0.9);border-top:1px solid rgba(255,255,255,0.1);">
+    {% for img in all_footer_images %}
+    <img src="/api/images/{{ img.id }}" alt="{{ img.alt_text }}" style="width:{{ img.width }}px;height:{{ img.height }}px;object-fit:contain;margin:2px 6px;border-radius:4px;display:inline-block;max-height:50px;">
+    {% endfor %}
+</div>
+{% endif %}
+</body>
+</html>

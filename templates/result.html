@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="as">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ধ্ৰুৱতৰা AI | {{ user_name }}ৰ কুণ্ডলী</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --orange: #FF6600; --orange-dark: #E55D00; --deep-blue: #1a237e;
+            --gold: #D4A017; --bg: #FFF8F0; --card-bg: #FFFFFF;
+            --text: #2c3e50; --text-light: #5a6c7d; --border: #e8e0d5;
+            --shadow: 0 4px 20px rgba(0,0,0,0.06); --radius: 14px; --radius-sm: 8px;
+            --green: #2E7D32; --red: #C62828; --purple: #6A1B9A;
+            --transition: 0.25s ease;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans Bengali', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #FFF8F0 0%, #FFF3E0 30%, #FFECB3 60%, #FFF8F0 100%);
+            background-attachment: fixed; min-height: 100vh; color: var(--text);
+        }
+
+        .top-nav {
+            background: white; border-bottom: 1px solid var(--border);
+            padding: 12px 24px; display: flex; align-items: center;
+            justify-content: space-between; position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .top-nav .brand { font-weight: 800; font-size: 1.2rem; color: var(--orange); }
+        .top-nav .brand span { color: var(--deep-blue); }
+        .nav-actions { display: flex; gap: 10px; }
+        .btn-sm {
+            padding: 8px 16px; border-radius: 20px; font-size: 0.82rem;
+            font-weight: 600; font-family: inherit; cursor: pointer;
+            border: none; transition: var(--transition); text-decoration: none;
+            display: inline-flex; align-items: center; gap: 5px;
+        }
+        .btn-outline { background: white; color: var(--orange); border: 2px solid var(--orange); }
+        .btn-outline:hover { background: var(--orange); color: white; }
+        .btn-fill { background: var(--orange); color: white; }
+        .btn-fill:hover { background: var(--orange-dark); transform: translateY(-1px); }
+
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+
+        .info-card {
+            background: var(--card-bg); border-radius: var(--radius);
+            box-shadow: var(--shadow); padding: 20px 24px; margin-bottom: 20px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px; border: 1px solid var(--border);
+        }
+        .info-item { display: flex; align-items: center; gap: 8px; }
+        .info-item .i-icon { font-size: 1.3rem; }
+        .info-item .i-label { font-size: 0.75rem; color: var(--text-light); }
+        .info-item .i-value { font-weight: 700; font-size: 0.9rem; }
+
+        .section {
+            background: var(--card-bg); border-radius: var(--radius);
+            box-shadow: var(--shadow); margin-bottom: 20px;
+            border: 1px solid var(--border); overflow: hidden;
+        }
+        .section-body { padding: 20px 24px; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th, td { border: 1px solid #eee; padding: 10px 12px; text-align: left; }
+        th { background: #f8f5f0; font-weight: 700; color: var(--deep-blue); font-size: 0.8rem; }
+        tr:nth-child(even) { background: #fefcf9; }
+        tr:hover { background: #fff8f0; }
+
+        .chart-controls {
+            display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;
+        }
+        .chart-controls select {
+            padding: 8px 14px; border: 2px solid var(--border);
+            border-radius: 20px; font-family: inherit; font-size: 0.85rem;
+            background: white; cursor: pointer; outline: none;
+        }
+        .chart-controls select:focus { border-color: var(--orange); }
+        .chart-canvas-wrap {
+            text-align: center; background: #fafafa; border-radius: var(--radius-sm);
+            padding: 16px; border: 1px solid var(--border);
+        }
+        canvas { max-width: 100%; height: auto; }
+
+        .panchanga-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px;
+        }
+        .panchanga-item {
+            background: var(--bg); border-radius: var(--radius-sm);
+            padding: 12px 14px; border: 1px solid var(--border);
+            text-align: center;
+        }
+        .panchanga-item .p-label { font-size: 0.7rem; color: var(--text-light); text-transform: uppercase; }
+        .panchanga-item .p-value { font-weight: 700; font-size: 0.95rem; margin-top: 2px; }
+        .panchanga-item .p-sub { font-size: 0.72rem; color: var(--text-light); }
+
+        .dosha-list { display: flex; flex-direction: column; gap: 10px; }
+        .dosha-card {
+            border-radius: var(--radius-sm); padding: 14px 18px;
+            border-left: 4px solid var(--red); background: #FFF5F5;
+            display: flex; align-items: flex-start; gap: 12px;
+        }
+        .dosha-card.safe {
+            border-left-color: var(--green); background: #F1F8E9;
+        }
+        .dosha-card .d-icon { font-size: 1.5rem; flex-shrink: 0; }
+        .dosha-card .d-content { flex: 1; }
+        .dosha-card .d-name { font-weight: 700; font-size: 0.95rem; }
+        .dosha-card .d-severity {
+            display: inline-block; padding: 2px 10px; border-radius: 12px;
+            font-size: 0.72rem; font-weight: 600; margin-left: 6px;
+        }
+        .dosha-card .d-severity.high { background: #FFCDD2; color: var(--red); }
+        .dosha-card .d-severity.medium { background: #FFE0B2; color: #E65100; }
+        .dosha-card .d-severity.low { background: #C8E6C9; color: var(--green); }
+        .dosha-card .d-desc { font-size: 0.8rem; color: var(--text-light); margin-top: 4px; }
+        .dosha-card .d-remedies { margin-top: 8px; }
+        .dosha-card .d-remedies summary {
+            font-size: 0.78rem; font-weight: 600; color: var(--orange); cursor: pointer;
+        }
+        .dosha-card .d-remedies ul {
+            margin-top: 4px; padding-left: 18px; font-size: 0.76rem; color: var(--text-light);
+        }
+
+        .yoga-list { display: flex; flex-direction: column; gap: 10px; }
+        .yoga-card {
+            border-radius: var(--radius-sm); padding: 14px 18px;
+            border-left: 4px solid var(--green); background: #F1F8E9;
+            display: flex; align-items: flex-start; gap: 12px;
+        }
+        .yoga-card .y-icon { font-size: 1.5rem; flex-shrink: 0; }
+        .yoga-card .y-name { font-weight: 700; font-size: 0.95rem; }
+        .yoga-card .y-category {
+            display: inline-block; padding: 2px 10px; border-radius: 12px;
+            font-size: 0.7rem; font-weight: 600; background: #C8E6C9; color: var(--green);
+        }
+        .yoga-card .y-desc { font-size: 0.8rem; color: var(--text-light); margin-top: 4px; }
+
+        /* ─── Dasha Tree ─── */
+        .dasha-tree {
+            max-height: 600px; overflow-y: auto;
+            border: 1px solid var(--border); border-radius: var(--radius-sm);
+            padding: 8px; background: #fafafa;
+        }
+        .md-node { margin-bottom: 2px; }
+        .md-header {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 14px; background: linear-gradient(135deg, #e8eaf6, #f0edf6);
+            border-radius: 8px; cursor: pointer; user-select: none;
+            transition: var(--transition); border: 1px solid #d5d0e8;
+        }
+        .md-header:hover { background: linear-gradient(135deg, #dde0f0, #e8e4f2); box-shadow: 0 2px 8px rgba(26,35,126,0.08); }
+        .md-header .md-arrow { font-size: 0.7rem; color: var(--deep-blue); transition: transform 0.2s; width: 14px; }
+        .md-header.expanded .md-arrow { transform: rotate(90deg); }
+        .md-header .md-icon { font-size: 1rem; color: var(--orange); }
+        .md-header .md-info { flex: 1; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .md-header .md-info strong { font-size: 0.95rem; color: var(--deep-blue); }
+        .md-header .md-dates { font-size: 0.75rem; color: var(--text-light); }
+        .md-header .md-years { font-size: 0.7rem; background: #d5d0e8; color: var(--deep-blue); padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+        .md-body { margin-left: 20px; border-left: 2px solid #d5d0e8; padding-left: 8px; }
+
+        .ad-node { margin: 2px 0; }
+        .ad-header {
+            display: flex; align-items: center; gap: 6px;
+            padding: 8px 12px; background: #fff; border-radius: 6px;
+            cursor: pointer; user-select: none; transition: var(--transition);
+            border: 1px solid #eee;
+        }
+        .ad-header:hover { background: #fff8f0; border-color: var(--orange); }
+        .ad-header .ad-arrow { font-size: 0.65rem; color: var(--orange); transition: transform 0.2s; width: 12px; }
+        .ad-header.expanded .ad-arrow { transform: rotate(90deg); }
+        .ad-header .ad-icon { font-size: 0.85rem; color: var(--orange); }
+        .ad-header .ad-info { flex: 1; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .ad-header .ad-info strong { font-size: 0.85rem; color: var(--text); }
+        .ad-header .ad-dates { font-size: 0.7rem; color: var(--text-light); }
+        .ad-body { margin-left: 16px; border-left: 2px solid #ffe0c0; padding-left: 8px; }
+
+        .pd-row {
+            display: flex; align-items: center; gap: 6px;
+            padding: 5px 10px; font-size: 0.75rem; color: var(--text);
+            border-bottom: 1px dotted #f0f0f0; cursor: pointer;
+            transition: var(--transition);
+        }
+        .pd-row:hover { background: #fff3e0; }
+        .pd-row.active { background: #ffe0b2; font-weight: 600; }
+        .pd-row:last-child { border-bottom: none; }
+        .pd-row .pd-icon { color: #bbb; font-size: 0.6rem; }
+        .pd-row .pd-info { flex: 1; display: flex; align-items: center; gap: 8px; }
+        .pd-row .pd-dates { font-size: 0.68rem; color: #999; }
+
+        .ad-header.active { background: #fff3e0; border-color: var(--orange); font-weight: 600; }
+
+        #dashaPredictionPanel {
+            scroll-behavior: smooth;
+            position: relative;
+        }
+        #dashaPredictionPanel strong { color: var(--deep-blue); }
+
+        /* ─── Upgrade Overlay for Free Plan ─── */
+        .dasha-free-wrapper {
+            position: relative;
+        }
+        .dasha-free-content {
+            max-height: 220px;
+            overflow: hidden;
+            position: relative;
+        }
+        .dasha-free-fade {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            height: 80px;
+            background: linear-gradient(to bottom, transparent, #fff8f0 60%, #fff8f0);
+            display: flex; align-items: flex-end; justify-content: center;
+            padding-bottom: 4px;
+        }
+        .dasha-free-fade .fade-dots {
+            font-size: 1.2rem; font-weight: 800; color: #bbb;
+            letter-spacing: 3px; user-select: none;
+        }
+        .upgrade-overlay {
+            background: linear-gradient(135deg, #fff8f0, #fff3e0);
+            border-top: 2px solid var(--orange);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            text-align: center; padding: 16px 20px;
+            border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+        }
+        .upgrade-overlay .lock-icon {
+            font-size: 2rem; margin-bottom: 6px;
+        }
+        .upgrade-overlay .upgrade-title {
+            font-size: 0.9rem; font-weight: 700; color: var(--deep-blue);
+            margin-bottom: 4px;
+        }
+        .upgrade-overlay .upgrade-sub {
+            font-size: 0.75rem; color: var(--text-light);
+            margin-bottom: 12px; max-width: 300px;
+        }
+        .btn-upgrade {
+            padding: 10px 28px; border-radius: 25px;
+            font-size: 0.9rem; font-weight: 700; font-family: inherit;
+            cursor: pointer; border: none; transition: var(--transition);
+            background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+            color: white; box-shadow: 0 4px 16px rgba(255,102,0,0.3);
+            text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-upgrade:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255,102,0,0.4);
+        }
+
+        /* ─── Upgrade Plans Modal ─── */
+        .plan-cards {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px; margin-top: 12px;
+        }
+        .plan-card {
+            background: var(--bg); border-radius: var(--radius-sm);
+            padding: 16px; border: 2px solid var(--border);
+            text-align: center; transition: var(--transition);
+            cursor: default;
+        }
+        .plan-card:hover { border-color: var(--orange); box-shadow: 0 4px 16px rgba(255,102,0,0.1); }
+        .plan-card.current { border-color: var(--green); background: #F1F8E9; }
+        .plan-card .plan-name { font-weight: 700; font-size: 1rem; color: var(--deep-blue); }
+        .plan-card .plan-price { font-size: 1.5rem; font-weight: 800; color: var(--orange); margin: 6px 0; }
+        .plan-card .plan-duration { font-size: 0.75rem; color: var(--text-light); }
+        .plan-card .plan-desc { font-size: 0.78rem; color: var(--text-light); margin: 8px 0; }
+        .plan-card .plan-features { font-size: 0.72rem; color: var(--text); text-align: left; margin: 8px 0; }
+        .plan-card .plan-features li { padding: 2px 0; }
+        .plan-card .plan-current-badge {
+            display: inline-block; background: var(--green); color: white;
+            padding: 3px 12px; border-radius: 12px; font-size: 0.7rem; font-weight: 600;
+            margin-top: 6px;
+        }
+
+        .ai-content {
+            background: linear-gradient(135deg, #f8f5ff, #fff8f0);
+            border-radius: var(--radius-sm); padding: 20px 24px;
+            border: 1px solid #e8e0f0; line-height: 1.8; font-size: 0.9rem;
+            white-space: pre-line;
+        }
+        .ai-content strong { color: var(--deep-blue); }
+
+        .tabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+        .tab-btn {
+            padding: 8px 18px; border-radius: 20px; font-size: 0.82rem;
+            font-weight: 600; font-family: inherit; cursor: pointer;
+            border: 2px solid var(--border); background: white;
+            color: var(--text-light); transition: var(--transition);
+        }
+        .tab-btn.active { background: var(--orange); color: white; border-color: var(--orange); }
+        .tab-btn:hover:not(.active) { border-color: var(--orange); color: var(--orange); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        @media (max-width: 768px) {
+            .container { padding: 12px; }
+            .info-card { grid-template-columns: 1fr 1fr; }
+            .panchanga-grid { grid-template-columns: repeat(2, 1fr); }
+            .chart-controls { flex-direction: column; }
+            .top-nav { padding: 10px 16px; }
+        }
+
+        /* ─── Custom PDF Modal ─── */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 999; justify-content: center;
+            align-items: flex-start; padding-top: 30px; overflow-y: auto;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-box {
+            background: white; border-radius: var(--radius); width: 90%; max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3); padding: 0; overflow: hidden;
+            animation: modalIn 0.3s ease;
+        }
+        @keyframes modalIn { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-header {
+            background: linear-gradient(135deg, var(--deep-blue), #283593);
+            color: white; padding: 18px 24px; display: flex;
+            justify-content: space-between; align-items: center;
+        }
+        .modal-header h3 { font-size: 1.1rem; margin: 0; }
+        .modal-close {
+            background: none; border: none; color: white; font-size: 1.5rem;
+            cursor: pointer; padding: 0 4px; line-height: 1;
+        }
+        .modal-body { padding: 20px 24px; max-height: 60vh; overflow-y: auto; }
+        .modal-body h4 {
+            color: var(--deep-blue); font-size: 0.9rem; margin: 16px 0 8px;
+            padding-bottom: 4px; border-bottom: 1px solid var(--border);
+        }
+        .modal-body h4:first-child { margin-top: 0; }
+        .cb-row {
+            display: flex; align-items: center; gap: 10px; padding: 7px 0;
+            font-size: 0.88rem; cursor: pointer;
+        }
+        .cb-row input[type="checkbox"] {
+            width: 18px; height: 18px; accent-color: var(--orange); cursor: pointer;
+        }
+        .cb-row label { cursor: pointer; flex: 1; }
+        .dasha-select-row {
+            display: flex; align-items: center; gap: 10px; padding: 7px 0;
+            font-size: 0.88rem;
+        }
+        .dasha-select-row select {
+            padding: 6px 12px; border: 2px solid var(--border); border-radius: 8px;
+            font-family: inherit; font-size: 0.85rem; background: white;
+        }
+        .modal-footer {
+            padding: 14px 24px; border-top: 1px solid var(--border);
+            display: flex; gap: 10px; justify-content: flex-end;
+        }
+        .btn-modal {
+            padding: 10px 24px; border-radius: 20px; font-size: 0.88rem;
+            font-weight: 600; font-family: inherit; cursor: pointer; border: none;
+            transition: var(--transition);
+        }
+        .btn-modal-cancel { background: #eee; color: var(--text); }
+        .btn-modal-cancel:hover { background: #ddd; }
+        .btn-modal-generate { background: var(--orange); color: white; }
+        .btn-modal-generate:hover { background: var(--orange-dark); }
+        .btn-modal-generate:disabled { opacity: 0.5; cursor: not-allowed; }
+        .select-all-row {
+            display: flex; gap: 8px; margin-bottom: 4px;
+        }
+        .select-all-row button {
+            font-size: 0.72rem; padding: 3px 10px; border-radius: 12px;
+            border: 1px solid var(--border); background: white; cursor: pointer;
+            font-family: inherit; color: var(--text-light);
+        }
+        .select-all-row button:hover { background: var(--bg); border-color: var(--orange); color: var(--orange); }
+    </style>
+</head>
+<body>
+
+<nav class="top-nav">
+    <div class="brand">🌟 ধ্ৰুৱতৰা<span> AI</span></div>
+    <div class="nav-actions">
+        <a href="/dashboard" class="btn-sm btn-outline">📊 ডেশ্ববৰ্ড</a>
+        <a href="/kundli" class="btn-sm btn-outline">🏠 নতুন কুণ্ডলী</a>
+        {% if session.get('user_id') %}
+        <button class="btn-sm btn-fill" onclick="saveKundli()" style="background:var(--green);">💾 কুণ্ডলী সংৰক্ষণ কৰক</button>
+        {% endif %}
+        {% if user_features and user_features.get('pdf_report', False) %}
+        <form action="/download-pdf" method="POST" style="display:inline;">
+            <input type="hidden" name="name" value="{{ user_name }}">
+            <input type="hidden" name="dob" value="{{ user_dob }}">
+            <input type="hidden" name="tob" value="{{ user_tob }}">
+            <input type="hidden" name="place" value="{{ user_place }}">
+            <input type="hidden" name="gender" value="{{ gender }}">
+            <input type="hidden" name="lat" value="{{ lat }}">
+            <input type="hidden" name="lon" value="{{ lon }}">
+            <input type="hidden" name="timezone" value="{{ timezone }}">
+            <button type="submit" class="btn-sm btn-fill">📥 PDF ডাউনলোড</button>
+        </form>
+        {% endif %}
+        {% if user_features and user_features.get('custom_pdf', False) %}
+        <button class="btn-sm btn-fill" onclick="openCustomPdfModal()" style="background:var(--deep-blue);">⚙️ নিজৰ মতে PDF</button>
+        {% endif %}
+    </div>
+</nav>
+
+<div class="container">
+
+    <div class="info-card">
+        <div class="info-item">
+            <span class="i-icon">👤</span>
+            <div><div class="i-label">নাম</div><div class="i-value">{{ user_name }}</div></div>
+        </div>
+        <div class="info-item">
+            <span class="i-icon">⚧</span>
+            <div><div class="i-label">লিংগ</div><div class="i-value">{% if gender == 'female' %}মহিলা (জাতিকা){% else %}পুৰুষ (জাতক){% endif %}</div></div>
+        </div>
+        <div class="info-item">
+            <span class="i-icon">📍</span>
+            <div><div class="i-label">জন্মৰ স্থান</div><div class="i-value">{{ user_place }}</div></div>
+        </div>
+        <div class="info-item">
+            <span class="i-icon">📅</span>
+            <div><div class="i-label">জন্মৰ তাৰিখ</div><div class="i-value">{{ user_dob }}</div></div>
+        </div>
+        <div class="info-item">
+            <span class="i-icon">⏰</span>
+            <div><div class="i-label">জন্মৰ সময়</div><div class="i-value">{{ user_tob }}</div></div>
+        </div>
+        <div class="info-item">
+            <span class="i-icon">🌅</span>
+            <div><div class="i-label">লগ্ন</div><div class="i-value">{{ asc_rasi }}</div></div>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('planets')">🪐 গ্ৰহ অৱস্থান</button>
+        {% if not user_features or user_features.get('varga_charts', True) %}
+        <button class="tab-btn" onclick="switchTab('charts')">📊 বিভাগীয় কুণ্ডলী</button>
+        {% endif %}
+        {% if not user_features or user_features.get('panchanga', True) %}
+        <button class="tab-btn" onclick="switchTab('panchanga')">🕉️ পঞ্চাঙ্গ</button>
+        {% endif %}
+        {% if not user_features or user_features.get('dosha_analysis', True) %}
+        <button class="tab-btn" onclick="switchTab('dosha')">⚠️ দোষ বিশ্লেষণ</button>
+        {% endif %}
+        {% if not user_features or user_features.get('yoga_analysis', True) %}
+        <button class="tab-btn" onclick="switchTab('yoga')">✨ যোগ বিশ্লেষণ</button>
+        {% endif %}
+        {% if not user_features or user_features.get('dasha', True) %}
+        <button class="tab-btn" onclick="switchTab('dasha')">⏳ দশা</button>
+        {% endif %}
+        {% if not user_features or user_features.get('ai_interpretation', True) %}
+        <button class="tab-btn" onclick="switchTab('ai')">🤖 AI বিশ্লেষণ</button>
+        {% endif %}
+        {% if not user_features or user_features.get('tripap_rista', True) %}
+        <button class="tab-btn" onclick="switchTab('tripap')">☠️ ত্ৰিপাপ ৰিষ্ট</button>
+        {% endif %}
+        {% if not user_features or user_features.get('sannari_chakra', True) %}
+        <button class="tab-btn" onclick="switchTab('sannari')">🌀 সন্নাড়ী চক্ৰ</button>
+        {% endif %}
+        {% if not user_features or user_features.get('navatara_chakra', True) %}
+        <button class="tab-btn" onclick="switchTab('navatara')">🌀 নৱতাৰা চক্ৰ</button>
+        {% endif %}
+        {% if not user_features or user_features.get('nakshatra_phala', True) %}
+        <button class="tab-btn" onclick="switchTab('nakshatra_phala')">🌟 নক্ষত্ৰ ফল</button>
+        {% endif %}
+        {% if not user_features or user_features.get('lagna_phala', True) %}
+        <button class="tab-btn" onclick="switchTab('lagna_phala')">🌅 লগ্ন ফল</button>
+        {% endif %}
+        {% if not user_features or user_features.get('rashi_phala', True) %}
+        <button class="tab-btn" onclick="switchTab('rashi_phala')">🌙 ৰাশিফল</button>
+        {% endif %}
+        {% if not user_features or user_features.get('graha_bichar', True) %}
+        <button class="tab-btn" onclick="switchTab('graha_bichar')">🪐 গ্ৰহ বিচাৰ</button>
+        {% endif %}
+    </div>
+
+    <div id="tab-planets" class="tab-content active">
+        <div class="section"><div class="section-body">
+            <table>
+                <thead><tr><th>গ্ৰহ</th><th>ৰাশি</th><th>ডিগ্ৰী</th><th>নক্ষত্ৰ</th><th>নক্ষত্ৰ পতি</th></tr></thead>
+                <tbody>
+                    {% for p in planets %}
+                    <tr><td><b>{{ p.name }}</b></td><td>{{ p.rasi }}</td><td>{{ p.degree }}°</td><td>{{ p.nakshatra }}</td><td>{{ p.lord }}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div></div>
+    </div>
+
+    <div id="tab-charts" class="tab-content">
+        <div class="section"><div class="section-body">
+            <div class="chart-controls">
+                <select id="vargaSelect" onchange="changeVargaChart()">
+                    <option value="D1">D1 - ৰাশি চক্ৰ (Rashi)</option>
+                    <option value="D2">D2 - হোৰা চক্ৰ (Hora)</option>
+                    <option value="D3">D3 - দ্ৰেক্কান চক্ৰ (Drekkana)</option>
+                    <option value="D4">D4 - চতুৰ্থাংশ চক্ৰ (Chaturthamsha)</option>
+                    <option value="D7">D7 - সপ্তমাংশ চক্ৰ (Saptamsha)</option>
+                    <option value="D9" selected>D9 - নৱাংশ চক্ৰ (Navamsha)</option>
+                    <option value="D10">D10 - দশমাংশ চক্ৰ (Dashamsha)</option>
+                    <option value="D12">D12 - দ্বাদশাংশ চক্ৰ (Dwadasamsha)</option>
+                    <option value="D16">D16 - ষোড়শাংশ চক্ৰ (Shodashamsha)</option>
+                    <option value="D20">D20 - বিংশাংশ চক্ৰ (Vimshamsha)</option>
+                    <option value="D24">D24 - চতুৰ্বিংশাংশ চক্ৰ (Chaturvimshamsha)</option>
+                    <option value="D27">D27 - সপ্তবিংশাংশ চক্ৰ (Bhamsha)</option>
+                    <option value="D30">D30 - ত্ৰিংশাংশ চক্ৰ (Trimshamsha)</option>
+                    <option value="D40">D40 - খবেদাংশ চক্ৰ (Khavedamsha)</option>
+                    <option value="D45">D45 - অক্ষবেদাংশ চক্ৰ (Akshavedamsha)</option>
+                    <option value="D60">D60 - ষষ্ট্যাংশ চক্ৰ (Shashtiamsha)</option>
+                </select>
+                <select id="chartStyle" onchange="changeVargaChart()">
+                    <option value="bengali_fixed">বঙালী আৰ্হি (স্থিৰ ৰাশি)</option>
+                    <option value="north_traditional">উত্তৰ ভাৰতীয় আৰ্হি (সংখ্যা)</option>
+                </select>
+            </div>
+            <div class="chart-canvas-wrap">
+                <canvas id="kundliCanvas" width="520" height="520"></canvas>
+            </div>
+        </div></div>
+    </div>
+
+    <div id="tab-panchanga" class="tab-content">
+        <div class="section"><div class="section-body">
+            <div class="panchanga-grid">
+                <div class="panchanga-item"><div class="p-label">তিথি</div><div class="p-value">{{ panchanga.tithi.name }}</div><div class="p-sub">{{ panchanga.paksha }}</div></div>
+                <div class="panchanga-item"><div class="p-label">নক্ষত্ৰ</div><div class="p-value">{{ panchanga.nakshatra.name }}</div><div class="p-sub">পাদ: {{ panchanga.nakshatra.pada }}</div></div>
+                <div class="panchanga-item"><div class="p-label">যোগ</div><div class="p-value">{{ panchanga.yoga.name }}</div></div>
+                <div class="panchanga-item"><div class="p-label">কৰণ</div><div class="p-value">{{ panchanga.karana.name }}</div></div>
+                <div class="panchanga-item"><div class="p-label">বাৰ</div><div class="p-value">{{ panchanga.vaar.name }}</div></div>
+                <div class="panchanga-item"><div class="p-label">ঋতু</div><div class="p-value">{{ panchanga.ritu.name }}</div></div>
+                <div class="panchanga-item"><div class="p-label">অসমীয়া মাহ</div><div class="p-value">{{ panchanga.masa.name }}</div></div>
+                <div class="panchanga-item"><div class="p-label">অয়নাংশ (লাহিড়ী)</div><div class="p-value">{{ panchanga.ayanamsa }}°</div></div>
+                <div class="panchanga-item"><div class="p-label">সূৰ্য্যোদয়</div><div class="p-value">{{ panchanga.sunrise }}</div></div>
+                <div class="panchanga-item"><div class="p-label">সূৰ্য্যাস্ত</div><div class="p-value">{{ panchanga.sunset }}</div></div>
+                <div class="panchanga-item"><div class="p-label">ৰাহুকাল</div><div class="p-value" style="color:#C62828;">{{ panchanga.rahu_kalam }}</div></div>
+                <div class="panchanga-item"><div class="p-label">যমগণ্ড</div><div class="p-value" style="color:#E65100;">{{ panchanga.yama_gandam }}</div></div>
+                <div class="panchanga-item"><div class="p-label">গুলিক কাল</div><div class="p-value" style="color:#6A1B9A;">{{ panchanga.gulika_kalam }}</div></div>
+                <div class="panchanga-item"><div class="p-label">অভিজিৎ মুহূৰ্ত</div><div class="p-value" style="color:#2E7D32;">{{ panchanga.abhijit_muhurta }}</div></div>
+            </div>
+        </div></div>
+    </div>
+
+    <div id="tab-dosha" class="tab-content">
+        <div class="section"><div class="section-body">
+            <div class="dosha-list">
+                {% for d in dosha_results %}
+                <div class="dosha-card {% if not d.present %}safe{% endif %}">
+                    <div class="d-icon">{{ d.info.icon if d.info else '•' }}</div>
+                    <div class="d-content">
+                        <div>
+                            <span class="d-name">{{ d.info.name if d.info else d.key }}</span>
+                            {% if d.present %}
+                            <span class="d-severity {% if d.severity >= 3 %}high{% elif d.severity >= 2 %}medium{% else %}low{% endif %}">{{ d.severity_text }}</span>
+                            {% else %}
+                            <span class="d-severity low">অনুপস্থিত ✅</span>
+                            {% endif %}
+                        </div>
+                        {% if d.present %}
+                        <div class="d-desc">{{ d.info.description[:200] if d.info else '' }}...</div>
+                        {% if d.info and d.info.remedies %}
+                        <details class="d-remedies"><summary>🔧 প্ৰতিকাৰ চাওক</summary><ul>{% for r in d.info.remedies[:3] %}<li>{{ r }}</li>{% endfor %}</ul></details>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div></div>
+    </div>
+
+    <div id="tab-yoga" class="tab-content">
+        <div class="section"><div class="section-body">
+            {% if yoga_results %}
+            <div class="yoga-list">
+                {% for y in yoga_results %}
+                <div class="yoga-card">
+                    <div class="y-icon">{{ y.icon }}</div>
+                    <div class="d-content">
+                        <div><span class="y-name">{{ y.name }}</span><span class="y-category">{{ y.category }}</span></div>
+                        <div class="y-desc">{{ y.description[:250] }}...</div>
+                        <div style="font-size:0.78rem;color:var(--green);margin-top:4px;"><b>ফল:</b> {{ y.effect }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div style="text-align:center;padding:30px;color:var(--text-light);"><span style="font-size:2rem;">🔍</span><p>কোনো বিশেষ যোগ ধৰা পৰা নাই।</p></div>
+            {% endif %}
+        </div></div>
+    </div>
+
+    <div id="tab-dasha" class="tab-content">
+        <div class="section"><div class="section-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <!-- Left: Dasha Tree -->
+                <div>
+                    <h4 style="margin-bottom:10px;color:var(--deep-blue);">⏳ বিংশোত্তৰী দশা তালিকা</h4>
+                    <div class="dasha-tree" id="dashaTree">
+                        {% for md in dasa_data %}
+                        <div class="md-node">
+                            <div class="md-header" onclick="toggleDasha(this)" data-expanded="false" data-maha="{{ md.md_lord }}">
+                                <span class="md-arrow">▶</span>
+                                <span class="md-icon">★</span>
+                                <span class="md-info">
+                                    <strong>{{ md.md_lord }}</strong>
+                                    <span class="md-dates">{{ md.start }} → {{ md.end }}</span>
+                                    <span class="md-years">({{ md.years }} বছৰ)</span>
+                                </span>
+                            </div>
+                            <div class="md-body" style="display:none;">
+                                {% for ad in md.sub_dasas %}
+                                <div class="ad-node">
+                                    <div class="ad-header" onclick="toggleDasha(this);showAntarPrediction(event, '{{ md.md_lord }}', '{{ ad.ad_lord }}')" data-expanded="false" data-maha="{{ md.md_lord }}" data-antar="{{ ad.ad_lord }}">
+                                        <span class="ad-arrow">▶</span>
+                                        <span class="ad-icon">↳</span>
+                                        <span class="ad-info">
+                                            <strong>{{ ad.ad_lord }}</strong>
+                                            <span class="ad-dates">{{ ad.start }} → {{ ad.end }}</span>
+                                        </span>
+                                    </div>
+                                    <div class="ad-body" style="display:none;">
+                                        {% for pd in ad.pratyantar %}
+                                        <div class="pd-row" onclick="showPratPrediction(event, '{{ md.md_lord }}', '{{ ad.ad_lord }}', '{{ pd.lord }}')" style="cursor:pointer;" data-maha="{{ md.md_lord }}" data-antar="{{ ad.ad_lord }}" data-prat="{{ pd.lord }}">
+                                            <span class="pd-icon">•</span>
+                                            <span class="pd-info">
+                                                <span>{{ pd.lord }}</span>
+                                                <span class="pd-dates">{{ pd.start }} → {{ pd.end }}</span>
+                                            </span>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <!-- Right: Prediction Panel -->
+                <div>
+                    <h4 style="margin-bottom:10px;color:var(--orange);">📝 দশা ফলাফল</h4>
+                    <div id="dashaPredictionPanel" style="background:linear-gradient(135deg,#f8f5ff,#fff8f0);border-radius:var(--radius-sm);border:1px solid #e8e0f0;line-height:1.8;font-size:0.85rem;white-space:pre-line;position:relative;">
+                        {% if user_subscription_id == 1 %}
+                        <!-- Free Plan: Show first ~10 lines, then fade + upgrade -->
+                        <div class="dasha-free-wrapper">
+                            <div class="dasha-free-content" style="padding:16px 20px 0 20px;">
+                                {{ current_dasha_prediction }}
+                            </div>
+                            <div class="dasha-free-fade">
+                                <span class="fade-dots">o o o o o o o o o o o o o o o o o o o o</span>
+                            </div>
+                        </div>
+                        <div class="upgrade-overlay" id="dashaUpgradeOverlay">
+                            <div class="lock-icon">🔒</div>
+                            <div class="upgrade-title">দশা ফলাফল সম্পূৰ্ণৰূপে চাবলৈ আপগ্ৰেড কৰক</div>
+                            <div class="upgrade-sub">বিনামূলীয়া প্লেনত দশা ফলাফলৰ স্ক্ৰল সীমিত। সম্পূৰ্ণ ফলাফল পাবলৈ প্ৰিমিয়াম প্লেনলৈ আপগ্ৰেড কৰক।</div>
+                            <button class="btn-upgrade" onclick="openUpgradePlansModal()">💳 Upgrade to Other Plane</button>
+                        </div>
+                        {% else %}
+                        <!-- Paid Plan: Full scrollable content -->
+                        <div style="padding:16px 20px;max-height:550px;overflow-y:auto;">
+                            {{ current_dasha_prediction }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div></div>
+    </div>
+
+    <div id="tab-ai" class="tab-content">
+        <div class="section"><div class="section-body"><div class="ai-content">{{ ai_interpretation }}</div></div></div>
+    </div>
+
+    <div id="tab-tripap" class="tab-content">
+        <div class="section"><div class="section-body">
+            {% if tripap_data %}
+            <div style="margin-bottom:16px;padding:12px 16px;background:linear-gradient(135deg,#fff3e0,#fce4ec);border-radius:8px;border:1px solid #ffcc80;">
+                <b>🌙 চন্দ্ৰৰ নক্ষত্ৰ:</b> {{ tripap_data.nakshatra }} ({{ tripap_data.nakshatra_index }})
+            </div>
+
+            <h4 style="margin-top:20px;color:var(--deep-blue);">📋 সম্পূৰ্ণ ত্ৰিপাপ ৰিষ্ট তালিকা ({{ tripap_data.nakshatra }})</h4>
+            <div style="overflow-x:auto;">
+                <table style="font-size:0.75rem;min-width:900px;">
+                    <thead>
+                        <tr>
+                            <th>শাৰী</th>
+                            <th>বিৱৰণ</th>
+                            {% for h in range(1,13) %}
+                            <th>ঘৰ {{ h }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rk in ['r1','r2','r3','r4','r5','r6','r7','r8','r9','r10','r11','r12','r13','r14','r15'] %}
+                        <tr>
+                            <td><b>{{ rk }}</b></td>
+                            <td>{{ tripap_data.row_labels[rk] }}</td>
+                            {% for val in tripap_data.rows[rk] %}
+                            <td style="{% if tripap_data.row_categories[rk] == 'planet' %}color:#c62828;font-weight:600;{% endif %}">
+                                {% if tripap_data.row_categories[rk] == 'planet' and val in tripap_data.planet_map %}
+                                    {{ tripap_data.planet_map[val] }}
+                                {% else %}
+                                    {{ val }}
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if tripap_ages %}
+            <div style="margin-top:24px;padding:16px 20px;background:linear-gradient(135deg,#fce4ec,#f3e5f5);border-radius:10px;border:2px solid #e91e63;">
+                <h4 style="color:#c62828;margin:0 0 10px 0;font-size:1.1rem;">⏳ ত্ৰিপাপ ৰিষ্ট হবলগীয়া বয়স</h4>
+                <p style="font-size:0.85rem;color:#555;margin-bottom:10px;">{{ tripap_data.nakshatra }} নক্ষত্ৰৰ বাবে তলত দিয়া বয়সসমূহত ত্ৰিপাপ ঋষ্ট হোৱাৰ সম্ভাৱনা থাকে:</p>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                    {% for age in tripap_ages %}
+                    <span style="display:inline-block;padding:6px 14px;background:#c62828;color:#fff;border-radius:20px;font-weight:700;font-size:0.9rem;">{{ age }}</span>
+                    {% endfor %}
+                </div>
+                <p style="font-size:0.75rem;color:#888;margin-top:12px;">মুঠ {{ tripap_ages|length }}টা বয়স • এই বয়সসমূহত সাৱধানতা অৱলম্বন কৰক।</p>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <div style="text-align:center;padding:30px;color:var(--text-light);">
+                <span style="font-size:2rem;">🔍</span>
+                <p>ত্ৰিপাপ ৰিষ্ট তথ্য উপলব্ধ নহয়।</p>
+            </div>
+            {% endif %}
+        </div></div>
+    </div>
+
+    <div id="tab-sannari" class="tab-content">
+        <div class="section"><div class="section-body">
+            {% if sannari_data %}
+            <div style="text-align:center;">
+                <h4 style="color:var(--deep-blue);margin-bottom:12px;">🌀 সন্নাড়ী চক্ৰ — {{ moon_nak_name }} (নক্ষত্ৰ নং {{ sannari_data.nakshatra_number }})</h4>
+                <div style="display:inline-block;max-width:600px;width:100%;">
+                    {{ sannari_svg | safe }}
+                </div>
+                <table style="margin:16px auto;max-width:350px;">
+                    <thead><tr><th>বিভাগ</th><th>নক্ষত্ৰ নং</th></tr></thead>
+                    <tbody>
+                        {% for pos in sannari_data.positions %}
+                        <tr><td><b>{{ pos.label }}</b></td><td>{{ pos.number }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <p style="font-size:0.8rem;color:var(--text-light);margin-top:8px;">
+                    সন্নাড়ী চক্ৰত ৬টা ভাগ থাকে — জন্ম, কৰ্ম, সমুদয়, মানস, সাংঘাতিক আৰু বিনাশ।
+                    জন্ম নক্ষত্ৰৰ পৰা আৰম্ভ কৰি প্ৰত্যেক ভাগৰ নক্ষত্ৰ সংখ্যা গণনা কৰা হয়।
+                </p>
+            </div>
+            {% else %}
+            <div style="text-align:center;padding:30px;color:var(--text-light);">
+                <span style="font-size:2rem;">🔍</span>
+                <p>সন্নাড়ী চক্ৰ তথ্য উপলব্ধ নহয়।</p>
+            </div>
+            {% endif %}
+        </div></div>
+    </div>
+
+    <div id="tab-navatara" class="tab-content">
+        <div class="section"><div class="section-body">
+            {% if navatara_data %}
+            <div style="text-align:center;">
+                <h4 style="color:var(--deep-blue);margin-bottom:12px;">🌀 নৱতাৰা চক্ৰ — {{ navatara_data.nakshatra_name }} (নক্ষত্ৰ নং {{ navatara_data.nakshatra_number }})</h4>
+                <div style="display:inline-block;max-width:700px;width:100%;">
+                    {{ navatara_svg | safe }}
+                </div>
+                <div style="overflow-x:auto;margin-top:12px;">
+                    <table style="font-size:0.78rem;border-collapse:collapse;margin:0 auto;min-width:650px;">
+                        <thead>
+                            <tr>
+                                {% for h in navatara_data.headers %}
+                                <th style="background:var(--deep-blue);color:#fff;padding:6px 8px;border:1px solid #ccc;{% if h in ['বিপদ','প্ৰত্যাৰি','বধ'] %}color:#FFCDD2;{% endif %}">{{ h }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in navatara_data.rows %}
+                            <tr>
+                                {% for cell in row %}
+                                <td style="padding:5px 6px;border:1px solid #ddd;text-align:center;{% if cell.is_red %}color:#C62828;font-weight:700;{% else %}color:#1565C0;font-weight:600;{% endif %}">
+                                    {{ cell.nakshatra_number }}<br><span style="font-size:0.65rem;font-weight:400;">{{ cell.nakshatra_name }}</span>
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top:12px;padding:10px 14px;background:#FFF3E0;border-left:3px solid var(--orange);border-radius:6px;font-size:0.78rem;color:#555;line-height:1.6;text-align:left;">
+                    <p>নৱতাৰা চক্ৰত উল্লেখিত নক্ষত্ৰত গ্ৰহ সঞ্চাৰ হলে শুভ গ্ৰহই হওঁক বা অশুভ গ্ৰহই হওঁক উল্লেখিত নামানুসৰি স্থিতি নক্ষত্ৰ কালত শুভা শুভ ফল সম্পাদিত হব। ৰঙা চিহ্ন থকা নক্ষত্ৰসমুহত জাতকৰ শুভকৰ্ম বৰ্জন কৰিব।</p>
+                </div>
+            </div>
+            {% else %}
+            <div style="text-align:center;padding:30px;color:var(--text-light);">
+                <span style="font-size:2rem;">🔍</span>
+                <p>নৱতাৰা চক্ৰ তথ্য উপলব্ধ নহয়।</p>
+            </div>
+            {% endif %}
+        </div></div>
+    </div>
+
+    <div id="tab-nakshatra_phala" class="tab-content">
+        <div class="section"><div class="section-body">
+            {% if nakshatra_phala_text %}
+            <div style="max-width:800px;margin:0 auto;">
+                <h4 style="color:var(--deep-blue);margin-bottom:16px;text-align:center;">🌟 {{ moon_nak_name }} নক্ষত্ৰৰ ফলাফল</h4>
+                <div style="font-size:0.9rem;line-height:2;text-align:justify;color:var(--text);white-space:pre-line;">
+                    {{ nakshatra_phala_text }}
+                </div>
+            </div>
+            {% else %}
+            <div style="text-align:center;padding:30px;color:var(--text-light);">
+                <span style="font-size:2rem;">🔍</span>
+                <p>নক্ষত্ৰ ফলাফল উপলব্ধ নহয়।</p>
+            </div>
+            {% endif %}
+        </div></div>
+    </div>
+
+    <div id="tab-lagna_phala" class="tab-content">
+        <div class="section"><div class="section-body">
+            {% if lagna_phala_text %}
+            <div style="max-width:800px;margin:0 auto;">
+                <h4 style="color:var(--deep-blue);margin-bottom:16px;text-align:center;">🌅 {{ asc_rasi }} লগ্নৰ ফলাফল</h4>
+                <div style="font-size:0.9rem;line-height:2;text-align:justify;color:var(--text);white-space:pre-line;">
+                    {{ lagna_phala_text }}
+                </div>
+            </div>
+            {% else %}
+            <div style="text-align:center;padding:30px;color:var(--text-light);">
+                <span style="font-size:2rem;">🔍</span>
+                <p>লগ্ন ফলাফল উপলব্ধ নহয়।</p>
+            </div>
+            {% endif %}
+        </div></div>
+    </div>
+
+    <div id="tab-rashi_phala" class="tab-content">
+        <div class="section"><div class="section-body">
+            {% if rashi_phala_text %}
+            <div style="max-width:800px;margin:0 auto;">
+                <h4 style="color:var(--deep-blue);margin-bottom:16px;text-align:center;">🌙 {{ moon_rasi }} ৰাশিফল (চন্দ্ৰ ৰাশি)</h4>
+                <div style="font-size:0.9rem;line-height:2;text-align:justify;color:var(--text);white-space:pre-line;">
+                    {{ rashi_phala_text }}
+                </div>
+            </div>
+            {% else %}
+            <div style="text-align:center;padding:30px;color:var(--text-light);">
+                <span style="font-size:2rem;">🔍</span>
+                <p>ৰাশিফল উপলব্ধ নহয়।</p>
+            </div>
+            {% endif %}
+        </div></div>
+    </div>
+
+    <div id="tab-graha_bichar" class="tab-content">
+        <div class="section"><div class="section-body">
+            {% if graha_bichar_html %}
+            <div style="max-width:900px;margin:0 auto;">
+                <h4 style="color:var(--deep-blue);margin-bottom:16px;text-align:center;">🪐 সকলো গ্ৰহৰ বিচাৰ (ভাব অনুসৰি)</h4>
+                {{ graha_bichar_html | safe }}
+            </div>
+            {% else %}
+            <div style="text-align:center;padding:30px;color:var(--text-light);">
+                <span style="font-size:2rem;">🔍</span>
+                <p>গ্ৰহ বিচাৰ উপলব্ধ নহয়।</p>
+            </div>
+            {% endif %}
+        </div></div>
+    </div>
+
+</div>
+
+<!-- ─── Custom PDF Modal ─── -->
+<div class="modal-overlay" id="customPdfModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3>⚙️ নিজৰ মতে PDF সৃষ্টি কৰক</h3>
+            <button class="modal-close" onclick="closeCustomPdfModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="customPdfForm" action="/custom-pdf" method="POST">
+                <input type="hidden" name="name" value="{{ user_name }}">
+                <input type="hidden" name="dob" value="{{ user_dob }}">
+                <input type="hidden" name="tob" value="{{ user_tob }}">
+                <input type="hidden" name="place" value="{{ user_place }}">
+                <input type="hidden" name="gender" value="{{ gender }}">
+                <input type="hidden" name="lat" value="{{ lat }}">
+                <input type="hidden" name="lon" value="{{ lon }}">
+                <input type="hidden" name="timezone" value="{{ timezone }}">
+
+                <h4>📊 গ্ৰহ তথ্য</h4>
+                <div class="select-all-row">
+                    <button type="button" onclick="toggleGroup('group-planets', true)">সকলো বাছক</button>
+                    <button type="button" onclick="toggleGroup('group-planets', false)">সকলো বাদ দিয়ক</button>
+                </div>
+                <div class="cb-row"><input type="checkbox" class="group-planets" name="sections" value="planets_table" id="sec_planets_table" checked><label for="sec_planets_table">গ্ৰহ তালিকা</label></div>
+                <div class="cb-row"><input type="checkbox" class="group-planets" name="sections" value="kundli_chart" id="sec_kundli_chart" checked><label for="sec_kundli_chart">কুণ্ডলী চক্ৰ (D1)</label></div>
+                <div class="cb-row"><input type="checkbox" class="group-planets" name="sections" value="varga_charts" id="sec_varga_charts" checked><label for="sec_varga_charts">ষোড়শবৰ্গ কুণ্ডলী (D2-D60)</label></div>
+
+                <h4>🕉️ পঞ্চাঙ্গ</h4>
+                <div class="select-all-row">
+                    <button type="button" onclick="toggleGroup('group-panchanga', true)">সকলো বাছক</button>
+                    <button type="button" onclick="toggleGroup('group-panchanga', false)">সকলো বাদ দিয়ক</button>
+                </div>
+                <div class="cb-row"><input type="checkbox" class="group-panchanga" name="sections" value="panchanga" id="sec_panchanga" checked><label for="sec_panchanga">পঞ্চাঙ্গ</label></div>
+
+                <h4>⚠️ দোষ বিশ্লেষণ</h4>
+                <div class="cb-row"><input type="checkbox" name="sections" value="dosha" id="sec_dosha" checked><label for="sec_dosha">দোষ বিশ্লেষণ</label></div>
+
+                <h4>✨ যোগ বিশ্লেষণ</h4>
+                <div class="cb-row"><input type="checkbox" name="sections" value="yoga" id="sec_yoga" checked><label for="sec_yoga">যোগ বিশ্লেষণ</label></div>
+
+                <h4>🌀 চক্ৰ</h4>
+                <div class="cb-row"><input type="checkbox" name="sections" value="sannari" id="sec_sannari" checked><label for="sec_sannari">সন্নাড়ী চক্ৰ</label></div>
+                <div class="cb-row"><input type="checkbox" name="sections" value="navatara" id="sec_navatara" checked><label for="sec_navatara">নৱতাৰা চক্ৰ</label></div>
+
+                <h4>☠️ ত্ৰিপাপ ৰিষ্ট</h4>
+                <div class="cb-row"><input type="checkbox" name="sections" value="tripap" id="sec_tripap" checked><label for="sec_tripap">ত্ৰিপাপ ৰিষ্ট বিশ্লেষণ</label></div>
+
+                <h4>🌟 নক্ষত্ৰ ফল</h4>
+                <div class="cb-row"><input type="checkbox" name="sections" value="nakshatra_phala" id="sec_nakshatra_phala" checked><label for="sec_nakshatra_phala">নক্ষত্ৰ ফলাফল</label></div>
+
+                <h4>🌅 লগ্ন ফল</h4>
+                <div class="cb-row"><input type="checkbox" name="sections" value="lagna_phala" id="sec_lagna_phala" checked><label for="sec_lagna_phala">লগ্ন ফলাফল</label></div>
+
+                <h4>🌙 ৰাশিফল</h4>
+                <div class="cb-row"><input type="checkbox" name="sections" value="rashi_phala" id="sec_rashi_phala" checked><label for="sec_rashi_phala">ৰাশিফল (চন্দ্ৰ ৰাশি)</label></div>
+
+                <h4>🪐 গ্ৰহ বিচাৰ</h4>
+                <div class="cb-row"><input type="checkbox" name="sections" value="graha_bichar" id="sec_graha_bichar" checked><label for="sec_graha_bichar">গ্ৰহ বিচাৰ (ভাব অনুসৰি)</label></div>
+
+                <h4>⏳ দশা</h4>
+                <div class="cb-row"><input type="checkbox" name="sections" value="dasha_summary" id="sec_dasha_summary" checked><label for="sec_dasha_summary">দশা সাৰাংশ</label></div>
+                <div class="cb-row"><input type="checkbox" name="sections" value="dasha_full" id="sec_dasha_full" checked><label for="sec_dasha_full">সম্পূৰ্ণ মহাদশা-অন্তৰ্দশা তালিকা</label></div>
+                <div class="cb-row"><input type="checkbox" name="sections" value="dasha_predictions" id="sec_dasha_predictions" checked><label for="sec_dasha_predictions">মহাদশা-অন্তৰ্দশাৰ ফলাফল</label></div>
+                <div class="dasha-select-row">
+                    <label for="dasha_limit" style="font-size:0.85rem;">অন্তৰ্দশাৰ সীমা:</label>
+                    <select name="dasha_limit" id="dasha_limit">
+                        <option value="0">সকলো (৮১)</option>
+                        <optgroup label="── প্ৰথম কেইটামান লওক ──">
+                            <option value="9">প্ৰথম ৯</option>
+                            <option value="18">প্ৰথম ১৮</option>
+                            <option value="27">প্ৰথম ২৭</option>
+                            <option value="36">প্ৰথম ৩৬</option>
+                            <option value="45">প্ৰথম ৪৫</option>
+                            <option value="54">প্ৰথম ৫৪</option>
+                            <option value="63">প্ৰথম ৬৩</option>
+                            <option value="72">প্ৰথম ৭২</option>
+                        </optgroup>
+                        <optgroup label="── প্ৰথম কেইটামান বাদ দিয়ক ──">
+                            <option value="s9">প্ৰথম ৯ বাতিল (১০-৮১)</option>
+                            <option value="s18">প্ৰথম ১৮ বাতিল (১৯-৮১)</option>
+                            <option value="s27">প্ৰথম ২৭ বাতিল (২৮-৮১)</option>
+                            <option value="s36">প্ৰথম ৩৬ বাতিল (৩৭-৮১)</option>
+                            <option value="s45">প্ৰথম ৪৫ বাতিল (৪৬-৮১)</option>
+                            <option value="s54">প্ৰথম ৫৪ বাতিল (৫৫-৮১)</option>
+                            <option value="s63">প্ৰথম ৬৩ বাতিল (৬৪-৮১)</option>
+                            <option value="s72">প্ৰথম ৭২ বাতিল (৭৩-৮১)</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <h4>🤖 AI বিশ্লেষণ</h4>
+                <div class="cb-row"><input type="checkbox" name="sections" value="ai" id="sec_ai" checked><label for="sec_ai">AI বিশ্লেষণ আৰু পৰামৰ্শ</label></div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-modal-cancel" onclick="closeCustomPdfModal()">বাতিল</button>
+            <button class="btn-modal btn-modal-generate" id="btnGeneratePdf" onclick="generateCustomPdf()">📥 PDF সৃষ্টি কৰক</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const allVargasData = {{ all_vargas | tojson }};
+    const ascRasiIndex = {{ asc_rasi_index }};
+    const rasiNames = ["মেষ", "বৃষ", "মিথুন", "কৰ্কট", "সিংহ", "কন্যা", "তুলা", "বৃশ্চিক", "ধনু", "মকৰ", "কুম্ভ", "মীন"];
+
+    // Dasha prediction API data
+    const userDob = "{{ user_dob }}";
+    const userTob = "{{ user_tob }}";
+    const userPlace = "{{ user_place }}";
+    const userSubscriptionId = {{ user_subscription_id }};
+    const allDashaPredictions = {{ all_dasha_predictions | tojson }};
+    const housePositions = [
+        { cx: 260, cy: 148, offsetXP: -22, offsetYP: 22, offsetXR: 0, offsetYR: -12 }, { cx: 130, cy: 68,  offsetXP: -15, offsetYP: 28, offsetXR: 0, offsetYR: -12 },
+        { cx: 68,  cy: 130, offsetXP: -15, offsetYP: 28, offsetXR: -15, offsetYR: -12 }, { cx: 148, cy: 260, offsetXP: -22, offsetYP: 22, offsetXR: -6, offsetYR: -12 },
+        { cx: 68,  cy: 390, offsetXP: -15, offsetYP: 28, offsetXR: -15, offsetYR: -12 }, { cx: 130, cy: 452, offsetXP: -15, offsetYP: 28, offsetXR: 0, offsetYR: -12 },
+        { cx: 260, cy: 372, offsetXP: -22, offsetYP: 22, offsetXR: 0, offsetYR: -12 }, { cx: 390, cy: 452, offsetXP: -15, offsetYP: 28, offsetXR: 0, offsetYR: -12 },
+        { cx: 452, cy: 390, offsetXP: -15, offsetYP: 28, offsetXR: 15, offsetYR: -12 }, { cx: 372, cy: 260, offsetXP: -22, offsetYP: 22, offsetXR: 6, offsetYR: -12 },
+        { cx: 452, cy: 130, offsetXP: -15, offsetYP: 28, offsetXR: 15, offsetYR: -12 }, { cx: 390, cy: 68,  offsetXP: -15, offsetYP: 28, offsetXR: 0, offsetYR: -12 }
+    ];
+
+    function changeVargaChart() {
+        const canvas = document.getElementById('kundliCanvas'); const ctx = canvas.getContext('2d');
+        const selectedVarga = document.getElementById('vargaSelect').value; const style = document.getElementById('chartStyle').value;
+        const chartData = allVargasData[selectedVarga] || {};
+        const S = 520;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.font = "bold 14px 'Noto Sans Bengali', Arial"; ctx.lineWidth = 2; ctx.strokeStyle = "#2c3e50";
+        ctx.strokeRect(0, 0, S, S);
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(S, S); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(S, 0); ctx.lineTo(0, S); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(S/2, 0); ctx.lineTo(S, S/2); ctx.lineTo(S/2, S); ctx.lineTo(0, S/2); ctx.closePath(); ctx.stroke();
+        for (let i = 0; i < 12; i++) {
+            let h = housePositions[i];
+            if (style === "north_traditional") {
+                let currentRasiIdx = (ascRasiIndex + i) % 12;
+                ctx.fillStyle = "#e74c3c"; ctx.font = "bold 13px 'Noto Sans Bengali', Arial";
+                ctx.fillText(currentRasiIdx + 1, h.cx + h.offsetXR, h.cx === S/2 ? h.cy - 12 : h.cy);
+                if (chartData[currentRasiIdx]) {
+                    ctx.fillStyle = "#1a237e"; ctx.font = "bold 15px 'Noto Sans Bengali', Arial";
+                    let planets = chartData[currentRasiIdx];
+                    let startY = h.cy + h.offsetYP;
+                    let spacing = Math.min(18, Math.floor(60 / Math.max(planets.length, 1)));
+                    planets.forEach((p, pIdx) => { ctx.fillText(p, h.cx + h.offsetXP, startY + (pIdx * spacing)); });
+                }
+            } else {
+                ctx.fillStyle = "#7f8c8d"; ctx.font = "bold 12px 'Noto Sans Bengali', Arial";
+                ctx.fillText(rasiNames[i], h.cx + h.offsetXR, h.cx === S/2 ? h.cy - 12 : h.cy);
+                if (chartData[i]) {
+                    ctx.fillStyle = "#1a237e"; ctx.font = "bold 15px 'Noto Sans Bengali', Arial";
+                    let planets = chartData[i];
+                    let startY = h.cy + h.offsetYP;
+                    let spacing = Math.min(18, Math.floor(60 / Math.max(planets.length, 1)));
+                    planets.forEach((p, pIdx) => { ctx.fillText(p, h.cx + h.offsetXP, startY + (pIdx * spacing)); });
+                }
+            }
+        }
+    }
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + tabName).classList.add('active');
+        event.target.classList.add('active');
+        if (tabName === 'charts') setTimeout(changeVargaChart, 100);
+    }
+
+    function toggleDasha(el) {
+        const expanded = el.getAttribute('data-expanded') === 'true';
+        const body = el.nextElementSibling;
+        if (expanded) {
+            body.style.display = 'none';
+            el.setAttribute('data-expanded', 'false');
+            el.classList.remove('expanded');
+        } else {
+            body.style.display = 'block';
+            el.setAttribute('data-expanded', 'true');
+            el.classList.add('expanded');
+        }
+    }
+
+    // Show antardasha prediction when clicking on antardasha header
+    function showAntarPrediction(event, mahaLord, antarLord) {
+        event.stopPropagation();
+        // First try local data
+        const pred = findLocalPrediction(mahaLord, antarLord, '');
+        if (pred) {
+            updateDashaPanelContent(pred);
+            return;
+        }
+        // Fallback to API
+        fetchDashaPrediction(mahaLord, antarLord, '');
+    }
+
+    // Show pratyantardasha prediction when clicking on pratyantar row
+    function showPratPrediction(event, mahaLord, antarLord, pratLord) {
+        event.stopPropagation();
+        fetchDashaPrediction(mahaLord, antarLord, pratLord);
+    }
+
+    // Update dasha panel content while preserving Free plan overlay
+    function updateDashaPanelContent(text) {
+        if (userSubscriptionId === 1) {
+            // Free plan: update only the content div, keep overlay
+            const contentDiv = document.querySelector('.dasha-free-content');
+            if (contentDiv) {
+                contentDiv.textContent = text;
+            }
+        } else {
+            // Paid plan: update the scrollable div
+            const panel = document.getElementById('dashaPredictionPanel');
+            const scrollDiv = panel.querySelector('div[style]');
+            if (scrollDiv) {
+                scrollDiv.textContent = text;
+            } else {
+                panel.textContent = text;
+            }
+        }
+    }
+
+    function findLocalPrediction(mahaLord, antarLord, pratLord) {
+        // Search in all_dasha_predictions
+        for (const p of allDashaPredictions) {
+            if (p.maha_lord === mahaLord && p.antar_lord === antarLord) {
+                return p.prediction;
+            }
+        }
+        return null;
+    }
+
+    function fetchDashaPrediction(mahaLord, antarLord, pratLord) {
+        if (userSubscriptionId === 1) {
+            // Free plan: show loading inside content div, keep overlay
+            const contentDiv = document.querySelector('.dasha-free-content');
+            if (contentDiv) {
+                contentDiv.innerHTML = '<div style="text-align:center;padding:20px;color:var(--orange);">⏳ গণনা কৰি আছে...</div>';
+            }
+        } else {
+            const panel = document.getElementById('dashaPredictionPanel');
+            panel.innerHTML = '<div style="text-align:center;padding:20px;color:var(--orange);">⏳ গণনা কৰি আছে...</div>';
+        }
+
+        fetch('/api/dasha-prediction', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                maha: mahaLord,
+                antar: antarLord,
+                prat: pratLord,
+                dob: userDob,
+                tob: userTob,
+                place: userPlace
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.prediction) {
+                updateDashaPanelContent(data.prediction);
+            } else {
+                updateDashaPanelContent('ফলাফল উপলব্ধ নহয়।');
+            }
+        })
+        .catch(err => {
+            updateDashaPanelContent('ফলাফল আনিবলৈ সমস্যা হৈছে। পুনৰ চেষ্টা কৰক।');
+            console.error(err);
+        });
+    }
+
+    // Highlight active dasha row
+    document.addEventListener('click', function(e) {
+        // Remove previous highlights
+        document.querySelectorAll('.pd-row.active, .ad-header.active').forEach(el => el.classList.remove('active'));
+        // Add highlight to clicked element
+        const pdRow = e.target.closest('.pd-row');
+        const adHeader = e.target.closest('.ad-header');
+        if (pdRow) pdRow.classList.add('active');
+        if (adHeader) adHeader.classList.add('active');
+    });
+
+    window.onload = function() { setTimeout(changeVargaChart, 200); };
+
+    // ─── Custom PDF Modal Functions ───
+    function openCustomPdfModal() {
+        document.getElementById('customPdfModal').classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeCustomPdfModal() {
+        document.getElementById('customPdfModal').classList.remove('show');
+        document.body.style.overflow = '';
+    }
+    // Close modal when clicking outside
+    document.getElementById('customPdfModal').addEventListener('click', function(e) {
+        if (e.target === this) closeCustomPdfModal();
+    });
+
+    function toggleGroup(groupClass, selectAll) {
+        document.querySelectorAll('.' + groupClass).forEach(cb => { cb.checked = selectAll; });
+    }
+
+    function generateCustomPdf() {
+        const btn = document.getElementById('btnGeneratePdf');
+        btn.disabled = true;
+        btn.textContent = '⏳ সৃষ্টি কৰি আছে...';
+
+        const form = document.getElementById('customPdfForm');
+        const formData = new FormData(form);
+
+        fetch('/custom-pdf', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('PDF creation failed');
+            return response.blob();
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Dhruvatara_AI_Custom.pdf';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+            btn.disabled = false;
+            btn.textContent = '📥 PDF সৃষ্টি কৰক';
+            closeCustomPdfModal();
+        })
+        .catch(err => {
+            alert('PDF সৃষ্টি কৰাত সমস্যা হৈছে। পুনৰ চেষ্টা কৰক।');
+            console.error(err);
+            btn.disabled = false;
+            btn.textContent = '📥 PDF সৃষ্টি কৰক';
+        });
+    }
+
+    // ─── Save Kundli ───
+    function saveKundli() {
+        const formData = new FormData();
+        formData.append('name', '{{ user_name }}');
+        formData.append('dob', '{{ user_dob }}');
+        formData.append('tob', '{{ user_tob }}');
+        formData.append('place', '{{ user_place }}');
+        formData.append('gender', '{{ gender }}');
+        formData.append('lat', '{{ lat }}');
+        formData.append('lon', '{{ lon }}');
+        formData.append('timezone', '{{ timezone }}');
+
+        fetch('/api/save-kundli', {
+            method: 'POST',
+            body: formData
+        })
+        .then(r => r.json())
+        .then(data => {
+            alert(data.message);
+        })
+        .catch(err => {
+            alert('সংৰক্ষণ কৰাত সমস্যা হৈছে।');
+            console.error(err);
+        });
+    }
+
+    // ─── Upgrade Plans Modal ───
+    function openUpgradePlansModal() {
+        document.getElementById('upgradePlansModal').classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeUpgradePlansModal() {
+        document.getElementById('upgradePlansModal').classList.remove('show');
+        document.body.style.overflow = '';
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        const upgradeModal = document.getElementById('upgradePlansModal');
+        if (upgradeModal) {
+            upgradeModal.addEventListener('click', function(e) {
+                if (e.target === this) closeUpgradePlansModal();
+            });
+        }
+    });
+</script>
+
+<!-- ─── Upgrade Plans Modal ─── -->
+<div class="modal-overlay" id="upgradePlansModal">
+    <div class="modal-box" style="max-width:750px;">
+        <div class="modal-header">
+            <h3>💳 চাবস্ক্ৰিপশ্যন প্লেনসমূহ</h3>
+            <button class="modal-close" onclick="closeUpgradePlansModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:12px;">
+                আপোনাৰ বৰ্তমানৰ প্লেন: <strong style="color:var(--deep-blue);">{{ user_subscription_name }}</strong>।
+                উন্নত সুবিধাৰ বাবে তলৰ প্লেনসমূহৰ পৰা আপগ্ৰেড কৰক।
+            </p>
+            <div class="plan-cards">
+                {% for sub in all_subscriptions %}
+                <div class="plan-card {% if sub.id == user_subscription_id %}current{% endif %}">
+                    <div class="plan-name">{{ sub.name_asm }}</div>
+                    <div class="plan-price">₹{{ sub.price }}</div>
+                    <div class="plan-duration">{{ sub.duration_days }} দিনৰ বাবে</div>
+                    <div class="plan-desc">{{ sub.description }}</div>
+                    {% if sub.id == user_subscription_id %}
+                    <span class="plan-current-badge">✅ বৰ্তমানৰ প্লেন</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            <p style="font-size:0.75rem;color:var(--text-light);margin-top:16px;text-align:center;">
+                আপগ্ৰেড কৰিবলৈ এডমিনৰ সৈতে যোগাযোগ কৰক। 📧
+            </p>
+            {% if plans_images %}
+            <div style="text-align:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+                {% for img in plans_images %}
+                <img src="/api/images/{{ img.id }}" alt="{{ img.alt_text }}" style="width:{{ img.width }}px;height:{{ img.height }}px;object-fit:contain;margin:4px 8px;border-radius:6px;display:inline-block;">
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-modal-cancel" onclick="closeUpgradePlansModal()">বন্ধ কৰক</button>
+        </div>
+    </div>
+</div>
+
+<div style="text-align:center;padding:16px;background:white;border-top:1px solid var(--border);margin-top:20px;">
+    {% for img in all_footer_images %}
+    <img src="/api/images/{{ img.id }}" alt="{{ img.alt_text }}" style="width:{{ img.width }}px;height:{{ img.height }}px;object-fit:contain;margin:4px 8px;border-radius:4px;display:inline-block;">
+    {% endfor %}
+</div>
+
+</body>
+</html>

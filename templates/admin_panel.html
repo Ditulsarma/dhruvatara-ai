@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="as">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>এডমিন পেনেল | ধ্ৰুৱতৰা AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --orange: #FF6600; --orange-dark: #E55D00; --deep-blue: #1a237e;
+            --gold: #D4A017; --bg: #FFF8F0; --card-bg: #FFFFFF;
+            --text: #2c3e50; --text-light: #5a6c7d; --border: #e8e0d5;
+            --shadow: 0 4px 20px rgba(0,0,0,0.06); --radius: 14px; --radius-sm: 8px;
+            --green: #2E7D32; --red: #C62828; --purple: #6A1B9A;
+            --transition: 0.25s ease;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans Bengali', 'Arial', sans-serif;
+            background: #f5f5f5; min-height: 100vh; color: var(--text);
+        }
+
+        /* Sidebar */
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar {
+            width: 260px; background: linear-gradient(180deg, var(--deep-blue), #0d1642);
+            color: white; padding: 20px 0; position: fixed; top: 0; left: 0;
+            bottom: 0; overflow-y: auto; z-index: 100;
+        }
+        .sidebar .brand {
+            padding: 0 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 16px;
+        }
+        .sidebar .brand h2 { font-size: 1.2rem; font-weight: 800; color: var(--orange); }
+        .sidebar .brand p { font-size: 0.7rem; color: rgba(255,255,255,0.6); margin-top: 2px; }
+        .sidebar .nav-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 20px; color: rgba(255,255,255,0.7);
+            text-decoration: none; font-size: 0.88rem; font-weight: 500;
+            transition: var(--transition); cursor: pointer; border: none;
+            background: none; width: 100%; text-align: left; font-family: inherit;
+        }
+        .sidebar .nav-item:hover, .sidebar .nav-item.active {
+            background: rgba(255,255,255,0.08); color: white;
+            border-left: 3px solid var(--orange);
+        }
+        .sidebar .nav-item .icon { font-size: 1.1rem; width: 24px; text-align: center; }
+
+        /* Main */
+        .main {
+            margin-left: 260px; flex: 1; padding: 24px;
+        }
+        .topbar {
+            background: white; border-radius: var(--radius); padding: 16px 24px;
+            box-shadow: var(--shadow); display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 24px;
+        }
+        .topbar h1 { font-size: 1.3rem; color: var(--deep-blue); }
+        .topbar .user-info { display: flex; align-items: center; gap: 12px; }
+        .topbar .badge {
+            background: var(--orange); color: white; padding: 4px 12px;
+            border-radius: 20px; font-size: 0.75rem; font-weight: 600;
+        }
+        .btn {
+            padding: 8px 18px; border-radius: 20px; font-size: 0.85rem;
+            font-weight: 600; font-family: inherit; cursor: pointer;
+            border: none; transition: var(--transition); text-decoration: none;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-sm { padding: 5px 12px; font-size: 0.75rem; }
+        .btn-primary { background: var(--orange); color: white; }
+        .btn-primary:hover { background: var(--orange-dark); }
+        .btn-danger { background: var(--red); color: white; }
+        .btn-danger:hover { background: #B71C1C; }
+        .btn-success { background: var(--green); color: white; }
+        .btn-success:hover { background: #1B5E20; }
+        .btn-outline { background: white; color: var(--orange); border: 2px solid var(--orange); }
+        .btn-outline:hover { background: var(--orange); color: white; }
+
+        .card {
+            background: white; border-radius: var(--radius);
+            box-shadow: var(--shadow); padding: 24px; margin-bottom: 20px;
+        }
+        .card h3 { font-size: 1.1rem; color: var(--deep-blue); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f8f5f0; font-weight: 700; color: var(--deep-blue); font-size: 0.78rem; text-transform: uppercase; }
+        tr:hover { background: #fff8f0; }
+
+        .status-badge {
+            display: inline-block; padding: 3px 10px; border-radius: 12px;
+            font-size: 0.72rem; font-weight: 600;
+        }
+        .status-active { background: #C8E6C9; color: var(--green); }
+        .status-inactive { background: #FFCDD2; color: var(--red); }
+        .status-pending { background: #FFE0B2; color: #E65100; }
+
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal {
+            background: white; border-radius: var(--radius); padding: 28px;
+            max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        .modal h3 { margin-bottom: 16px; color: var(--deep-blue); }
+        .modal .close-btn {
+            float: right; background: none; border: none; font-size: 1.5rem;
+            cursor: pointer; color: var(--text-light);
+        }
+
+        .feature-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 10px;
+        }
+        .feature-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 14px; background: #fafafa; border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+        .feature-item .f-name { font-weight: 600; font-size: 0.85rem; }
+        .feature-item .f-cat { font-size: 0.7rem; color: var(--text-light); }
+
+        .toggle-switch {
+            position: relative; width: 44px; height: 24px; display: inline-block;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background: #ccc; border-radius: 24px; transition: var(--transition);
+        }
+        .toggle-slider::before {
+            content: ''; position: absolute; height: 18px; width: 18px;
+            left: 3px; bottom: 3px; background: white; border-radius: 50%;
+            transition: var(--transition);
+        }
+        input:checked + .toggle-slider { background: var(--green); }
+        input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card {
+            background: white; border-radius: var(--radius); padding: 20px;
+            box-shadow: var(--shadow); text-align: center;
+        }
+        .stat-card .stat-num { font-size: 2rem; font-weight: 800; color: var(--orange); }
+        .stat-card .stat-label { font-size: 0.8rem; color: var(--text-light); margin-top: 4px; }
+
+        .alert {
+            padding: 10px 14px; border-radius: var(--radius-sm); margin-bottom: 16px;
+            font-size: 0.85rem; font-weight: 500;
+        }
+        .alert-error { background: #FFEBEE; color: var(--red); border: 1px solid #FFCDD2; }
+        .alert-success { background: #E8F5E9; color: var(--green); border: 1px solid #C8E6C9; }
+
+        .search-box {
+            width: 100%; padding: 10px 14px; border: 2px solid var(--border);
+            border-radius: var(--radius-sm); font-size: 0.9rem; font-family: inherit;
+            margin-bottom: 16px; outline: none;
+        }
+        .search-box:focus { border-color: var(--orange); }
+
+        .section { display: none; }
+        .section.active { display: block; }
+
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-weight: 600; font-size: 0.82rem; color: var(--text); margin-bottom: 4px; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 8px 12px; border: 2px solid var(--border);
+            border-radius: 6px; font-size: 0.88rem; font-family: inherit;
+            background: #FAFAFA; transition: var(--transition); outline: none;
+        }
+        .form-group input:focus, .form-group select:focus { border-color: var(--orange); background: #FFF; }
+    </style>
+</head>
+<body>
+<div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="brand">
+            <h2>🌟 ধ্ৰুৱতৰা AI</h2>
+            <p>এডমিন পেনেল</p>
+        </div>
+        <button class="nav-item active" onclick="showSection('dashboard')">
+            <span class="icon">📊</span> ডেশ্ববৰ্ড
+        </button>
+        <button class="nav-item" onclick="showSection('users')">
+            <span class="icon">👥</span> ব্যৱহাৰকাৰীসকল
+        </button>
+        <button class="nav-item" onclick="showSection('subscriptions')">
+            <span class="icon">💳</span> চাবস্ক্ৰিপশ্যন
+        </button>
+        <button class="nav-item" onclick="showSection('features')">
+            <span class="icon">⚙️</span> ফিচাৰ ব্যৱস্থাপনা
+        </button>
+        <button class="nav-item" onclick="showSection('images')">
+            <span class="icon">🖼️</span> ফটো ব্যৱস্থাপনা
+        </button>
+        <a href="/admin/logout" class="nav-item">
+            <span class="icon">🚪</span> লগআউট
+        </a>
+        <!-- Sidebar Images -->
+        {% if sidebar_images %}
+        <div style="padding:12px 16px;margin-top:8px;">
+            {% for img in sidebar_images %}
+            <div style="text-align:center;margin-bottom:8px;">
+                <img src="/api/images/{{ img.id }}" alt="{{ img.alt_text }}" style="width:{{ img.width }}px;height:{{ img.height }}px;object-fit:contain;border-radius:6px;max-width:100%;">
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="topbar">
+            <h1 id="pageTitle">📊 ডেশ্ববৰ্ড</h1>
+            <div class="user-info">
+                <span>👑 {{ admin_username }}</span>
+                <span class="badge">এডমিন</span>
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ 'error' if category == 'error' else 'success' }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <!-- Dashboard -->
+        <div id="section-dashboard" class="section active">
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-num">{{ total_users }}</div>
+                    <div class="stat-label">মুঠ ব্যৱহাৰকাৰী</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num">{{ active_users }}</div>
+                    <div class="stat-label">সক্ৰিয় ব্যৱহাৰকাৰী</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num">{{ pending_users }}</div>
+                    <div class="stat-label">অপেক্ষাৰত</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num">{{ total_subs }}</div>
+                    <div class="stat-label">চাবস্ক্ৰিপশ্যন প্লেন</div>
+                </div>
+            </div>
+
+            <!-- User Access Mode Setting -->
+            <div class="card" style="margin-bottom:20px;">
+                <h3>⚙️ ব্যৱহাৰকাৰী এক্সেছ মোড</h3>
+                <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:12px;">
+                    নতুন ব্যৱহাৰকাৰীয়ে পঞ্জীয়নৰ পিছত চিধাই লগইন কৰিব পাৰিব নে এডমিনৰ অনুমোদনৰ প্ৰয়োজন হ'ব তাক নিৰ্বাচন কৰক।
+                </p>
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                    <select id="userAccessMode" onchange="updateAccessMode()" style="padding:10px 16px;border:2px solid var(--border);border-radius:8px;font-size:0.9rem;font-family:inherit;background:white;cursor:pointer;min-width:280px;">
+                        <option value="admin_approval" {% if user_auto_activate == 'admin_approval' %}selected{% endif %}>
+                            🔒 এডমিনৰ অনুমোদনৰ প্ৰয়োজন (Admin Approval Required)
+                        </option>
+                        <option value="direct" {% if user_auto_activate == 'direct' %}selected{% endif %}>
+                            ✅ চিধাই প্ৰৱেশ (Direct Entry - Auto Activate)
+                        </option>
+                    </select>
+                    <span id="accessModeStatus" style="font-size:0.8rem;font-weight:600;padding:4px 12px;border-radius:12px;">
+                        {% if user_auto_activate == 'direct' %}
+                        <span style="color:var(--green);">✅ চিধাই প্ৰৱেশ সক্ৰিয়</span>
+                        {% else %}
+                        <span style="color:var(--red);">🔒 এডমিন অনুমোদন প্ৰয়োজন</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <p style="font-size:0.75rem;color:var(--text-light);margin-top:8px;">
+                    {% if user_auto_activate == 'direct' %}
+                    বৰ্তমান: নতুন ব্যৱহাৰকাৰীয়ে পঞ্জীয়নৰ পিছত চিধাই লগইন কৰি সকলো সুবিধা ব্যৱহাৰ কৰিব পাৰিব।
+                    {% else %}
+                    বৰ্তমান: নতুন ব্যৱহাৰকাৰীয়ে পঞ্জীয়নৰ পিছত এডমিনে সক্ৰিয় নকৰালৈকে লগইন কৰিব নোৱাৰিব।
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="card">
+                <h3>📋 শেহতীয়া ব্যৱহাৰকাৰী</h3>
+                <table>
+                    <thead>
+                        <tr><th>নাম</th><th>ইমেইল</th><th>স্থিতি</th><th>চাবস্ক্ৰিপশ্যন</th><th>পঞ্জীয়নৰ তাৰিখ</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for u in recent_users %}
+                        <tr>
+                            <td>{{ u.name }}</td>
+                            <td>{{ u.email }}</td>
+                            <td>
+                                {% if u.is_active %}
+                                <span class="status-badge status-active">সক্ৰিয়</span>
+                                {% else %}
+                                <span class="status-badge status-inactive">অপেক্ষাৰত</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ u.subscription_name or 'বিনামূলীয়া' }}</td>
+                            <td>{{ u.created_at[:10] if u.created_at else '' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Users Section -->
+        <div id="section-users" class="section">
+            <div class="card">
+                <h3>👥 সকলো ব্যৱহাৰকাৰী</h3>
+                <input type="text" class="search-box" id="userSearch" placeholder="🔍 নাম বা ইমেইলেৰে সন্ধান কৰক..." oninput="filterUsers()">
+                <table id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th><th>নাম</th><th>ইমেইল</th><th>মোবাইল</th>
+                            <th>ইমেইল ভেৰিফাইড</th><th>মোবাইল ভেৰিফাইড</th>
+                            <th>স্থিতি</th><th>চাবস্ক্ৰিপশ্যন</th><th>একচন</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in all_users %}
+                        <tr data-search="{{ u.name }} {{ u.email }} {{ u.mobile or '' }}">
+                            <td>{{ u.id }}</td>
+                            <td><strong>{{ u.name }}</strong></td>
+                            <td>{{ u.email }}</td>
+                            <td>{{ u.mobile or '-' }}</td>
+                            <td>
+                                {% if u.is_verified_email %}
+                                <span class="status-badge status-active">✅</span>
+                                {% else %}
+                                <span class="status-badge status-inactive">❌</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if u.is_verified_mobile %}
+                                <span class="status-badge status-active">✅</span>
+                                {% else %}
+                                <span class="status-badge status-inactive">❌</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if u.is_active %}
+                                <span class="status-badge status-active">সক্ৰিয়</span>
+                                {% else %}
+                                <span class="status-badge status-pending">অপেক্ষাৰত</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ u.subscription_name or 'বিনামূলীয়া' }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="openUserModal({{ u.id }})">⚙️ ব্যৱস্থাপনা</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Subscriptions Section -->
+        <div id="section-subscriptions" class="section">
+            <div class="card">
+                <h3>💳 চাবস্ক্ৰিপশ্যন প্লেনসমূহ</h3>
+                <table>
+                    <thead>
+                        <tr><th>নাম</th><th>মূল্য (₹)</th><th>ম্যাদ (দিন)</th><th>বিৱৰণ</th><th>ফিচাৰ সংখ্যা</th><th>একচন</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for sub in subscriptions %}
+                        <tr>
+                            <td><strong>{{ sub.name_asm }}</strong> ({{ sub.name }})</td>
+                            <td>₹{{ sub.price }}</td>
+                            <td>{{ sub.duration_days }}</td>
+                            <td>{{ sub.description }}</td>
+                            <td>{{ sub_feature_counts[sub.id] }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="openSubModal({{ sub.id }})">✏️ সম্পাদনা</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div id="section-features" class="section">
+            <div class="card">
+                <h3>⚙️ ফিচাৰ তালিকা</h3>
+                <div class="feature-grid">
+                    {% for f in feature_defs %}
+                    <div class="feature-item">
+                        <div>
+                            <div class="f-name">{{ f.feature_name_asm }}</div>
+                            <div class="f-cat">{{ f.category }}</div>
+                        </div>
+                        <span style="font-size:0.7rem;color:var(--text-light);">{{ f.feature_key }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Images Section -->
+        <div id="section-images" class="section">
+            <div class="card">
+                <h3>🖼️ ফটো ব্যৱস্থাপনা</h3>
+                <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:16px;">
+                    সকলো ফৰ্মৰ ছাইডবাৰ, ফুটাৰ, আৰু চাবস্ক্ৰিপশ্যন প্লেনৰ বাবে ফটো আপলোড কৰক। ফটোৰ আকাৰ (Width × Height) পৰিবৰ্তন কৰিব পাৰিব।
+                </p>
+
+                <!-- Upload Form -->
+                <div style="background:var(--bg);border-radius:var(--radius-sm);padding:16px;margin-bottom:20px;border:1px solid var(--border);">
+                    <h4 style="margin-bottom:12px;color:var(--deep-blue);">📤 নতুন ফটো আপলোড কৰক</h4>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                        <div class="form-group">
+                            <label>ফটো ফাইল</label>
+                            <input type="file" id="imageFile" accept="image/*" style="padding:6px;">
+                        </div>
+                        <div class="form-group">
+                            <label>স্থান (Placement)</label>
+                            <select id="imagePlacement" style="width:100%;padding:8px 12px;border:2px solid var(--border);border-radius:6px;font-family:inherit;">
+                                <option value="sidebar">ছাইডবাৰ</option>
+                                <option value="footer">ফুটাৰ</option>
+                                <option value="plans">💳 চাবস্ক্ৰিপশ্যন প্লেন</option>
+                                <option value="general">সাধাৰণ</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>ফটোৰ নাম (Image Key)</label>
+                            <input type="text" id="imageKey" placeholder="যেনে: logo_sidebar" style="width:100%;">
+                        </div>
+                        <div class="form-group">
+                            <label>Alt Text</label>
+                            <input type="text" id="imageAlt" placeholder="ফটোৰ বিৱৰণ" style="width:100%;">
+                        </div>
+                        <div class="form-group">
+                            <label>Width (px)</label>
+                            <input type="number" id="imageWidth" value="200" min="10" max="2000" style="width:100%;">
+                        </div>
+                        <div class="form-group">
+                            <label>Height (px)</label>
+                            <input type="number" id="imageHeight" value="200" min="10" max="2000" style="width:100%;">
+                        </div>
+                    </div>
+                    <div style="margin-top:12px;">
+                        <label style="font-weight:600;font-size:0.85rem;color:var(--text);display:block;margin-bottom:6px;">📄 কোন পেজত দেখুৱাব?</label>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                            <label style="display:flex;align-items:center;gap:4px;font-size:0.8rem;cursor:pointer;background:var(--bg);padding:5px 10px;border-radius:6px;border:1px solid var(--border);">
+                                <input type="checkbox" class="page-target-cb" value="all" checked onchange="handlePageTargetChange(this)"> সকলো পেজ
+                            </label>
+                            <label style="display:flex;align-items:center;gap:4px;font-size:0.8rem;cursor:pointer;background:var(--bg);padding:5px 10px;border-radius:6px;border:1px solid var(--border);">
+                                <input type="checkbox" class="page-target-cb page-specific" value="kundli"> কুণ্ডলী পেজ
+                            </label>
+                            <label style="display:flex;align-items:center;gap:4px;font-size:0.8rem;cursor:pointer;background:var(--bg);padding:5px 10px;border-radius:6px;border:1px solid var(--border);">
+                                <input type="checkbox" class="page-target-cb page-specific" value="login"> লগিন / ৰেজিষ্ট্ৰেচন
+                            </label>
+                            <label style="display:flex;align-items:center;gap:4px;font-size:0.8rem;cursor:pointer;background:var(--bg);padding:5px 10px;border-radius:6px;border:1px solid var(--border);">
+                                <input type="checkbox" class="page-target-cb page-specific" value="verify"> ভেৰিফিকেচন পেজ
+                            </label>
+                            <label style="display:flex;align-items:center;gap:4px;font-size:0.8rem;cursor:pointer;background:var(--bg);padding:5px 10px;border-radius:6px;border:1px solid var(--border);">
+                                <input type="checkbox" class="page-target-cb page-specific" value="dashboard"> ইউজাৰ ডেশ্ববৰ্ড
+                            </label>
+                            <label style="display:flex;align-items:center;gap:4px;font-size:0.8rem;cursor:pointer;background:var(--bg);padding:5px 10px;border-radius:6px;border:1px solid var(--border);">
+                                <input type="checkbox" class="page-target-cb page-specific" value="result"> ৰিজাল্ট / গ্ৰহ বিৱৰণ
+                            </label>
+                            <label style="display:flex;align-items:center;gap:4px;font-size:0.8rem;cursor:pointer;background:var(--bg);padding:5px 10px;border-radius:6px;border:1px solid var(--border);">
+                                <input type="checkbox" class="page-target-cb page-specific" value="admin"> এডমিন পেনেল
+                            </label>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="uploadImage()" style="margin-top:12px;">📤 আপলোড কৰক</button>
+                    <span id="uploadStatus" style="margin-left:12px;font-size:0.85rem;"></span>
+                </div>
+
+                <!-- Image List -->
+                <h4 style="margin-bottom:12px;color:var(--deep-blue);">📋 আপলোড কৰা ফটোবোৰ</h4>
+                <div id="imageList" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:14px;">
+                    <p style="color:var(--text-light);">লোড হৈ আছে...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Footer Images -->
+<div style="text-align:center;padding:16px 24px 16px 284px;background:white;border-top:1px solid var(--border);">
+    {% for img in all_footer_images %}
+    <img src="/api/images/{{ img.id }}" alt="{{ img.alt_text }}" style="width:{{ img.width }}px;height:{{ img.height }}px;object-fit:contain;margin:4px 8px;border-radius:4px;display:inline-block;">
+    {% endfor %}
+</div>
+
+<!-- User Management Modal -->
+<div class="modal-overlay" id="userModal">
+    <div class="modal">
+        <button class="close-btn" onclick="closeUserModal()">✕</button>
+        <h3>⚙️ ব্যৱহাৰকাৰী ব্যৱস্থাপনা</h3>
+        <div id="userModalContent">লোড হৈ আছে...</div>
+    </div>
+</div>
+
+<!-- Subscription Edit Modal -->
+<div class="modal-overlay" id="subModal">
+    <div class="modal">
+        <button class="close-btn" onclick="closeSubModal()">✕</button>
+        <h3>✏️ চাবস্ক্ৰিপশ্যন সম্পাদনা</h3>
+        <div id="subModalContent">লোড হৈ আছে...</div>
+    </div>
+</div>
+
+<script>
+    function showSection(name) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById('section-' + name).classList.add('active');
+        document.querySelector(`[onclick="showSection('${name}')"]`).classList.add('active');
+        const titles = {dashboard:'📊 ডেশ্ববৰ্ড', users:'👥 ব্যৱহাৰকাৰীসকল', subscriptions:'💳 চাবস্ক্ৰিপশ্যন', features:'⚙️ ফিচাৰ ব্যৱস্থাপনা', images:'🖼️ ফটো ব্যৱস্থাপনা'};
+        document.getElementById('pageTitle').textContent = titles[name] || '';
+    }
+
+    function filterUsers() {
+        const q = document.getElementById('userSearch').value.toLowerCase();
+        document.querySelectorAll('#usersTable tbody tr').forEach(row => {
+            row.style.display = row.dataset.search.toLowerCase().includes(q) ? '' : 'none';
+        });
+    }
+
+    function openUserModal(userId) {
+        document.getElementById('userModal').classList.add('show');
+        document.getElementById('userModalContent').innerHTML = '<p style="text-align:center;padding:20px;">লোড হৈ আছে...</p>';
+        fetch('/admin/api/user/' + userId)
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('userModalContent').innerHTML = '<p style="color:red;">' + data.error + '</p>';
+                    return;
+                }
+                renderUserModal(data);
+            })
+            .catch(e => {
+                document.getElementById('userModalContent').innerHTML = '<p style="color:red;">ত্ৰুটি: ' + e + '</p>';
+            });
+    }
+
+    function closeUserModal() {
+        document.getElementById('userModal').classList.remove('show');
+    }
+
+    function renderUserModal(data) {
+        const u = data.user;
+        const features = data.features;
+        const overrides = data.overrides;
+        const subs = data.subscriptions;
+
+        let subsOptions = subs.map(s =>
+            `<option value="${s.id}" ${s.id == u.subscription_id ? 'selected' : ''}>${s.name_asm} (₹${s.price})</option>`
+        ).join('');
+
+        let featuresHtml = features.map(f => {
+            const override = overrides.find(o => o.feature_key === f.feature_key);
+            const isEnabled = override ? override.enabled : data.sub_features.includes(f.feature_key);
+            const hasOverride = !!override;
+            return `
+                <div class="feature-item" style="${hasOverride ? 'border-color: var(--orange); background: #FFF8F0;' : ''}">
+                    <div>
+                        <div class="f-name">${f.feature_name_asm} ${hasOverride ? '🔸' : ''}</div>
+                        <div class="f-cat">${f.feature_key}</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <label class="toggle-switch">
+                            <input type="checkbox" ${isEnabled ? 'checked' : ''}
+                                   onchange="toggleUserFeature(${u.id}, '${f.feature_key}', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        ${hasOverride ? `<button class="btn btn-sm btn-outline" onclick="resetUserFeature(${u.id}, '${f.feature_key}')" title="অভাৰৰাইড আঁতৰাওক">↩</button>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        document.getElementById('userModalContent').innerHTML = `
+            <div style="margin-bottom:16px;">
+                <strong>নাম:</strong> ${u.name}<br>
+                <strong>ইমেইল:</strong> ${u.email}<br>
+                <strong>মোবাইল:</strong> ${u.mobile || 'নাই'}<br>
+                <strong>ইমেইল ভেৰিফাইড:</strong> ${u.is_verified_email ? '✅ হয়' : '❌ নহয়'}<br>
+                <strong>মোবাইল ভেৰিফাইড:</strong> ${u.is_verified_mobile ? '✅ হয়' : '❌ নহয়'}<br>
+            </div>
+
+            <div style="margin-bottom:16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <strong>স্থিতি:</strong>
+                <button class="btn btn-sm ${u.is_active ? 'btn-danger' : 'btn-success'}"
+                        onclick="toggleUserActive(${u.id}, ${u.is_active ? 0 : 1})">
+                    ${u.is_active ? '🔒 নিষ্ক্ৰিয় কৰক' : '✅ সক্ৰিয় কৰক'}
+                </button>
+            </div>
+
+            <div style="margin-bottom:16px;">
+                <strong>চাবস্ক্ৰিপশ্যন:</strong>
+                <select id="subSelect_${u.id}" style="padding:6px 10px;border-radius:6px;border:1px solid #ccc;font-family:inherit;margin-left:8px;">
+                    ${subsOptions}
+                </select>
+                <button class="btn btn-sm btn-primary" onclick="updateSubscription(${u.id})" style="margin-left:8px;">আপডেট</button>
+            </div>
+
+            <h4 style="margin-bottom:12px;">⚙️ ফিচাৰ টগল (প্ৰতি-ব্যৱহাৰকাৰী অভাৰৰাইড)</h4>
+            <div class="feature-grid">${featuresHtml}</div>
+        `;
+    }
+
+    function toggleUserActive(userId, makeActive) {
+        fetch('/admin/api/user/' + userId + '/toggle-active', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({is_active: makeActive})
+        })
+        .then(r => r.json())
+        .then(data => {
+            alert(data.message);
+            location.reload();
+        });
+    }
+
+    function updateSubscription(userId) {
+        const subId = document.getElementById('subSelect_' + userId).value;
+        fetch('/admin/api/user/' + userId + '/subscription', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({subscription_id: parseInt(subId)})
+        })
+        .then(r => r.json())
+        .then(data => {
+            alert(data.message);
+            location.reload();
+        });
+    }
+
+    function toggleUserFeature(userId, featureKey, enabled) {
+        fetch('/admin/api/user/' + userId + '/feature', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({feature_key: featureKey, enabled: enabled})
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) alert(data.message);
+        });
+    }
+
+    function resetUserFeature(userId, featureKey) {
+        fetch('/admin/api/user/' + userId + '/feature/reset', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({feature_key: featureKey})
+        })
+        .then(r => r.json())
+        .then(data => {
+            alert(data.message);
+            openUserModal(userId); // refresh modal
+        });
+    }
+
+    // Close modal on overlay click
+    document.getElementById('userModal').addEventListener('click', function(e) {
+        if (e.target === this) closeUserModal();
+    });
+
+    // ─── Subscription Plan Editing ───
+
+    function openSubModal(subId) {
+        document.getElementById('subModal').classList.add('show');
+        document.getElementById('subModalContent').innerHTML = '<p style="text-align:center;padding:20px;">লোড হৈ আছে...</p>';
+        fetch('/admin/api/subscription/' + subId)
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('subModalContent').innerHTML = '<p style="color:red;">' + data.error + '</p>';
+                    return;
+                }
+                renderSubModal(data, subId);
+            })
+            .catch(e => {
+                document.getElementById('subModalContent').innerHTML = '<p style="color:red;">ত্ৰুটি: ' + e + '</p>';
+            });
+    }
+
+    function closeSubModal() {
+        document.getElementById('subModal').classList.remove('show');
+    }
+
+    function renderSubModal(data, subId) {
+        const sub = data.subscription;
+        const features = data.features;
+        const subFeatureKeys = data.sub_feature_keys;
+
+        let featuresHtml = features.map(f => {
+            const isEnabled = subFeatureKeys[f.feature_key] || false;
+            return `
+                <div class="feature-item">
+                    <div>
+                        <div class="f-name">${f.feature_name_asm}</div>
+                        <div class="f-cat">${f.feature_key}</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" ${isEnabled ? 'checked' : ''}
+                               onchange="toggleSubFeature(${subId}, '${f.feature_key}', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            `;
+        }).join('');
+
+        document.getElementById('subModalContent').innerHTML = `
+            <div style="margin-bottom:12px;">
+                <div class="form-group" style="margin-bottom:10px;">
+                    <label>নাম (English)</label>
+                    <input type="text" id="subName" value="${sub.name}" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;font-family:inherit;">
+                </div>
+                <div class="form-group" style="margin-bottom:10px;">
+                    <label>নাম (অসমীয়া)</label>
+                    <input type="text" id="subNameAsm" value="${sub.name_asm}" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;font-family:inherit;">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                    <div class="form-group">
+                        <label>মূল্য (₹)</label>
+                        <input type="number" id="subPrice" value="${sub.price}" step="0.01" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;font-family:inherit;">
+                    </div>
+                    <div class="form-group">
+                        <label>ম্যাদ (দিন)</label>
+                        <input type="number" id="subDuration" value="${sub.duration_days}" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;font-family:inherit;">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:10px;">
+                    <label>বিৱৰণ</label>
+                    <input type="text" id="subDesc" value="${sub.description || ''}" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;font-family:inherit;">
+                </div>
+                <button class="btn btn-primary" onclick="saveSubscription(${subId})" style="width:100%;">💾 ছেভ কৰক</button>
+            </div>
+            <h4 style="margin-top:16px;margin-bottom:8px;">⚙️ ফিচাৰসমূহ</h4>
+            <div class="feature-grid">${featuresHtml}</div>
+        `;
+    }
+
+    function saveSubscription(subId) {
+        const data = {
+            name: document.getElementById('subName').value,
+            name_asm: document.getElementById('subNameAsm').value,
+            price: parseFloat(document.getElementById('subPrice').value),
+            duration_days: parseInt(document.getElementById('subDuration').value),
+            description: document.getElementById('subDesc').value
+        };
+        fetch('/admin/api/subscription/' + subId + '/update', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+        .then(r => r.json())
+        .then(data => {
+            alert(data.message);
+            if (data.success) location.reload();
+        });
+    }
+
+    function toggleSubFeature(subId, featureKey, enabled) {
+        fetch('/admin/api/subscription/' + subId + '/feature', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({feature_key: featureKey, enabled: enabled})
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) alert(data.message);
+        });
+    }
+
+    // Close sub modal on overlay click
+    document.getElementById('subModal').addEventListener('click', function(e) {
+        if (e.target === this) closeSubModal();
+    });
+
+    // ─── User Access Mode Setting ───
+    function updateAccessMode() {
+        const select = document.getElementById('userAccessMode');
+        const value = select.value;
+        const statusEl = document.getElementById('accessModeStatus');
+
+        fetch('/admin/api/settings', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({key: 'user_auto_activate', value: value})
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                if (value === 'direct') {
+                    statusEl.innerHTML = '<span style="color:var(--green);">✅ চিধাই প্ৰৱেশ সক্ৰিয়</span>';
+                } else {
+                    statusEl.innerHTML = '<span style="color:var(--red);">🔒 এডমিন অনুমোদন প্ৰয়োজন</span>';
+                }
+                // Update description text
+                const descEl = select.parentElement.nextElementSibling;
+                if (descEl) {
+                    if (value === 'direct') {
+                        descEl.textContent = 'বৰ্তমান: নতুন ব্যৱহাৰকাৰীয়ে পঞ্জীয়নৰ পিছত চিধাই লগইন কৰি সকলো সুবিধা ব্যৱহাৰ কৰিব পাৰিব।';
+                    } else {
+                        descEl.textContent = 'বৰ্তমান: নতুন ব্যৱহাৰকাৰীয়ে পঞ্জীয়নৰ পিছত এডমিনে সক্ৰিয় নকৰালৈকে লগইন কৰিব নোৱাৰিব।';
+                    }
+                }
+            } else {
+                alert('ছেটিং আপডেট বিফল: ' + data.message);
+            }
+        })
+        .catch(err => {
+            alert('ছেটিং আপডেট কৰাত সমস্যা হৈছে।');
+            console.error(err);
+        });
+    }
+
+    // ─── Image Management ───
+    function handlePageTargetChange(allCb) {
+        const specifics = document.querySelectorAll('.page-specific');
+        if (allCb.value === 'all' && allCb.checked) {
+            specifics.forEach(cb => { cb.checked = false; cb.disabled = true; });
+        } else if (allCb.value === 'all' && !allCb.checked) {
+            specifics.forEach(cb => { cb.disabled = false; });
+        }
+    }
+
+    function loadImages() {
+        fetch('/admin/api/images')
+            .then(r => r.json())
+            .then(images => {
+                const container = document.getElementById('imageList');
+                if (images.length === 0) {
+                    container.innerHTML = '<p style="color:var(--text-light);grid-column:1/-1;">কোনো ফটো আপলোড কৰা হোৱা নাই।</p>';
+                    return;
+                }
+                container.innerHTML = images.map(img => `
+                    <div style="background:var(--bg);border-radius:var(--radius-sm);padding:12px;border:1px solid var(--border);text-align:center;">
+                        <img src="/api/images/${img.id}" alt="${img.alt_text || ''}" style="max-width:100%;height:auto;max-height:120px;border-radius:4px;margin-bottom:8px;">
+                        <div style="font-size:0.75rem;color:var(--text);">
+                            <strong>${img.image_key}</strong><br>
+                            <span style="color:var(--text-light);">স্থান: ${img.placement} | ${img.filename}</span><br>
+                            <span style="color:var(--text-light);">পেজ: ${img.page_target || 'all'} | ${img.mime_type}</span>
+                        </div>
+                        <div style="display:flex;gap:6px;align-items:center;justify-content:center;margin-top:8px;flex-wrap:wrap;">
+                            <input type="number" value="${img.width}" min="10" max="2000" style="width:60px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;font-size:0.7rem;" onchange="updateImageSize(${img.id}, this.value, this.nextElementSibling.value)" title="Width">
+                            <span style="font-size:0.7rem;">×</span>
+                            <input type="number" value="${img.height}" min="10" max="2000" style="width:60px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;font-size:0.7rem;" onchange="updateImageSize(${img.id}, this.previousElementSibling.value, this.value)" title="Height">
+                            <button class="btn btn-sm btn-danger" onclick="deleteImage(${img.id})" title="বিলোপ কৰক">🗑️</button>
+                        </div>
+                    </div>
+                `).join('');
+            });
+    }
+
+    function uploadImage() {
+        const fileInput = document.getElementById('imageFile');
+        const file = fileInput.files[0];
+        if (!file) {
+            alert('অনুগ্ৰহ কৰি এটা ফটো ফাইল নিৰ্বাচন কৰক।');
+            return;
+        }
+
+        // Collect page targets
+        const allCb = document.querySelector('.page-target-cb[value="all"]');
+        let pageTarget = 'all';
+        if (!allCb.checked) {
+            const checked = document.querySelectorAll('.page-specific:checked');
+            pageTarget = Array.from(checked).map(cb => cb.value).join(',');
+            if (!pageTarget) pageTarget = 'all';
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('placement', document.getElementById('imagePlacement').value);
+        formData.append('page_target', pageTarget);
+        formData.append('image_key', document.getElementById('imageKey').value);
+        formData.append('alt_text', document.getElementById('imageAlt').value);
+        formData.append('width', document.getElementById('imageWidth').value);
+        formData.append('height', document.getElementById('imageHeight').value);
+
+        const statusEl = document.getElementById('uploadStatus');
+        statusEl.textContent = '⏳ আপলোড কৰি আছে...';
+        statusEl.style.color = 'var(--orange)';
+
+        fetch('/admin/api/images/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(r => r.json())
+        .then(data => {
+            statusEl.textContent = data.message;
+            statusEl.style.color = data.success ? 'var(--green)' : 'var(--red)';
+            if (data.success) {
+                fileInput.value = '';
+                document.getElementById('imageKey').value = '';
+                document.getElementById('imageAlt').value = '';
+                loadImages();
+            }
+        })
+        .catch(err => {
+            statusEl.textContent = 'আপলোড বিফল।';
+            statusEl.style.color = 'var(--red)';
+        });
+    }
+
+    function updateImageSize(imageId, width, height) {
+        fetch('/admin/api/images/' + imageId, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({width: parseInt(width), height: parseInt(height)})
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) alert(data.message);
+        });
+    }
+
+    function deleteImage(imageId) {
+        if (!confirm('আপুনি নিশ্চিতভাৱে এই ফটো বিলোপ কৰিব বিচাৰে নেকি?')) return;
+        fetch('/admin/api/images/' + imageId, { method: 'DELETE' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) loadImages();
+                else alert(data.message);
+            });
+    }
+
+    // Load images when switching to images section
+    const origShowSection = showSection;
+    showSection = function(name) {
+        origShowSection(name);
+        if (name === 'images') loadImages();
+    };
+</script>
+</body>
+</html>
