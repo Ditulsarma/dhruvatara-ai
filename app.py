@@ -75,9 +75,17 @@ def health():
 def show_traceback():
     try:
         places = get_locations()
-        return render_template("index.html", places=places, timezones=get_all_timezones())
+        return render_template("index.html",
+            places=places, timezones=get_all_timezones(),
+            user_features=None, feature_defs=[])
     except Exception as e:
         return f"<pre>ERROR: {e}\n\n{traceback.format_exc()}</pre>", 500
+
+# ─── Favicon handler (prevents 404 for Logo.png) ───
+@app.route("/favicon.ico")
+@app.route("/Logo.png")
+def favicon():
+    return "", 204
 
 # ─── Image Upload Configuration ───
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads')
@@ -553,7 +561,12 @@ def home():
     except Exception as e:
         logger.error(f"get_locations failed: {e}")
         places = []
-    return render_template("index.html", places=places, timezones=get_all_timezones())
+    return render_template("index.html",
+        places=places,
+        timezones=get_all_timezones(),
+        user_features=None,
+        feature_defs=[]
+    )
 
 @app.route("/api/search-places")
 def api_search_places():
