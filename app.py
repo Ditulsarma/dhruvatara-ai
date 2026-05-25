@@ -46,9 +46,34 @@ from auth_module import (
 app = Flask(__name__)
 app.secret_key = 'DhruvataraAI_2026_Secure_Secret_Key_8x7k9m2p'
 
+# ─── Logging for Railway debugging ───
+import logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s')
+logger = logging.getLogger(__name__)
+
 # ─── Auto-initialize database on startup ───
-from setup_db import setup_database
-setup_database()
+try:
+    from setup_db import setup_database
+    setup_database()
+    logger.info("Database initialized successfully")
+except Exception as e:
+    logger.error(f"Database init failed: {e}")
+
+# ─── Global error handlers ───
+@app.errorhandler(500)
+def internal_error(e):
+    logger.error(f"500 error: {e}")
+    return "Internal Server Error. Please try again later.", 500
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    logger.error(f"Unhandled exception: {e}")
+    return "Internal Server Error. Please try again later.", 500
+
+# ─── Health check endpoint ───
+@app.route("/health")
+def health():
+    return "OK", 200
 
 # ─── Image Upload Configuration ───
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads')

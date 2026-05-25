@@ -26,8 +26,14 @@ RUN apt-get remove -y gcc python3-dev libsqlite3-dev \
 # Copy application code
 COPY . .
 
+# Pre-initialize database during build (idempotent - safe to run again at startup)
+RUN python -c "from setup_db import setup_database; setup_database()"
+
+# Make startup script executable
+RUN chmod +x start.sh
+
 # Expose port (Railway uses PORT env var, default 5000)
 EXPOSE 5000
 
-# Run with gunicorn
-CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 2 --timeout 120 app:app"]
+# Run startup script (initializes DB then starts gunicorn)
+CMD ["./start.sh"]
