@@ -26,6 +26,9 @@ RUN apt-get remove -y gcc python3-dev libsqlite3-dev \
 # Copy application code
 COPY . .
 
+# Create persistent data directory for SQLite (Railway volume mount)
+RUN mkdir -p /data
+
 # Pre-initialize database during build (idempotent - safe to run again at startup)
 RUN python -c "from setup_db import setup_database; setup_database()"
 

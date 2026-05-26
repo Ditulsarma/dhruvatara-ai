@@ -6,9 +6,10 @@ Run: python setup_db.py
 
 import sqlite3
 from werkzeug.security import generate_password_hash
+from config import DB_PATH
 
 def setup_database():
-    conn = sqlite3.connect('dhrubatara.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     # ─── Existing table ───

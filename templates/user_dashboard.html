@@ -103,6 +103,35 @@
         .alert-warning { background: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2; }
         .alert-success { background: #E8F5E9; color: var(--green); border: 1px solid #C8E6C9; }
         .alert-info { background: #E3F2FD; color: #1565C0; border: 1px solid #BBDEFB; }
+
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            .top-nav { padding: 8px 12px; flex-wrap: wrap; gap: 6px; }
+            .top-nav .brand { font-size: 1rem; }
+            .nav-actions { flex-wrap: wrap; gap: 6px; }
+            .nav-actions span { font-size: 0.75rem; }
+            .btn { padding: 6px 12px; font-size: 0.72rem; }
+            .welcome-card { padding: 18px 20px; }
+            .welcome-card h1 { font-size: 1.2rem; }
+            .welcome-card .sub { font-size: 0.78rem; }
+            .feature-grid { grid-template-columns: 1fr; gap: 10px; }
+            .feature-card { padding: 14px; gap: 10px; }
+            .feature-card .f-icon { font-size: 1.5rem; width: 40px; height: 40px; }
+            .feature-card .f-name { font-size: 0.85rem; }
+            .feature-card .f-desc { font-size: 0.72rem; }
+            .info-row { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .info-card { padding: 12px 14px; }
+            .info-card .i-value { font-size: 0.85rem; }
+            .section-title { font-size: 0.95rem; }
+        }
+
+        @media (max-width: 480px) {
+            .info-row { grid-template-columns: 1fr; }
+            .welcome-card { padding: 14px 16px; }
+            .welcome-card h1 { font-size: 1.05rem; }
+            .feature-card { padding: 10px 12px; }
+            .feature-card .f-icon { font-size: 1.3rem; width: 36px; height: 36px; }
+        }
     </style>
 </head>
 <body>

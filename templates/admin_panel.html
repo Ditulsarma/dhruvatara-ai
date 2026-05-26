@@ -173,6 +173,30 @@
             background: #FAFAFA; transition: var(--transition); outline: none;
         }
         .form-group input:focus, .form-group select:focus { border-color: var(--orange); background: #FFF; }
+
+        @media (max-width: 768px) {
+            .layout { flex-direction: column; }
+            .sidebar { width: 100%; padding: 12px; }
+            .sidebar .brand { font-size: 1rem; }
+            .sidebar .nav-item { padding: 8px 12px; font-size: 0.8rem; }
+            .main { padding: 12px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .stat-card { padding: 12px; }
+            .stat-card .stat-value { font-size: 1.2rem; }
+            table { font-size: 0.7rem; }
+            th, td { padding: 6px 8px; font-size: 0.65rem; }
+            .search-box { width: 100%; }
+            .modal-box { width: 95%; max-width: 95%; }
+            .modal-body { max-height: 50vh; }
+            .form-group input, .form-group select { font-size: 0.8rem; padding: 7px 10px; }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .sidebar .nav-item { padding: 6px 10px; font-size: 0.72rem; }
+            table { font-size: 0.6rem; }
+            th, td { padding: 4px 5px; font-size: 0.58rem; }
+        }
     </style>
 </head>
 <body>

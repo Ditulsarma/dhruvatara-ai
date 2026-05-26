@@ -233,12 +233,32 @@
         }
         .footer span { color: var(--orange); font-weight: 600; }
 
-        @media (max-width: 480px) {
+        @media (max-width: 768px) {
+            .header { padding: 24px 16px 12px; }
             .header h1 { font-size: 2rem; }
-            .card { padding: 24px 18px; }
+            .header .logo-icon { font-size: 40px; }
+            .header .tagline { font-size: 0.85rem; }
+            .main-container { padding: 0 12px; }
+            .card { padding: 20px 16px; }
             .features { grid-template-columns: 1fr 1fr; gap: 8px; }
             .feature-item { padding: 10px 8px; }
             .feature-item .f-text { font-size: 0.7rem; }
+            .top-nav { padding: 8px 12px; }
+            .top-nav .brand { font-size: 0.95rem; }
+            .btn-sm { padding: 6px 12px; font-size: 0.72rem; }
+            .form-group input, .form-group select { font-size: 0.85rem; padding: 10px 12px; }
+            .place-dropdown { max-height: 180px; }
+            .place-dropdown .place-option { padding: 8px 12px; font-size: 0.8rem; }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 { font-size: 1.6rem; }
+            .card { padding: 16px 12px; }
+            .features { grid-template-columns: 1fr 1fr; gap: 6px; }
+            .feature-item { padding: 8px 6px; }
+            .feature-item .f-text { font-size: 0.65rem; }
+            .feature-item .f-icon { font-size: 1.2rem; }
+            .btn-submit { font-size: 0.9rem; padding: 12px; }
         }
     </style>
 </head>

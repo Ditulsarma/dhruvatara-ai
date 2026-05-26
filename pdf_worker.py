@@ -13,6 +13,9 @@ async def html_to_pdf(html_path: str, pdf_path: str):
         browser = await p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox'])
         page = await browser.new_page()
         await page.set_content(html, wait_until='networkidle', timeout=30000)
+        # Wait for Google Fonts to load
+        await page.wait_for_load_state('networkidle')
+        await page.evaluate('document.fonts.ready')
         await page.pdf(
             path=pdf_path, format='A4',
             margin={'top': '15mm', 'bottom': '15mm', 'left': '18mm', 'right': '18mm'},

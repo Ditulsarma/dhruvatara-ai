@@ -97,6 +97,28 @@
         .otp-row { display: flex; gap: 8px; }
         .otp-row input { flex: 1; }
         .otp-row button { white-space: nowrap; padding: 11px 16px; font-size: 0.8rem; }
+
+        @media (max-width: 768px) {
+            .page-wrapper { padding: 12px; }
+            .container { max-width: 100%; }
+            .card { padding: 20px 16px; }
+            .card h2 { font-size: 1.1rem; }
+            .logo h1 { font-size: 1.5rem; }
+            .logo .icon { font-size: 36px; }
+            .form-group input { padding: 10px 12px; font-size: 0.85rem; }
+            .btn { padding: 10px; font-size: 0.9rem; }
+            .tab-btn { padding: 8px; font-size: 0.8rem; }
+        }
+
+        @media (max-width: 480px) {
+            .card { padding: 16px 12px; }
+            .logo h1 { font-size: 1.3rem; }
+            .form-group { margin-bottom: 12px; }
+            .form-group label { font-size: 0.78rem; }
+            .form-group input { padding: 9px 10px; font-size: 0.8rem; }
+            .btn { padding: 10px; font-size: 0.85rem; }
+            .tab-btn { padding: 7px; font-size: 0.75rem; }
+        }
     </style>
 </head>
 <body>

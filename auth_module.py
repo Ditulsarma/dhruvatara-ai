@@ -11,12 +11,13 @@ from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from flask import session, redirect, url_for, request, jsonify
+from config import DB_PATH
 
 
 # ─── Database helpers ───
 
 def get_db():
-    conn = sqlite3.connect('dhrubatara.db')
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
 

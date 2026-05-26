@@ -14,6 +14,7 @@ import os
 import base64
 from functools import wraps
 from werkzeug.utils import secure_filename
+from config import DB_PATH
 
 from panchanga import get_full_panchanga
 from dosha_engine import get_complete_dosha_analysis
@@ -97,7 +98,7 @@ def allowed_file(filename):
 
 def get_all_images():
     """Get all admin images from DB."""
-    conn = sqlite3.connect('dhrubatara.db')
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     try:
         rows = conn.execute(
@@ -109,7 +110,7 @@ def get_all_images():
 
 def get_images_by_placement(placement, page_name=None):
     """Get images for a specific placement, optionally filtered by page."""
-    conn = sqlite3.connect('dhrubatara.db')
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     try:
         if page_name:
@@ -128,7 +129,7 @@ def get_images_by_placement(placement, page_name=None):
 
 def get_image_data(image_id):
     """Get image binary data by ID."""
-    conn = sqlite3.connect('dhrubatara.db')
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     try:
         row = conn.execute("SELECT * FROM admin_images WHERE id = ?", (image_id,)).fetchone()
@@ -138,7 +139,7 @@ def get_image_data(image_id):
 
 def save_image_to_db(image_key, placement, page_target, filename, mime_type, width, height, alt_text, image_data):
     """Save or update an image in DB."""
-    conn = sqlite3.connect('dhrubatara.db')
+    conn = sqlite3.connect(DB_PATH)
     try:
         existing = conn.execute(
             "SELECT id FROM admin_images WHERE image_key = ?", (image_key,)
@@ -163,7 +164,7 @@ def save_image_to_db(image_key, placement, page_target, filename, mime_type, wid
 
 def delete_image_from_db(image_id):
     """Delete an image from DB."""
-    conn = sqlite3.connect('dhrubatara.db')
+    conn = sqlite3.connect(DB_PATH)
     try:
         conn.execute("DELETE FROM admin_images WHERE id = ?", (image_id,))
         conn.commit()
@@ -173,7 +174,7 @@ def delete_image_from_db(image_id):
 
 def update_image_dimensions(image_id, width, height):
     """Update image dimensions."""
-    conn = sqlite3.connect('dhrubatara.db')
+    conn = sqlite3.connect(DB_PATH)
     try:
         conn.execute("UPDATE admin_images SET width=?, height=?, updated_at=CURRENT_TIMESTAMP WHERE id=?", (width, height, image_id))
         conn.commit()
@@ -463,7 +464,7 @@ def get_full_dasa_hierarchy(moon_sidereal_lon, birth_date):
     return timeline
 
 def get_locations():
-    conn = sqlite3.connect('dhrubatara.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT place_name, latitude, longitude FROM locations ORDER BY place_name")
     places = [{"name": row[0], "lat": row[1], "lon": row[2]} for row in cursor.fetchall()]
@@ -471,7 +472,7 @@ def get_locations():
     return places
 
 def get_coordinates(place_name):
-    conn = sqlite3.connect('dhrubatara.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT latitude, longitude FROM locations WHERE place_name = ?", (place_name,))
     result = cursor.fetchone()
@@ -574,7 +575,7 @@ def api_search_places():
     q = request.args.get("q", "").strip()
     if len(q) < 2:
         return jsonify([])
-    conn = sqlite3.connect('dhrubatara.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute(
         "SELECT place_name, latitude, longitude FROM locations WHERE place_name LIKE ? ORDER BY place_name LIMIT 15",
@@ -765,7 +766,7 @@ def calculate():
     user_subscription_id = 1
     all_subscriptions = []
     if session.get('user_id'):
-        conn = sqlite3.connect('dhrubatara.db')
+        conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row
         row = conn.execute(
             "SELECT s.name_asm, s.id FROM users u JOIN subscriptions s ON u.subscription_id = s.id WHERE u.id = ?",
@@ -1288,7 +1289,7 @@ def register_post():
 @login_required
 def verify_page():
     """Email/Mobile verification page."""
-    conn = sqlite3.connect('dhrubatara.db')
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     user = conn.execute("SELECT * FROM users WHERE id = ?", (session['user_id'],)).fetchone()
     conn.close()
@@ -1304,7 +1305,7 @@ def verify_page():
 @login_required
 def verify_email_post():
     """Handle email verification."""
-    conn = sqlite3.connect('dhrubatara.db')
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     user = conn.execute("SELECT email FROM users WHERE id = ?", (session['user_id'],)).fetchone()
     conn.close()
@@ -1320,7 +1321,7 @@ def verify_email_post():
 @login_required
 def verify_mobile_post():
     """Handle mobile verification."""
-    conn = sqlite3.connect('dhrubatara.db')
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     user = conn.execute("SELECT mobile FROM users WHERE id = ?", (session['user_id'],)).fetchone()
     conn.close()
@@ -1340,7 +1341,7 @@ def verify_mobile_post():
 @login_required
 def resend_otp_post():
     """Resend OTP."""
-    conn = sqlite3.connect('dhrubatara.db')
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     user = conn.execute("SELECT email FROM users WHERE id = ?", (session['user_id'],)).fetchone()
     conn.close()
@@ -1366,7 +1367,7 @@ def logout():
 @login_required
 def user_dashboard():
     """User dashboard showing available features."""
-    conn = sqlite3.connect('dhrubatara.db')
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
 
     user = conn.execute('''
@@ -1408,7 +1409,7 @@ def kundli_page():
     if not check_feature_access(session['user_id'], 'kundli_calculate'):
         return render_template('feature_locked.html', feature='kundli_calculate'), 403
 
-    conn = sqlite3.connect('dhrubatara.db')
+    conn = sqlite3.connect(DB_PATH)
     places = []
     cursor = conn.cursor()
     cursor.execute("SELECT place_name, latitude, longitude FROM locations ORDER BY place_name")
@@ -1466,7 +1467,7 @@ def admin_logout():
 @admin_required
 def admin_panel():
     """Admin panel dashboard."""
-    conn = sqlite3.connect('dhrubatara.db')
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
 
     # Stats
@@ -1538,7 +1539,7 @@ def admin_api_get_user(user_id):
     subscriptions = get_all_subscriptions()
 
     # Get subscription features
-    conn = sqlite3.connect('dhrubatara.db')
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     sub_features = conn.execute(
         "SELECT feature_key FROM subscription_features WHERE subscription_id = ? AND enabled = 1",
@@ -1572,7 +1573,7 @@ def admin_api_set_subscription(user_id):
     data = request.get_json()
     sub_id = data.get("subscription_id", 1)
 
-    conn = sqlite3.connect('dhrubatara.db')
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     sub = conn.execute("SELECT duration_days FROM subscriptions WHERE id = ?", (sub_id,)).fetchone()
     conn.close()
@@ -1688,7 +1689,7 @@ def admin_api_update_image(image_id):
     alt_text = data.get("alt_text")
     placement = data.get("placement")
 
-    conn = sqlite3.connect('dhrubatara.db')
+    conn = sqlite3.connect(DB_PATH)
     try:
         if width is not None and height is not None:
             conn.execute(
@@ -1815,7 +1816,7 @@ def api_save_kundli():
     if not name or not dob or not tob:
         return jsonify({"success": False, "message": "নাম, জন্ম তাৰিখ আৰু সময় আৱশ্যক।"}), 400
 
-    conn = sqlite3.connect('dhrubatara.db')
+    conn = sqlite3.connect(DB_PATH)
     try:
         conn.execute('''
             INSERT INTO saved_kundlis (user_id, name, dob, tob, place, gender, lat, lon, timezone)
@@ -1840,7 +1841,7 @@ def api_search_kundlis():
     if len(q) < 1:
         return jsonify([])
 
-    conn = sqlite3.connect('dhrubatara.db')
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     try:
         rows = conn.execute(
@@ -1859,7 +1860,7 @@ def api_get_kundli(kundli_id):
     if 'user_id' not in session:
         return jsonify({"error": "Unauthorized"}), 401
 
-    conn = sqlite3.connect('dhrubatara.db')
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     try:
         row = conn.execute(
@@ -1879,7 +1880,7 @@ def api_delete_kundli(kundli_id):
     if 'user_id' not in session:
         return jsonify({"success": False, "message": "Unauthorized"}), 401
 
-    conn = sqlite3.connect('dhrubatara.db')
+    conn = sqlite3.connect(DB_PATH)
     try:
         conn.execute("DELETE FROM saved_kundlis WHERE id = ? AND user_id = ?", (kundli_id, session['user_id']))
         conn.commit()

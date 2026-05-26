@@ -304,6 +304,7 @@ def _build_html(
 <html lang="as">
 <head>
 <meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
     @page {{ size: A4; margin: 15mm 18mm; }}
     * {{ margin: 0; padding: 0; box-sizing: border-box; }}
