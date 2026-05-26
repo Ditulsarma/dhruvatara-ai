@@ -16,6 +16,20 @@ OLLAMA_URL = "https://api.ollama.com/v1/chat/completions"
 # ─── Tīkṣṇa Nakshatras (তীক্ষ্ণ নক্ষত্ৰ) ─────────────────────────
 TIKSHNA_NAKSHATRAS = ["আৰ্দ্ৰা", "অশ্লেষা", "জ্যেষ্ঠা", "মূল"]
 
+# ─── Nakshatra Lords (দশা অধিপতি ক্ৰমে) ─────────────────────────
+NAKSHATRA_LORDS = [
+    "কেতু", "শুক্ৰ", "ৰবি", "চন্দ্ৰ", "মংগল", "ৰাহু",
+    "বৃহস্পতি", "শনি", "বুধ"
+]
+
+# ─── Natural benefic & malefic planets ──────────────────────────
+NATURAL_BENEFICS = ["বৃহস্পতি", "শুক্ৰ", "বুধ", "চন্দ্ৰ"]
+NATURAL_MALEFICS = ["ৰবি", "মংগল", "শনি", "ৰাহু", "কেতু"]
+
+# ─── Dusthana houses (দুঃস্থান) ─────────────────────────────────
+DUSTHANA_HOUSES = [6, 8, 12]
+SHUBH_HOUSES = [1, 2, 4, 5, 7, 9, 10, 11]
+
 # ─── Predefined Questions ───────────────────────────────────────
 PREDEFINED_QUESTIONS = [
     {"id": "marriage", "label": "মোৰ বিবাহ স্থান কেনেকুৱা হ'ব?", "house": 7, "topic": "বিবাহ"},
@@ -170,7 +184,23 @@ def chat_with_ai(user_name: str, question: str, planets_data: list,
             for hp in house_planets:
                 hp_nak = hp.get("nakshatra", "")
                 hp_tikshna = " [তীক্ষ্ণ নক্ষত্ৰ]" if hp_nak in TIKSHNA_NAKSHATRAS else ""
+                hp_lord = hp.get("lord", "")
                 house_analysis += f"\n  এই ঘৰত {hp['name']} গ্ৰহ অৱস্থান কৰিছে, {hp['rasi']} ৰাশিত, {hp_nak} নক্ষত্ৰত{hp_tikshna}।"
+                # Nakshatra lord position analysis
+                if hp_lord:
+                    lord_house_num = planet_houses.get(hp_lord, -1) + 1 if planet_houses.get(hp_lord, -1) >= 0 else None
+                    if lord_house_num is not None:
+                        lord_is_benefic = hp_lord in NATURAL_BENEFICS
+                        lord_in_dusthana = lord_house_num in DUSTHANA_HOUSES
+                        lord_in_shubh = lord_house_num in SHUBH_HOUSES
+                        if lord_is_benefic and lord_in_shubh:
+                            house_analysis += f" {hp['name']}ৰ নক্ষত্ৰ অধিপতি {hp_lord} এজন শুভ গ্ৰহ আৰু {lord_house_num} নং শুভ ঘৰত অৱস্থান কৰিছে — ই {topic} স্থানৰ বাবে অতি শুভ।"
+                        elif lord_is_benefic and lord_in_dusthana:
+                            house_analysis += f" {hp['name']}ৰ নক্ষত্ৰ অধিপতি {hp_lord} শুভ গ্ৰহ হ'লেও {lord_house_num} নং দুঃস্থানত অৱস্থান কৰিছে — ই {topic} স্থানত কিছু বাধাৰ সৃষ্টি কৰিব পাৰে।"
+                        elif not lord_is_benefic and lord_in_shubh:
+                            house_analysis += f" {hp['name']}ৰ নক্ষত্ৰ অধিপতি {hp_lord} অশুভ গ্ৰহ কিন্তু {lord_house_num} নং শুভ ঘৰত অৱস্থান কৰিছে — ই {topic} স্থানত মিশ্ৰিত ফল দিব।"
+                        elif not lord_is_benefic and lord_in_dusthana:
+                            house_analysis += f" {hp['name']}ৰ নক্ষত্ৰ অধিপতি {hp_lord} অশুভ গ্ৰহ আৰু {lord_house_num} নং দুঃস্থানত অৱস্থান কৰিছে — ই {topic} স্থানৰ বাবে অতি অশুভ, গুৰুতৰ সমস্যাৰ সংকেত।"
         else:
             house_analysis += f"\n  এই ঘৰত কোনো গ্ৰহ অৱস্থান কৰা নাই।"
 
@@ -179,6 +209,21 @@ def chat_with_ai(user_name: str, question: str, planets_data: list,
             house_analysis += f", যি {lord_house} নং ঘৰত অৱস্থান কৰিছে, {lord_nak} নক্ষত্ৰত।"
             if lord_tikshna:
                 house_analysis += f" {lord_name} তীক্ষ্ণ নক্ষত্ৰ ({lord_nak})ত অৱস্থান কৰি অশুভ ফল প্ৰদান কৰিব পাৰে।"
+            # House lord's nakshatra lord analysis
+            lord_nak_lord = None
+            for p in planets_data:
+                if p.get("name") == lord_name:
+                    lord_nak_lord = p.get("lord", "")
+                    break
+            if lord_nak_lord:
+                lord_nl_house = planet_houses.get(lord_nak_lord, -1) + 1 if planet_houses.get(lord_nak_lord, -1) >= 0 else None
+                if lord_nl_house is not None:
+                    lord_nl_benefic = lord_nak_lord in NATURAL_BENEFICS
+                    lord_nl_dusthana = lord_nl_house in DUSTHANA_HOUSES
+                    if lord_nl_benefic and not lord_nl_dusthana:
+                        house_analysis += f" {lord_name}ৰ নক্ষত্ৰ অধিপতি {lord_nak_lord} শুভ গ্ৰহ আৰু {lord_nl_house} নং ঘৰত অৱস্থান কৰি {topic} স্থানক সুদৃঢ় কৰিছে।"
+                    elif not lord_nl_benefic and lord_nl_dusthana:
+                        house_analysis += f" {lord_name}ৰ নক্ষত্ৰ অধিপতি {lord_nak_lord} অশুভ গ্ৰহ আৰু {lord_nl_house} নং দুঃস্থানত অৱস্থান কৰি {topic} স্থানত গুৰুতৰ বাধাৰ সৃষ্টি কৰিব পাৰে।"
 
     # Build the system prompt
     gender_text = "জাতিকা (মহিলা)" if gender == "female" else "জাতক (পুৰুষ)"
@@ -190,6 +235,15 @@ def chat_with_ai(user_name: str, question: str, planets_data: list,
 - তুমি কেৱল জ্যোতিষশাস্ত্ৰৰ সম্ভাৱনা, কাৰণ, সমস্যা, আৰু চূড়ান্ত ফলাফলৰ ওপৰত গুৰুত্ব দিবা।
 - কোনো ধৰণৰ সাধাৰণ অস্বীকাৰ (generic disclaimer), অলাগতিয়াল পাতনি, বা অদৰকাৰী তথ্য লিখিব নালাগে।
 - পোনপটীয়াকৈ বিশ্লেষণলৈ আহিবা।
+
+জ্যোতিষীয় বিশ্লেষণৰ গুৰুত্বপূৰ্ণ সূত্ৰ (এই সূত্ৰসমূহ ব্যৱহাৰ কৰি বিশ্লেষণ কৰিবা):
+1. নক্ষত্ৰ অধিপতি সূত্ৰ: কোনো গ্ৰহৰ নক্ষত্ৰৰ অধিপতি যদি শুভ গ্ৰহ হয় আৰু শুভ ঘৰত (1,2,4,5,7,9,10,11) অৱস্থান কৰে, তেন্তে সেই গ্ৰহই শুভ ফল দিব — গ্ৰহটো নিজে অশুভ হ'লেও। বিপৰীতে, নক্ষত্ৰ অধিপতি অশুভ গ্ৰহ হৈ দুঃস্থানত (6,8,12) থাকিলে অতি অশুভ ফল দিব।
+2. ঘৰৰ অধিপতি সূত্ৰ: ঘৰৰ অধিপতি গ্ৰহ যি ঘৰত অৱস্থান কৰে, সেই ঘৰৰ বিষয়সমূহৰ ওপৰত প্ৰভাৱ পৰে। যেনে: 7ম ঘৰৰ অধিপতি 8ম ঘৰত থাকিলে বিবাহিত জীৱনত বাধা, মতানৈক্য, বা জীৱনসংগীৰ স্বাস্থ্যজনিত সমস্যা হ'ব পাৰে।
+3. মাংগলিক দোষ সূত্ৰ: মংগল 1,2,4,7,8,12 ঘৰত থাকিলে মাংগলিক দোষ হয় — বিবাহত বিলম্ব, মতানৈক্য, বা বিচ্ছেদৰ সম্ভাৱনা থাকে।
+4. তীক্ষ্ণ নক্ষত্ৰ সূত্ৰ: কোনো গ্ৰহ আৰ্দ্ৰা, অশ্লেষা, জ্যেষ্ঠা, বা মূল নক্ষত্ৰত থাকিলে তাৰ ফল অশুভ হয় — বিশেষকৈ সম্পৰ্ক আৰু স্বাস্থ্যৰ ক্ষেত্ৰত।
+5. দশা সূত্ৰ: বৰ্তমানৰ মহাদশা আৰু অন্তৰ্দশাৰ গ্ৰহসমূহৰ অৱস্থান অনুসৰি ফলাফলৰ তীব্ৰতা নিৰ্ণয় কৰা হয়। দশাৰ গ্ৰহ যদি প্ৰশ্নৰ ঘৰৰ সৈতে সম্বন্ধযুক্ত, তেন্তে সেই সময়ত বিশেষ প্ৰভাৱ পৰে।
+6. শনি-মংগল যুতি সূত্ৰ: শনি আৰু মংগল একেলগে কোনো ঘৰত থাকিলে (বিশেষকৈ 7ম ঘৰত) বিবাহিত জীৱনত গুৰুতৰ সমস্যা, দাম্পত্য কলহ, বা দীৰ্ঘম্যাদী বিচ্ছেদৰ সম্ভাৱনা থাকে।
+
 - যদি কোনো নেতিবাচক গ্ৰহ প্ৰভাৱ বা দোষ থাকে, তেন্তে নিৰ্দিষ্ট, ব্যৱহাৰিক বৈদিক জ্যোতিষীয় প্ৰতিকাৰ (যেনে: মন্ত্ৰ, ৰত্ন, দান, ব্ৰত) অসমীয়া ভাষাত উল্লেখ কৰিবা।
 - উত্তৰ বিতংভাৱে, পেৰেগ্ৰাফ আকাৰত, আৰু শুদ্ধ অসমীয়া ভাষাত দিবা।
 - তুমি কেতিয়াও চিকিৎসা, আইনী, বা বিত্তীয় পৰামৰ্শ নিদিবা — কেৱল জ্যোতিষীয় বিশ্লেষণ দিবা।"""
@@ -274,11 +328,13 @@ def _fallback_response(question: str, planets_data: list, planet_houses: dict,
         lord_house = None
         lord_nak = ""
         lord_tikshna = False
+        lord_nak_lord = ""
         for p in planets_data:
             if p.get("name") == lord_name:
                 lord_house = planet_houses.get(lord_name, -1) + 1
                 lord_nak = p.get("nakshatra", "")
                 lord_tikshna = lord_nak in TIKSHNA_NAKSHATRAS
+                lord_nak_lord = p.get("lord", "")
                 break
 
         response_parts.append(f"আপোনাৰ কুণ্ডলীৰ {house_num} নং ঘৰটো {topic} স্থান।")
@@ -288,8 +344,23 @@ def _fallback_response(question: str, planets_data: list, planet_houses: dict,
             response_parts.append(f"এই ঘৰত {planet_names} গ্ৰহ অৱস্থান কৰিছে।")
             for hp in house_planets:
                 hp_nak = hp.get("nakshatra", "")
+                hp_lord = hp.get("lord", "")
                 if hp_nak in TIKSHNA_NAKSHATRAS:
-                    response_parts.append(f"{hp['name']} গ্ৰহ {hp_nak} তীক্ষ্ণ নক্ষত্ৰত অৱস্থান কৰি কিছু অশুভ প্ৰভাৱ দিব পাৰে।")
+                    response_parts.append(f"{hp['name']} গ্ৰহ {hp_nak} তীক্ষ্ণ নক্ষত্ৰত অৱস্থান কৰি অশুভ প্ৰভাৱ দিব পাৰে।")
+                # Nakshatra lord analysis
+                if hp_lord:
+                    nl_house = planet_houses.get(hp_lord, -1) + 1 if planet_houses.get(hp_lord, -1) >= 0 else None
+                    if nl_house is not None:
+                        nl_benefic = hp_lord in NATURAL_BENEFICS
+                        nl_dusthana = nl_house in DUSTHANA_HOUSES
+                        if nl_benefic and not nl_dusthana:
+                            response_parts.append(f"{hp['name']}ৰ নক্ষত্ৰ অধিপতি {hp_lord} শুভ গ্ৰহ আৰু {nl_house} নং শুভ ঘৰত অৱস্থান কৰিছে — ই {topic} স্থানৰ বাবে শুভ সংকেত।")
+                        elif nl_benefic and nl_dusthana:
+                            response_parts.append(f"{hp['name']}ৰ নক্ষত্ৰ অধিপতি {hp_lord} শুভ গ্ৰহ হ'লেও {nl_house} নং দুঃস্থানত অৱস্থান কৰিছে — ই {topic} স্থানত কিছু বাধাৰ সৃষ্টি কৰিব পাৰে।")
+                        elif not nl_benefic and not nl_dusthana:
+                            response_parts.append(f"{hp['name']}ৰ নক্ষত্ৰ অধিপতি {hp_lord} অশুভ গ্ৰহ কিন্তু {nl_house} নং শুভ ঘৰত অৱস্থান কৰিছে — ই {topic} স্থানত মিশ্ৰিত ফল দিব।")
+                        elif not nl_benefic and nl_dusthana:
+                            response_parts.append(f"{hp['name']}ৰ নক্ষত্ৰ অধিপতি {hp_lord} অশুভ গ্ৰহ আৰু {nl_house} নং দুঃস্থানত অৱস্থান কৰিছে — ই {topic} স্থানৰ বাবে অতি অশুভ, গুৰুতৰ সমস্যাৰ সংকেত।")
         else:
             response_parts.append(f"এই ঘৰত কোনো গ্ৰহ অৱস্থান কৰা নাই।")
 
@@ -297,15 +368,80 @@ def _fallback_response(question: str, planets_data: list, planet_houses: dict,
         if lord_house:
             response_parts.append(f"{lord_name} গ্ৰহ আপোনাৰ কুণ্ডলীৰ {lord_house} নং ঘৰত অৱস্থান কৰিছে।")
             if lord_tikshna:
-                response_parts.append(f"{lord_name} গ্ৰহ {lord_nak} তীক্ষ্ণ নক্ষত্ৰত অৱস্থান কৰাৰ বাবে {topic} স্থানত কিছু বাধা-বিঘিনি আহিব পাৰে।")
+                response_parts.append(f"{lord_name} গ্ৰহ {lord_nak} তীক্ষ্ণ নক্ষত্ৰত অৱস্থান কৰাৰ বাবে {topic} স্থানত বাধা-বিঘিনি আহিব পাৰে।")
+            # House lord's nakshatra lord analysis
+            if lord_nak_lord:
+                lnl_house = planet_houses.get(lord_nak_lord, -1) + 1 if planet_houses.get(lord_nak_lord, -1) >= 0 else None
+                if lnl_house is not None:
+                    lnl_benefic = lord_nak_lord in NATURAL_BENEFICS
+                    lnl_dusthana = lnl_house in DUSTHANA_HOUSES
+                    if lnl_benefic and not lnl_dusthana:
+                        response_parts.append(f"{lord_name}ৰ নক্ষত্ৰ অধিপতি {lord_nak_lord} শুভ গ্ৰহ আৰু {lnl_house} নং ঘৰত অৱস্থান কৰি {topic} স্থানক সুদৃঢ় কৰিছে।")
+                    elif not lnl_benefic and lnl_dusthana:
+                        response_parts.append(f"{lord_name}ৰ নক্ষত্ৰ অধিপতি {lord_nak_lord} অশুভ গ্ৰহ আৰু {lnl_house} নং দুঃস্থানত অৱস্থান কৰি {topic} স্থানত গুৰুতৰ বাধাৰ সৃষ্টি কৰিব পাৰে।")
 
-    # Mangal dosha for marriage
+    # ─── Rule-based predictions ───
+    # Marriage-specific rules
     if topic == "বিবাহ":
         mangal = next((d for d in dosha_results if d.get("key") == "mangal_dosha" and d.get("present")), None)
         if mangal:
             response_parts.append("\nআপোনাৰ কুণ্ডলীত মাংগলিক দোষ উপস্থিত। ই বিবাহৰ ক্ষেত্ৰত বিলম্ব বা মতানৈক্যৰ সৃষ্টি কৰিব পাৰে। মাংগলিক দোষ নিবাৰণৰ বাবে হনুমান চালিচা পাঠ, মঙ্গলবাৰৰ ব্ৰত, আৰু পোৱাল ৰত্ন ধাৰণ কৰিব পাৰে।")
         else:
             response_parts.append("\nআপোনাৰ কুণ্ডলীত মাংগলিক দোষ অনুপস্থিত, যি বিবাহৰ বাবে শুভ।")
+
+        # 7th lord in 8th house rule
+        if lord_house == 8:
+            response_parts.append(f"সূত্ৰ: ৭ম ঘৰৰ অধিপতি {lord_name} ৮ম ঘৰত অৱস্থান কৰিছে। ই বিবাহিত জীৱনত মতানৈক্য, জীৱনসংগীৰ স্বাস্থ্যজনিত সমস্যা, বা কৰ্মসূত্ৰে দূৰৈত থকাৰ সম্ভাৱনা সৃষ্টি কৰে।")
+        # 7th lord in 6th house rule
+        if lord_house == 6:
+            response_parts.append(f"সূত্ৰ: ৭ম ঘৰৰ অধিপতি {lord_name} ৬ষ্ঠ ঘৰত অৱস্থান কৰিছে। ই বিবাহিত জীৱনত কলহ, স্বাস্থ্যজনিত সমস্যা, বা আইনী জটিলতাৰ সম্ভাৱনা সৃষ্টি কৰে।")
+        # 7th lord in 12th house rule
+        if lord_house == 12:
+            response_parts.append(f"সূত্ৰ: ৭ম ঘৰৰ অধিপতি {lord_name} ১২শ ঘৰত অৱস্থান কৰিছে। ই বিবাহিত জীৱনত দূৰত্ব, বিচ্ছেদ, বা বিদেশ যাত্ৰাৰ সম্ভাৱনা সৃষ্টি কৰে।")
+
+        # Saturn+Mars conjunction in 7th
+        house_planet_names = [p["name"] for p in house_planets]
+        if "শনি" in house_planet_names and "মংগল" in house_planet_names:
+            response_parts.append("সূত্ৰ: ৭ম ঘৰত শনি-মংগলৰ যুতি অতি অশুভ। ই দাম্পত্য কলহ, দীৰ্ঘম্যাদী বিচ্ছেদ, বা বিবাহ বিচ্ছেদৰ সম্ভাৱনা সৃষ্টি কৰে।")
+
+    # Career-specific rules
+    if topic == "কৰ্ম":
+        if lord_house == 6:
+            response_parts.append(f"সূত্ৰ: ১০ম ঘৰৰ অধিপতি {lord_name} ৬ষ্ঠ ঘৰত অৱস্থান কৰিছে। ই কৰ্মক্ষেত্ৰত প্ৰতিযোগিতা, স্বাস্থ্যজনিত বাধা, বা চাকৰিৰ অনিশ্চয়তাৰ সম্ভাৱনা সৃষ্টি কৰে।")
+        if lord_house == 8:
+            response_parts.append(f"সূত্ৰ: ১০ম ঘৰৰ অধিপতি {lord_name} ৮ম ঘৰত অৱস্থান কৰিছে। ই কৰ্মক্ষেত্ৰত আকস্মিক পৰিৱৰ্তন, গোপন শত্ৰু, বা আৰ্থিক অনিশ্চয়তাৰ সম্ভাৱনা সৃষ্টি কৰে।")
+        if lord_house == 12:
+            response_parts.append(f"সূত্ৰ: ১০ম ঘৰৰ অধিপতি {lord_name} ১২শ ঘৰত অৱস্থান কৰিছে। ই বিদেশত কৰ্ম, আধ্যাত্মিক ক্ষেত্ৰত কৰ্ম, বা কৰ্মক্ষেত্ৰত দূৰত্বৰ সম্ভাৱনা সৃষ্টি কৰে।")
+
+    # Children-specific rules
+    if topic == "সন্তান":
+        if lord_house == 6:
+            response_parts.append(f"সূত্ৰ: ৫ম ঘৰৰ অধিপতি {lord_name} ৬ষ্ঠ ঘৰত অৱস্থান কৰিছে। ই সন্তান লাভত বিলম্ব বা স্বাস্থ্যজনিত সমস্যাৰ সম্ভাৱনা সৃষ্টি কৰে।")
+        if lord_house == 8:
+            response_parts.append(f"সূত্ৰ: ৫ম ঘৰৰ অধিপতি {lord_name} ৮ম ঘৰত অৱস্থান কৰিছে। ই সন্তান লাভত গুৰুতৰ বাধা বা অনিশ্চয়তাৰ সম্ভাৱনা সৃষ্টি কৰে।")
+
+    # Health-specific rules
+    if topic == "স্বাস্থ্য":
+        if lord_house == 6:
+            response_parts.append(f"সূত্ৰ: লগ্নৰ অধিপতি {lord_name} ৬ষ্ঠ ঘৰত অৱস্থান কৰিছে। ই স্বাস্থ্যৰ ক্ষেত্ৰত ৰোগ প্ৰতিৰোধ ক্ষমতা কমি যোৱাৰ সম্ভাৱনা সৃষ্টি কৰে।")
+        if lord_house == 8:
+            response_parts.append(f"সূত্ৰ: লগ্নৰ অধিপতি {lord_name} ৮ম ঘৰত অৱস্থান কৰিছে। ই দীৰ্ঘম্যাদী ৰোগ বা আকস্মিক স্বাস্থ্যজনিত সমস্যাৰ সম্ভাৱনা সৃষ্টি কৰে।")
+
+    # Finance-specific rules
+    if topic == "ধন":
+        if lord_house == 6:
+            response_parts.append(f"সূত্ৰ: ২য় ঘৰৰ অধিপতি {lord_name} ৬ষ্ঠ ঘৰত অৱস্থান কৰিছে। ই আৰ্থিক ক্ষেত্ৰত ঋণ, খৰচ বৃদ্ধি, বা অনিশ্চয়তাৰ সম্ভাৱনা সৃষ্টি কৰে।")
+        if lord_house == 8:
+            response_parts.append(f"সূত্ৰ: ২য় ঘৰৰ অধিপতি {lord_name} ৮ম ঘৰত অৱস্থান কৰিছে। ই আৰ্থিক ক্ষেত্ৰত আকস্মিক লোকচান বা গোপন ব্যয়ৰ সম্ভাৱনা সৃষ্টি কৰে।")
+        if lord_house == 12:
+            response_parts.append(f"সূত্ৰ: ২য় ঘৰৰ অধিপতি {lord_name} ১২শ ঘৰত অৱস্থান কৰিছে। ই অযথা ব্যয়, বিদেশত বিনিয়োগ, বা আৰ্থিক ক্ষতিৰ সম্ভাৱনা সৃষ্টি কৰে।")
+
+    # Education-specific rules
+    if topic == "বিদ্যা":
+        if lord_house == 6:
+            response_parts.append(f"সূত্ৰ: ৪ৰ্থ ঘৰৰ অধিপতি {lord_name} ৬ষ্ঠ ঘৰত অৱস্থান কৰিছে। ই শিক্ষাৰ ক্ষেত্ৰত বাধা, প্ৰতিযোগিতা, বা স্বাস্থ্যজনিত সমস্যাৰ সম্ভাৱনা সৃষ্টি কৰে।")
+        if lord_house == 12:
+            response_parts.append(f"সূত্ৰ: ৪ৰ্থ ঘৰৰ অধিপতি {lord_name} ১২শ ঘৰত অৱস্থান কৰিছে। ই বিদেশত শিক্ষা বা শিক্ষাৰ ক্ষেত্ৰত দূৰত্বৰ সম্ভাৱনা সৃষ্টি কৰে।")
 
     # Current dasha
     if dasa_data:
@@ -315,7 +451,7 @@ def _fallback_response(question: str, planets_data: list, planet_houses: dict,
             ad = md["sub_dasas"][0]
             response_parts.append(f"আৰু {ad.get('ad_lord', '')} অন্তৰ্দশা চলি আছে। এই দশাৰ প্ৰভাৱেও {topic} স্থানত পৰিব।")
 
-    # Brief analysis summary instead of referring to another astrologer
+    # Brief analysis summary
     response_parts.append(f"\n【সাৰাংশ】")
     response_parts.append(f"ওপৰোক্ত বিশ্লেষণ অনুসৰি, আপোনাৰ {topic} স্থানৰ গ্ৰহ অৱস্থান আৰু বৰ্তমানৰ দশাৰ প্ৰভাৱ বিবেচনা কৰি ক'ব পাৰি যে এই বিষয়ত আপুনি ধৈৰ্য্য আৰু সচেতনতা অৱলম্বন কৰা উচিত। শুভ গ্ৰহৰ প্ৰভাৱ থাকিলে সফলতা লাভ কৰিব, আৰু অশুভ প্ৰভাৱ থাকিলে উপযুক্ত প্ৰতিকাৰ গ্ৰহণ কৰিলে পৰিস্থিতিৰ উন্নতি হ'ব।")
 
