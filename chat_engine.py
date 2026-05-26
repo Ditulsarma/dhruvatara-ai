@@ -9,6 +9,7 @@ astrology-related questions based on the user's kundli data.
 
 import json
 import requests
+import swisseph as swe
 from datetime import datetime
 
 # ─── Ollama API Configuration ───────────────────────────────────
@@ -37,26 +38,26 @@ SHUBH_HOUSES = [1, 2, 4, 5, 7, 9, 10, 11]
 
 def _calculate_gochara(planets_data: list, planet_houses: dict, moon_rasi: str) -> dict:
     """
-    Calculate current transit (gochara) positions for Saturn, Rahu, and Jupiter.
-    Returns a dict with transit analysis for each key planet.
+    Calculate CURRENT transit (gochara) positions for Saturn, Rahu, and Jupiter
+    using swisseph for today's actual planetary positions.
+    Then compare to natal Moon and Lagna signs.
     
     Saturn transit rules (Sade Sati / Dhaiya):
-    - Sade Sati: Saturn transiting 12th, 1st, or 2nd from Moon sign
-    - Dhaiya: Saturn transiting 4th or 8th from Moon sign
-    - Saturn 7th from Lagna or Moon = Ashtam Shani / Saptam Shani
+    - Sade Sati: Saturn transiting 12th, 1st, or 2nd from natal Moon sign
+    - Dhaiya: Saturn transiting 4th or 8th from natal Moon sign
+    - Saturn 7th from Lagna or Moon = Saptam Shani
     
     Jupiter transit rules:
-    - Jupiter's aspect on Lagna/Moon can neutralize Saturn's malefic effects
-    - Jupiter in 2,5,7,9,11 from Moon = shubh
-    - Jupiter in 6,8,12 from Moon = ashubh
+    - Jupiter in 2,5,7,9,11 from natal Moon = shubh (protects from Saturn)
+    - Jupiter in 6,8,12 from natal Moon = ashubh (amplifies Saturn's malefic effects)
     """
     rasi_names = ["মেষ", "বৃষ", "মিথুন", "কৰ্কট", "সিংহ", "কন্যা",
                   "তুলা", "বৃশ্চিক", "ধনু", "মকৰ", "কুম্ভ", "মীন"]
     
-    # Find Moon's rasi index
+    # Find natal Moon's rasi index (from birth chart)
     moon_rasi_idx = rasi_names.index(moon_rasi) if moon_rasi in rasi_names else -1
     
-    # Find Lagna rasi index (from planets_data, the ascendant)
+    # Find natal Lagna rasi index (from birth chart planets_data)
     lagna_rasi_idx = -1
     for p in planets_data:
         if p.get("name") == "লগ্ন":
@@ -65,86 +66,95 @@ def _calculate_gochara(planets_data: list, planet_houses: dict, moon_rasi: str) 
                 lagna_rasi_idx = rasi_names.index(lagna_rasi)
             break
     
-    # Get current transit positions of Saturn, Rahu, Jupiter from planets_data
-    saturn_house = planet_houses.get("শনি", -1) + 1 if planet_houses.get("শনি", -1) >= 0 else None
-    rahu_house = planet_houses.get("ৰাহু", -1) + 1 if planet_houses.get("ৰাহু", -1) >= 0 else None
-    jupiter_house = planet_houses.get("বৃহস্পতি", -1) + 1 if planet_houses.get("বৃহস্পতি", -1) >= 0 else None
+    # ─── Calculate CURRENT transit positions using swisseph ───
+    # Get today's Julian Day
+    now = datetime.utcnow()
+    jd = swe.julday(now.year, now.month, now.day, now.hour + now.minute / 60.0)
     
-    # Get Saturn's rasi
-    saturn_rasi_idx = -1
-    for p in planets_data:
-        if p.get("name") == "শনি":
-            sat_rasi = p.get("rasi", "")
-            if sat_rasi in rasi_names:
-                saturn_rasi_idx = rasi_names.index(sat_rasi)
-            break
+    # Set sidereal mode (Lahiri ayanamsa)
+    swe.set_sid_mode(swe.SIDM_LAHIRI, 0, 0)
     
-    # Get Jupiter's rasi
-    jupiter_rasi_idx = -1
-    for p in planets_data:
-        if p.get("name") == "বৃহস্পতি":
-            jup_rasi = p.get("rasi", "")
-            if jup_rasi in rasi_names:
-                jupiter_rasi_idx = rasi_names.index(jup_rasi)
-            break
+    transit_positions = {}
+    planet_ids = {
+        "শনি": swe.SATURN,
+        "বৃহস্পতি": swe.JUPITER,
+        "ৰাহু": swe.MEAN_NODE
+    }
     
-    # Get Rahu's rasi
-    rahu_rasi_idx = -1
-    for p in planets_data:
-        if p.get("name") == "ৰাহু":
-            rh_rasi = p.get("rasi", "")
-            if rh_rasi in rasi_names:
-                rahu_rasi_idx = rasi_names.index(rh_rasi)
-            break
+    for p_name, p_id in planet_ids.items():
+        try:
+            pos, _ = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
+            lon = pos[0] % 360
+            rasi_idx = int(lon / 30) % 12
+            transit_positions[p_name] = {
+                "longitude": round(lon, 2),
+                "rasi_idx": rasi_idx,
+                "rasi_name": rasi_names[rasi_idx]
+            }
+        except Exception as e:
+            print(f"Gochara calc error for {p_name}: {e}")
+            transit_positions[p_name] = None
     
     gochara = {
-        "saturn": {"house": saturn_house, "rasi_idx": saturn_rasi_idx},
-        "rahu": {"house": rahu_house, "rasi_idx": rahu_rasi_idx},
-        "jupiter": {"house": jupiter_house, "rasi_idx": jupiter_rasi_idx},
+        "saturn": transit_positions.get("শনি"),
+        "jupiter": transit_positions.get("বৃহস্পতি"),
+        "rahu": transit_positions.get("ৰাহু"),
         "analysis": []
     }
     
+    saturn_rasi_idx = gochara["saturn"]["rasi_idx"] if gochara["saturn"] else -1
+    jupiter_rasi_idx = gochara["jupiter"]["rasi_idx"] if gochara["jupiter"] else -1
+    rahu_rasi_idx = gochara["rahu"]["rasi_idx"] if gochara["rahu"] else -1
+    
     # ─── Saturn Gochara Analysis ───
     if moon_rasi_idx >= 0 and saturn_rasi_idx >= 0:
-        # Saturn's position relative to Moon (distance in signs)
         sat_from_moon = (saturn_rasi_idx - moon_rasi_idx) % 12
         
-        if sat_from_moon in [12, 0, 1]:  # 12th, 1st, 2nd from Moon
+        if sat_from_moon == 0:
             gochara["saturn"]["sade_sati"] = True
-            phase = "প্ৰথম" if sat_from_moon == 12 else ("মধ্য" if sat_from_moon == 0 else "শেষ")
-            gochara["analysis"].append(f"শনি গ্ৰহৰ সাৰে সাতি চলি আছে ({phase} পৰ্যায়)। চন্দ্ৰ ৰাশিৰ পৰা {sat_from_moon+1 if sat_from_moon < 12 else 1} নং ঘৰত শনি অৱস্থান কৰিছে। সাৰে সাতি কালত মানসিক অস্থিৰতা, আৰ্থিক টনাটনি, স্বাস্থ্যজনিত সমস্যা, আৰু কৰ্মক্ষেত্ৰত বাধাৰ সম্ভাৱনা থাকে।")
-        elif sat_from_moon == 4:
+            gochara["analysis"].append(f"শনি গ্ৰহৰ সাৰে সাতি চলি আছে (মধ্য পৰ্যায়)। বৰ্তমান শনি গ্ৰহ {gochara['saturn']['rasi_name']} ৰাশিত অৱস্থান কৰিছে, যি আপোনাৰ জন্ম ৰাশি ({moon_rasi})। চন্দ্ৰ ৰাশিৰ পৰা ১ম ঘৰত শনি অৱস্থান কৰিছে। সাৰে সাতিৰ এই মধ্য পৰ্যায়ত মানসিক অস্থিৰতা, আৰ্থিক টনাটনি, স্বাস্থ্যজনিত সমস্যা, আৰু কৰ্মক্ষেত্ৰত বাধাৰ সম্ভাৱনা থাকে।")
+        elif sat_from_moon == 1:
+            gochara["saturn"]["sade_sati"] = True
+            gochara["analysis"].append(f"শনি গ্ৰহৰ সাৰে সাতি চলি আছে (শেষ পৰ্যায়)। বৰ্তমান শনি গ্ৰহ {gochara['saturn']['rasi_name']} ৰাশিত অৱস্থান কৰিছে, যি আপোনাৰ জন্ম ৰাশি ({moon_rasi})ৰ পৰা ২য় ঘৰ। সাৰে সাতিৰ এই শেষ পৰ্যায়ত আৰ্থিক টনাটনি, পাৰিবাৰিক চিন্তা, আৰু বাক্পটুতাত বাধাৰ সম্ভাৱনা থাকে।")
+        elif sat_from_moon == 11:  # 12th from Moon
+            gochara["saturn"]["sade_sati"] = True
+            gochara["analysis"].append(f"শনি গ্ৰহৰ সাৰে সাতি চলি আছে (প্ৰথম পৰ্যায়)। বৰ্তমান শনি গ্ৰহ {gochara['saturn']['rasi_name']} ৰাশিত অৱস্থান কৰিছে, যি আপোনাৰ জন্ম ৰাশি ({moon_rasi})ৰ পৰা ১২শ ঘৰ। সাৰে সাতিৰ এই প্ৰথম পৰ্যায়ত অযথা ব্যয়, নিদ্ৰাহীনতা, আৰু মানসিক অশান্তিৰ সম্ভাৱনা থাকে।")
+        elif sat_from_moon == 3:  # 4th from Moon
             gochara["saturn"]["dhaiya"] = True
-            gochara["analysis"].append("শনি গ্ৰহৰ ধেয়া (Dhaiya) চলি আছে। চন্দ্ৰ ৰাশিৰ পৰা ৪ৰ্থ ঘৰত শনি অৱস্থান কৰিছে। এই সময়ত ঘৰ-পৰিয়াল, মাতৃ, সুখ-শান্তি, আৰু স্থাৱৰ সম্পত্তিৰ ক্ষেত্ৰত বাধাৰ সম্ভাৱনা থাকে।")
-        elif sat_from_moon == 8:
+            gochara["analysis"].append(f"শনি গ্ৰহৰ ধেয়া (Dhaiya) চলি আছে। বৰ্তমান শনি গ্ৰহ {gochara['saturn']['rasi_name']} ৰাশিত অৱস্থান কৰিছে, যি আপোনাৰ জন্ম ৰাশি ({moon_rasi})ৰ পৰা ৪ৰ্থ ঘৰ। এই সময়ত ঘৰ-পৰিয়াল, মাতৃ, সুখ-শান্তি, আৰু স্থাৱৰ সম্পত্তিৰ ক্ষেত্ৰত বাধাৰ সম্ভাৱনা থাকে।")
+        elif sat_from_moon == 7:  # 8th from Moon
             gochara["saturn"]["dhaiya"] = True
-            gochara["analysis"].append("শনি গ্ৰহৰ ধেয়া (Dhaiya) চলি আছে। চন্দ্ৰ ৰাশিৰ পৰা ৮ম ঘৰত শনি অৱস্থান কৰিছে। এই সময়ত আয়ুস, গোপন শত্ৰু, আকস্মিক বিপদ, আৰু স্বাস্থ্যজনিত গুৰুতৰ সমস্যাৰ সম্ভাৱনা থাকে।")
-        elif sat_from_moon == 7:
-            gochara["analysis"].append("শনি গ্ৰহ চন্দ্ৰ ৰাশিৰ পৰা ৭ম ঘৰত অৱস্থান কৰিছে। ই সম্পৰ্ক, বিবাহ, আৰু অংশীদাৰিত্বৰ ক্ষেত্ৰত বাধা-বিঘিনিৰ সৃষ্টি কৰিব পাৰে।")
+            gochara["analysis"].append(f"শনি গ্ৰহৰ ধেয়া (Dhaiya) চলি আছে। বৰ্তমান শনি গ্ৰহ {gochara['saturn']['rasi_name']} ৰাশিত অৱস্থান কৰিছে, যি আপোনাৰ জন্ম ৰাশি ({moon_rasi})ৰ পৰা ৮ম ঘৰ। এই সময়ত আয়ুস, গোপন শত্ৰু, আকস্মিক বিপদ, আৰু স্বাস্থ্যজনিত গুৰুতৰ সমস্যাৰ সম্ভাৱনা থাকে।")
+        elif sat_from_moon == 6:  # 7th from Moon
+            gochara["analysis"].append(f"শনি গ্ৰহ {gochara['saturn']['rasi_name']} ৰাশিত অৱস্থান কৰিছে, যি আপোনাৰ জন্ম ৰাশি ({moon_rasi})ৰ পৰা ৭ম ঘৰ। ই সম্পৰ্ক, বিবাহ, আৰু অংশীদাৰিত্বৰ ক্ষেত্ৰত বাধা-বিঘিনিৰ সৃষ্টি কৰিব পাৰে।")
+        else:
+            gochara["analysis"].append(f"শনি গ্ৰহ বৰ্তমান {gochara['saturn']['rasi_name']} ৰাশিত অৱস্থান কৰিছে, যি আপোনাৰ জন্ম ৰাশি ({moon_rasi})ৰ পৰা {sat_from_moon+1 if sat_from_moon < 11 else sat_from_moon-10} নং ঘৰ। এই সময়ত শনিৰ সাৰে সাতি বা ধেয়া চলি থকা নাই।")
     
     # Saturn from Lagna
     if lagna_rasi_idx >= 0 and saturn_rasi_idx >= 0:
         sat_from_lagna = (saturn_rasi_idx - lagna_rasi_idx) % 12
-        if sat_from_lagna == 7:
-            gochara["analysis"].append("শনি গ্ৰহ লগ্নৰ পৰা ৭ম ঘৰত অৱস্থান কৰিছে (সপ্তম শনি)। ই সম্পৰ্ক, বিবাহ, আৰু সহযোগিতাৰ ক্ষেত্ৰত প্ৰত্যাহ্বান সৃষ্টি কৰিব পাৰে।")
+        if sat_from_lagna == 6:  # 7th from Lagna
+            gochara["analysis"].append(f"শনি গ্ৰহ লগ্ন ({rasi_names[lagna_rasi_idx]})ৰ পৰা ৭ম ঘৰত অৱস্থান কৰিছে (সপ্তম শনি)। ই সম্পৰ্ক, বিবাহ, আৰু সহযোগিতাৰ ক্ষেত্ৰত প্ৰত্যাহ্বান সৃষ্টি কৰিব পাৰে।")
         elif sat_from_lagna == 0:
-            gochara["analysis"].append("শনি গ্ৰহ লগ্নত অৱস্থান কৰিছে (লগ্নগত শনি)। ই ব্যক্তিগত স্বাস্থ্য, আত্মবিশ্বাস, আৰু নতুন কাম আৰম্ভ কৰাত বাধাৰ সৃষ্টি কৰিব পাৰে।")
+            gochara["analysis"].append(f"শনি গ্ৰহ লগ্নত ({rasi_names[lagna_rasi_idx]}) অৱস্থান কৰিছে (লগ্নগত শনি)। ই ব্যক্তিগত স্বাস্থ্য, আত্মবিশ্বাস, আৰু নতুন কাম আৰম্ভ কৰাত বাধাৰ সৃষ্টি কৰিব পাৰে।")
     
     # ─── Jupiter Gochara Analysis ───
     if moon_rasi_idx >= 0 and jupiter_rasi_idx >= 0:
         jup_from_moon = (jupiter_rasi_idx - moon_rasi_idx) % 12
-        if jup_from_moon in [2, 5, 7, 9, 11]:
+        if jup_from_moon in [1, 4, 6, 8, 10]:  # 2,5,7,9,11 from Moon (0-indexed)
             gochara["jupiter"]["shubh"] = True
-            gochara["analysis"].append(f"বৃহস্পতি গ্ৰহ চন্দ্ৰ ৰাশিৰ পৰা {jup_from_moon} নং শুভ ঘৰত অৱস্থান কৰিছে। বৃহস্পতিৰ এই শুভ অৱস্থানে শনিৰ অশুভ প্ৰভাৱ বহু পৰিমাণে নিষ্ক্ৰিয় কৰিব। জ্ঞান, ভাগ্য, আৰু ধন লাভৰ সম্ভাৱনা বৃদ্ধি পাব।")
-        elif jup_from_moon in [6, 8, 12]:
+            gochara["analysis"].append(f"বৃহস্পতি গ্ৰহ বৰ্তমান {gochara['jupiter']['rasi_name']} ৰাশিত অৱস্থান কৰিছে, যি আপোনাৰ জন্ম ৰাশি ({moon_rasi})ৰ পৰা {jup_from_moon+1} নং শুভ ঘৰ। বৃহস্পতিৰ এই শুভ অৱস্থানে শনিৰ অশুভ প্ৰভাৱ বহু পৰিমাণে নিষ্ক্ৰিয় কৰিব। জ্ঞান, ভাগ্য, আৰু ধন লাভৰ সম্ভাৱনা বৃদ্ধি পাব।")
+        elif jup_from_moon in [5, 7, 11]:  # 6,8,12 from Moon (0-indexed)
             gochara["jupiter"]["shubh"] = False
-            gochara["analysis"].append(f"বৃহস্পতি গ্ৰহ চন্দ্ৰ ৰাশিৰ পৰা {jup_from_moon} নং দুঃস্থানত অৱস্থান কৰিছে। বৃহস্পতিৰ এই অৱস্থানে শনিৰ অশুভ প্ৰভাৱ আৰু অধিক বৃদ্ধি কৰিব পাৰে। এই সময়ত ধৈৰ্য্য আৰু সাৱধানতা অৱলম্বন কৰা উচিত।")
+            gochara["analysis"].append(f"বৃহস্পতি গ্ৰহ বৰ্তমান {gochara['jupiter']['rasi_name']} ৰাশিত অৱস্থান কৰিছে, যি আপোনাৰ জন্ম ৰাশি ({moon_rasi})ৰ পৰা {jup_from_moon+1} নং দুঃস্থান। বৃহস্পতিৰ এই অৱস্থানে শনিৰ অশুভ প্ৰভাৱ আৰু অধিক বৃদ্ধি কৰিব পাৰে। এই সময়ত ধৈৰ্য্য আৰু সাৱধানতা অৱলম্বন কৰা উচিত।")
+        else:
+            gochara["analysis"].append(f"বৃহস্পতি গ্ৰহ বৰ্তমান {gochara['jupiter']['rasi_name']} ৰাশিত অৱস্থান কৰিছে, যি আপোনাৰ জন্ম ৰাশি ({moon_rasi})ৰ পৰা {jup_from_moon+1} নং ঘৰ। এই অৱস্থান মধ্যম ফলপ্ৰদ।")
     
     if lagna_rasi_idx >= 0 and jupiter_rasi_idx >= 0:
         jup_from_lagna = (jupiter_rasi_idx - lagna_rasi_idx) % 12
-        if jup_from_lagna in [2, 5, 7, 9, 11]:
+        if jup_from_lagna in [1, 4, 6, 8, 10]:
             gochara["jupiter"]["lagna_shubh"] = True
-        elif jup_from_lagna in [6, 8, 12]:
+        elif jup_from_lagna in [5, 7, 11]:
             gochara["jupiter"]["lagna_shubh"] = False
     
     # ─── Combined Saturn-Jupiter Analysis ───
@@ -157,13 +167,15 @@ def _calculate_gochara(planets_data: list, planet_houses: dict, moon_rasi: str) 
     # ─── Rahu Gochara Analysis ───
     if moon_rasi_idx >= 0 and rahu_rasi_idx >= 0:
         rahu_from_moon = (rahu_rasi_idx - moon_rasi_idx) % 12
-        if rahu_from_moon in [1, 2, 4, 5, 7, 8, 9, 12]:
-            gochara["analysis"].append(f"ৰাহু গ্ৰহ চন্দ্ৰ ৰাশিৰ পৰা {rahu_from_moon} নং ঘৰত অৱস্থান কৰিছে। ৰাহুৰ এই গোচৰে মানসিক অস্থিৰতা, ভ্ৰম, আৰু অপ্ৰত্যাশিত পৰিঘটনাৰ সম্ভাৱনা বৃদ্ধি কৰে।")
+        if rahu_from_moon in [0, 1, 3, 4, 6, 7, 8, 11]:  # 1,2,4,5,7,8,9,12 from Moon
+            gochara["analysis"].append(f"ৰাহু গ্ৰহ বৰ্তমান {gochara['rahu']['rasi_name']} ৰাশিত অৱস্থান কৰিছে, যি আপোনাৰ জন্ম ৰাশি ({moon_rasi})ৰ পৰা {rahu_from_moon+1} নং ঘৰ। ৰাহুৰ এই গোচৰে মানসিক অস্থিৰতা, ভ্ৰম, আৰু অপ্ৰত্যাশিত পৰিঘটনাৰ সম্ভাৱনা বৃদ্ধি কৰে।")
+        else:
+            gochara["analysis"].append(f"ৰাহু গ্ৰহ বৰ্তমান {gochara['rahu']['rasi_name']} ৰাশিত অৱস্থান কৰিছে, যি আপোনাৰ জন্ম ৰাশি ({moon_rasi})ৰ পৰা {rahu_from_moon+1} নং ঘৰ।")
     
     if lagna_rasi_idx >= 0 and rahu_rasi_idx >= 0:
         rahu_from_lagna = (rahu_rasi_idx - lagna_rasi_idx) % 12
-        if rahu_from_lagna in [1, 7]:
-            gochara["analysis"].append(f"ৰাহু গ্ৰহ লগ্নৰ পৰা {rahu_from_lagna} নং ঘৰত অৱস্থান কৰিছে। ই ব্যক্তিগত জীৱনত গুৰুত্বপূৰ্ণ পৰিৱৰ্তন আৰু উচ্চাকাংক্ষা বৃদ্ধিৰ ইংগিত দিয়ে।")
+        if rahu_from_lagna in [0, 6]:  # 1,7 from Lagna
+            gochara["analysis"].append(f"ৰাহু গ্ৰহ লগ্ন ({rasi_names[lagna_rasi_idx]})ৰ পৰা {rahu_from_lagna+1} নং ঘৰত অৱস্থান কৰিছে। ই ব্যক্তিগত জীৱনত গুৰুত্বপূৰ্ণ পৰিৱৰ্তন আৰু উচ্চাকাংক্ষা বৃদ্ধিৰ ইংগিত দিয়ে।")
     
     return gochara
 
