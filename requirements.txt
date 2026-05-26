@@ -11,4 +11,5 @@ pillow==12.2.0
 playwright==1.52.0
 pyswisseph==2.10.3.2
 reportlab==4.5.1
+requests==2.32.3
 Werkzeug==3.1.8
