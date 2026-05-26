@@ -250,13 +250,11 @@ def _build_kundli_context(planets_data: list, planet_houses: dict, planet_signs:
     else:
         context_parts.append("\nমাংগলিক দোষ: অনুপস্থিত")
 
-    # Current dasha
-    if dasa_data:
-        md = dasa_data[0]
-        context_parts.append(f"\nবৰ্তমান মহাদশা: {md.get('md_lord', '')} ({md.get('start', '')} ৰ পৰা {md.get('end', '')} লৈ)")
-        if md.get("sub_dasas"):
-            ad = md["sub_dasas"][0]
-            context_parts.append(f"বৰ্তমান অন্তৰ্দশা: {ad.get('ad_lord', '')} ({ad.get('start', '')} ৰ পৰা {ad.get('end', '')} লৈ)")
+    # Current dasha (find the one actually running today)
+    current_dasha = _get_current_dasha(dasa_data)
+    if current_dasha:
+        context_parts.append(f"\nবৰ্তমান মহাদশা: {current_dasha['md_lord']} ({current_dasha['md_start']} ৰ পৰা {current_dasha['md_end']} লৈ)")
+        context_parts.append(f"বৰ্তমান অন্তৰ্দশা: {current_dasha['ad_lord']} ({current_dasha['ad_start']} ৰ পৰা {current_dasha['ad_end']} লৈ)")
 
     return "\n".join(context_parts)
 
@@ -270,6 +268,61 @@ def _get_house_planets(planet_houses: dict, planets_data: list, house_num: int) 
         if planet_houses.get(p_name) == house_idx:
             result.append(p)
     return result
+
+
+def _parse_dasha_date(date_str: str):
+    """Parse DD/MM/YYYY dasha date string to datetime object."""
+    try:
+        d, m, y = date_str.split('/')
+        return datetime(int(y), int(m), int(d))
+    except (ValueError, AttributeError):
+        return datetime(1900, 1, 1)
+
+
+def _get_current_dasha(dasa_data: list) -> dict:
+    """
+    Find the currently running mahadasha and antardasha based on today's date.
+    Returns dict with 'md_lord', 'md_start', 'md_end', 'ad_lord', 'ad_start', 'ad_end'
+    or None if no dasha is currently running.
+    """
+    if not dasa_data:
+        return None
+    
+    today = datetime.now()
+    
+    for md in dasa_data:
+        md_start = _parse_dasha_date(md.get('start', ''))
+        md_end = _parse_dasha_date(md.get('end', ''))
+        
+        if md_start <= today <= md_end:
+            # Found current mahadasha, now find current antardasha
+            for ad in md.get('sub_dasas', []):
+                ad_start = _parse_dasha_date(ad.get('start', ''))
+                ad_end = _parse_dasha_date(ad.get('end', ''))
+                
+                if ad_start <= today <= ad_end:
+                    return {
+                        'md_lord': md.get('md_lord', ''),
+                        'md_start': md.get('start', ''),
+                        'md_end': md.get('end', ''),
+                        'ad_lord': ad.get('ad_lord', ''),
+                        'ad_start': ad.get('start', ''),
+                        'ad_end': ad.get('end', '')
+                    }
+            
+            # If no antardasha matches (shouldn't happen), return first antardasha
+            if md.get('sub_dasas'):
+                ad = md['sub_dasas'][0]
+                return {
+                    'md_lord': md.get('md_lord', ''),
+                    'md_start': md.get('start', ''),
+                    'md_end': md.get('end', ''),
+                    'ad_lord': ad.get('ad_lord', ''),
+                    'ad_start': ad.get('start', ''),
+                    'ad_end': ad.get('end', '')
+                }
+    
+    return None
 
 
 def _get_house_lord_planet(house_num: int, planet_signs: dict, asc_rasi_idx: int) -> dict:
@@ -632,13 +685,11 @@ def _fallback_response(question: str, planets_data: list, planet_houses: dict,
         if "বুধ" in house_planet_names and "বৃহস্পতি" in house_planet_names:
             response_parts.append("সূত্ৰ: বিদ্যাস্থানত বুধ (বুদ্ধি) আৰু বৃহস্পতিৰ (জ্ঞান) প্ৰভাৱে জাতকক অত্যন্ত জ্ঞানী, যুক্তিবাদী আৰু শিক্ষাক্ষেত্ৰত পাৰ্গত কৰি তোলে।")
 
-    # Current dasha
-    if dasa_data:
-        md = dasa_data[0]
-        response_parts.append(f"\nবৰ্তমান আপুনি {md.get('md_lord', '')} মহাদশা অতিক্ৰম কৰি আছে।")
-        if md.get("sub_dasas"):
-            ad = md["sub_dasas"][0]
-            response_parts.append(f"আৰু {ad.get('ad_lord', '')} অন্তৰ্দশা চলি আছে। এই দশাৰ প্ৰভাৱেও {topic} স্থানত পৰিব।")
+    # Current dasha (find the one actually running today)
+    current_dasha = _get_current_dasha(dasa_data)
+    if current_dasha:
+        response_parts.append(f"\nবৰ্তমান আপুনি {current_dasha['md_lord']} মহাদশা অতিক্ৰম কৰি আছে।")
+        response_parts.append(f"আৰু {current_dasha['ad_lord']} অন্তৰ্দশা চলি আছে ({current_dasha['ad_start']} ৰ পৰা {current_dasha['ad_end']} লৈ)। এই দশাৰ প্ৰভাৱেও {topic} স্থানত পৰিব।")
 
     # ─── Gochara (Transit) Analysis ───
     # Extract moon_rasi from planets_data for gochara calculation
