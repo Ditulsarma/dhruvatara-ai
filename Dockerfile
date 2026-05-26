@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.11-slim-bookworm
 
 # Install build dependencies + runtime libs for pyswisseph + Playwright
 RUN apt-get update && apt-get install -y --no-install-recommends \
