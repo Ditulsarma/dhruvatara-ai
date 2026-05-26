@@ -21,6 +21,7 @@ from dosha_engine import get_complete_dosha_analysis
 from yoga_engine import get_complete_yoga_analysis
 from ai_engine import generate_ai_interpretation
 from pdf_generator import generate_pdf_report
+from chat_engine import chat_with_ai, PREDEFINED_QUESTIONS
 from tripap_rista import get_tripap_rista, analyze_tripap_rista, TRIPAP_AGES
 from dasha_engine import (
     get_full_dasha_prediction, get_all_maha_antar_predictions,
@@ -1906,6 +1907,172 @@ def api_delete_kundli(kundli_id):
         return jsonify({"success": True, "message": "কুণ্ডলী বিলোপ কৰা হৈছে।"})
     finally:
         conn.close()
+
+
+# ─── Chat Routes ─────────────────────────────────────────────────
+
+@app.route("/api/calculate-kundli", methods=["POST"])
+def api_calculate_kundli():
+    """Calculate kundli data and return as JSON for the chat feature."""
+    data = request.get_json()
+    if not data:
+        return jsonify({"success": False, "message": "Invalid request"}), 400
+
+    name = data.get("name", "")
+    dob = data.get("dob", "")
+    tob = data.get("tob", "")
+    place = data.get("place", "")
+    gender = data.get("gender", "male")
+    lat = float(data.get("lat", 26.1445))
+    lon = float(data.get("lon", 91.7362))
+    tz_offset = float(data.get("timezone", 5.5))
+
+    try:
+        ist_time = datetime.strptime(f"{dob} {tob}", "%Y-%m-%d %H:%M")
+        jd = swe.julday(ist_time.year, ist_time.month, ist_time.day,
+                        (ist_time.hour + ist_time.minute / 60.0) - tz_offset)
+
+        swe.set_sid_mode(swe.SIDM_LAHIRI)
+        ayanamsa = swe.get_ayanamsa(jd)
+
+        planets_dict = {
+            "ৰবি": swe.SUN, "চন্দ্ৰ": swe.MOON, "মংগল": swe.MARS,
+            "বুধ": swe.MERCURY, "বৃহস্পতি": swe.JUPITER, "শুক্ৰ": swe.VENUS,
+            "শনি": swe.SATURN, "ৰাহু": swe.MEAN_NODE
+        }
+
+        planets_data = []
+        p_sidereal_longitudes = {}
+        planet_signs = {}
+        planet_houses = {}
+
+        for p_name, p_id in planets_dict.items():
+            pos, _ = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
+            p_sidereal_longitudes[p_name] = pos[0]
+            r_idx, rasi, deg = get_rasi_and_degree(pos[0])
+            _, nak, lord = get_nakshatra_details(pos[0])
+            planets_data.append({"name": p_name, "rasi": rasi, "degree": deg,
+                                 "nakshatra": nak, "lord": lord})
+            planet_signs[p_name] = r_idx
+
+        p_sidereal_longitudes["কেতু"] = (p_sidereal_longitudes["ৰাহু"] + 180) % 360
+        r_idx_k, ketu_rasi, ketu_deg = get_rasi_and_degree(p_sidereal_longitudes["কেতু"])
+        _, ketu_nak, ketu_lord = get_nakshatra_details(p_sidereal_longitudes["কেতু"])
+        planets_data.append({"name": "কেতু", "rasi": ketu_rasi, "degree": ketu_deg,
+                             "nakshatra": ketu_nak, "lord": ketu_lord})
+        planet_signs["কেতু"] = r_idx_k
+
+        cusps, ascmc = swe.houses(jd, lat, lon, b'P')
+        asc_sidereal = (ascmc[0] - ayanamsa) % 360
+        p_sidereal_longitudes["লগ্ন"] = asc_sidereal
+        asc_rasi_idx, asc_rasi, asc_deg = get_rasi_and_degree(asc_sidereal)
+        _, asc_nak, asc_nak_lord = get_nakshatra_details(asc_sidereal)
+        planets_data.append({"name": "লগ্ন", "rasi": asc_rasi, "degree": asc_deg,
+                             "nakshatra": asc_nak, "lord": asc_nak_lord})
+        planet_signs["লগ্ন"] = asc_rasi_idx
+
+        for p_name, p_lon in p_sidereal_longitudes.items():
+            house_idx = (int(p_lon / 30) - asc_rasi_idx) % 12
+            planet_houses[p_name] = house_idx
+
+        moon_nak_idx = get_nakshatra_details(p_sidereal_longitudes["চন্দ্ৰ"])[0] + 1
+        moon_rasi_idx = get_rasi_and_degree(p_sidereal_longitudes["চন্দ্ৰ"])[0]
+
+        dasa_hierarchy = get_full_dasa_hierarchy(p_sidereal_longitudes["চন্দ্ৰ"], ist_time)
+        dosha_results = get_complete_dosha_analysis(planet_houses, p_sidereal_longitudes)
+
+        lagna_lord = get_rashi_lord(asc_rasi_idx)
+        moon_rashi_lord = get_rashi_lord(moon_rasi_idx)
+
+        return jsonify({
+            "success": True,
+            "planets": planets_data,
+            "planet_houses": planet_houses,
+            "planet_signs": planet_signs,
+            "asc_rasi": asc_rasi,
+            "asc_rasi_idx": asc_rasi_idx,
+            "moon_nak_name": nakshatras[moon_nak_idx - 1],
+            "moon_rasi": rasis[moon_rasi_idx],
+            "dosha_results": dosha_results,
+            "dasa_data": dasa_hierarchy,
+            "lagna_lord": lagna_lord,
+            "moon_rashi_lord": moon_rashi_lord
+        })
+    except Exception as e:
+        logger.error(f"API kundli calc error: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@app.route("/chat", methods=["GET"])
+def chat_page():
+    """Render the AI chat page."""
+    # Get user's saved kundli data if logged in
+    kundli_data = None
+    if session.get('user_id'):
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        row = conn.execute(
+            "SELECT * FROM saved_kundlis WHERE user_id = ? ORDER BY created_at DESC LIMIT 1",
+            (session['user_id'],)
+        ).fetchone()
+        conn.close()
+        if row:
+            kundli_data = dict(row)
+
+    return render_template("chat.html",
+                           predefined_questions=PREDEFINED_QUESTIONS,
+                           kundli_data=kundli_data,
+                           user_features=get_user_features(session.get('user_id', 0)))
+
+
+@app.route("/api/chat", methods=["POST"])
+def api_chat():
+    """Handle AI chat requests with kundli context."""
+    data = request.get_json()
+    if not data:
+        return jsonify({"success": False, "message": "Invalid request"}), 400
+
+    question = data.get("question", "")
+    name = data.get("name", "গ্ৰাহক")
+    gender = data.get("gender", "male")
+
+    # Get kundli data from request
+    planets_data = data.get("planets", [])
+    planet_houses = data.get("planet_houses", {})
+    planet_signs = data.get("planet_signs", {})
+    asc_rasi = data.get("asc_rasi", "")
+    asc_rasi_idx = data.get("asc_rasi_idx", 0)
+    moon_nak_name = data.get("moon_nak_name", "")
+    moon_rasi = data.get("moon_rasi", "")
+    dosha_results = data.get("dosha_results", [])
+    dasa_data = data.get("dasa_data", [])
+    lagna_lord = data.get("lagna_lord", "")
+    moon_rashi_lord = data.get("moon_rashi_lord", "")
+
+    if not question:
+        return jsonify({"success": False, "message": "প্ৰশ্ন খালী"}), 400
+
+    try:
+        response = chat_with_ai(
+            user_name=name,
+            question=question,
+            planets_data=planets_data,
+            planet_houses=planet_houses,
+            planet_signs=planet_signs,
+            asc_rasi=asc_rasi,
+            asc_rasi_idx=asc_rasi_idx,
+            moon_nak_name=moon_nak_name,
+            moon_rasi=moon_rasi,
+            dosha_results=dosha_results,
+            dasa_data=dasa_data,
+            lagna_lord=lagna_lord,
+            moon_rashi_lord=moon_rashi_lord,
+            gender=gender
+        )
+        return jsonify({"success": True, "response": response})
+    except Exception as e:
+        logger.error(f"Chat error: {e}")
+        return jsonify({"success": False, "message": f"ত্ৰুটি: {str(e)}"}), 500
 
 
 if __name__ == "__main__":

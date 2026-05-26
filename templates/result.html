@@ -509,6 +509,7 @@
         {% if user_features and user_features.get('custom_pdf', False) %}
         <button class="btn-sm btn-fill" onclick="openCustomPdfModal()" style="background:var(--deep-blue);">⚙️ নিজৰ মতে PDF</button>
         {% endif %}
+        <button class="btn-sm btn-fill" onclick="openChatFromResult()" style="background:var(--purple);">💬 AI চেট</button>
     </div>
 </nav>
 
@@ -1398,6 +1399,23 @@
             alert('সংৰক্ষণ কৰাত সমস্যা হৈছে।');
             console.error(err);
         });
+    }
+
+    // ─── Open Chat from Result ───
+    function openChatFromResult() {
+        // Store current kundli data in sessionStorage for the chat page
+        const kundliData = {
+            name: '{{ user_name }}',
+            dob: '{{ user_dob }}',
+            tob: '{{ user_tob }}',
+            place: '{{ user_place }}',
+            gender: '{{ gender }}',
+            lat: {{ lat }},
+            lon: {{ lon }},
+            timezone: {{ timezone }}
+        };
+        sessionStorage.setItem('chatKundliData', JSON.stringify(kundliData));
+        window.location.href = '/chat';
     }
 
     // ─── Upgrade Plans Modal ───

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="as">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ধ্ৰুৱতৰা AI | জ্যোতিষ চেট</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --orange: #FF6600; --orange-dark: #E55D00; --deep-blue: #1a237e;
+            --gold: #D4A017; --bg: #FFF8F0; --card-bg: #FFFFFF;
+            --text: #2c3e50; --text-light: #5a6c7d; --border: #e8e0d5;
+            --shadow: 0 4px 20px rgba(0,0,0,0.06); --radius: 14px; --radius-sm: 8px;
+            --green: #2E7D32; --red: #C62828; --purple: #6A1B9A;
+            --transition: 0.25s ease;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans Bengali', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #FFF8F0 0%, #FFF3E0 30%, #FFECB3 60%, #FFF8F0 100%);
+            background-attachment: fixed; min-height: 100vh; color: var(--text);
+        }
+
+        .top-nav {
+            background: white; border-bottom: 1px solid var(--border);
+            padding: 12px 24px; display: flex; align-items: center;
+            justify-content: space-between; position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .top-nav .brand { font-weight: 800; font-size: 1.2rem; color: var(--orange); }
+        .top-nav .brand span { color: var(--deep-blue); }
+        .nav-actions { display: flex; gap: 10px; }
+        .btn-sm {
+            padding: 8px 16px; border-radius: 20px; font-size: 0.82rem;
+            font-weight: 600; font-family: inherit; cursor: pointer;
+            border: none; transition: var(--transition); text-decoration: none;
+            display: inline-flex; align-items: center; gap: 5px;
+        }
+        .btn-outline { background: white; color: var(--orange); border: 2px solid var(--orange); }
+        .btn-outline:hover { background: var(--orange); color: white; }
+        .btn-fill { background: var(--orange); color: white; }
+        .btn-fill:hover { background: var(--orange-dark); transform: translateY(-1px); }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+
+        .chat-layout {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .chat-layout { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--card-bg); border-radius: var(--radius);
+            box-shadow: var(--shadow); border: 1px solid var(--border);
+            overflow: hidden;
+        }
+        .card-header {
+            background: linear-gradient(135deg, var(--deep-blue), #283593);
+            color: white; padding: 14px 20px; font-weight: 700;
+            font-size: 1rem; display: flex; align-items: center; gap: 8px;
+        }
+        .card-body { padding: 16px 20px; }
+
+        /* Kundli Info */
+        .kundli-info {
+            font-size: 0.82rem; line-height: 1.8;
+        }
+        .kundli-info .ki-row {
+            display: flex; justify-content: space-between;
+            padding: 4px 0; border-bottom: 1px dotted #eee;
+        }
+        .kundli-info .ki-label { color: var(--text-light); }
+        .kundli-info .ki-value { font-weight: 600; color: var(--deep-blue); }
+        .kundli-info .ki-warn { color: var(--red); font-weight: 600; }
+
+        /* Question Dropdown */
+        .question-select-wrap {
+            margin-bottom: 12px;
+        }
+        .question-select-wrap label {
+            display: block; font-weight: 600; font-size: 0.85rem;
+            color: var(--deep-blue); margin-bottom: 6px;
+        }
+        .question-select-wrap select {
+            width: 100%; padding: 10px 14px; border: 2px solid var(--border);
+            border-radius: var(--radius-sm); font-family: inherit;
+            font-size: 0.9rem; background: white; cursor: pointer;
+            outline: none; transition: var(--transition);
+        }
+        .question-select-wrap select:focus { border-color: var(--orange); }
+
+        .btn-ask {
+            width: 100%; padding: 12px; border-radius: 25px;
+            font-size: 0.95rem; font-weight: 700; font-family: inherit;
+            cursor: pointer; border: none; transition: var(--transition);
+            background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+            color: white; box-shadow: 0 4px 16px rgba(255,102,0,0.3);
+            margin-bottom: 12px;
+        }
+        .btn-ask:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,102,0,0.4); }
+        .btn-ask:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        /* Chat Messages */
+        .chat-messages {
+            max-height: 500px; overflow-y: auto; padding: 8px 0;
+        }
+        .chat-msg {
+            margin-bottom: 14px; animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .chat-msg.user {
+            text-align: right;
+        }
+        .chat-msg.user .msg-bubble {
+            background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+            color: white; display: inline-block; max-width: 85%;
+            padding: 10px 16px; border-radius: 18px 18px 4px 18px;
+            font-size: 0.85rem; text-align: left;
+        }
+        .chat-msg.ai .msg-bubble {
+            background: var(--bg); border: 1px solid var(--border);
+            display: inline-block; max-width: 90%;
+            padding: 12px 16px; border-radius: 18px 18px 18px 4px;
+            font-size: 0.85rem; line-height: 1.8; white-space: pre-line;
+        }
+        .chat-msg .msg-label {
+            font-size: 0.7rem; color: var(--text-light); margin-bottom: 3px;
+        }
+
+        .typing-indicator {
+            display: none; padding: 12px 16px;
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: 18px; max-width: 100px;
+        }
+        .typing-indicator.show { display: inline-block; }
+        .typing-dot {
+            display: inline-block; width: 8px; height: 8px;
+            border-radius: 50%; background: var(--orange);
+            margin: 0 2px; animation: bounce 1.4s infinite;
+        }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-8px); }
+        }
+
+        .empty-chat {
+            text-align: center; padding: 40px 20px; color: var(--text-light);
+        }
+        .empty-chat .ec-icon { font-size: 3rem; margin-bottom: 10px; }
+        .empty-chat .ec-text { font-size: 0.9rem; }
+
+        .no-kundli {
+            text-align: center; padding: 30px 20px;
+            background: #FFF3E0; border-radius: var(--radius-sm);
+            border: 1px solid #FFCC80;
+        }
+        .no-kundli .nk-icon { font-size: 2.5rem; margin-bottom: 8px; }
+        .no-kundli .nk-text { font-size: 0.85rem; color: var(--text); margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+
+<nav class="top-nav">
+    <div class="brand">🌟 ধ্ৰুৱতৰা<span> AI</span></div>
+    <div class="nav-actions">
+        <a href="/" class="btn-sm btn-outline">🏠 হোম</a>
+        <a href="/dashboard" class="btn-sm btn-outline">📊 ডেশ্ববৰ্ড</a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="chat-layout">
+        <!-- Left: Kundli Info + Question Selector -->
+        <div>
+            <div class="card" style="margin-bottom:16px;">
+                <div class="card-header">📋 আপোনাৰ কুণ্ডলী তথ্য</div>
+                <div class="card-body">
+                    {% if kundli_data %}
+                    <div class="kundli-info" id="kundliInfo">
+                        <div class="ki-row"><span class="ki-label">নাম</span><span class="ki-value">{{ kundli_data.name }}</span></div>
+                        <div class="ki-row"><span class="ki-label">জন্ম তাৰিখ</span><span class="ki-value">{{ kundli_data.dob }}</span></div>
+                        <div class="ki-row"><span class="ki-label">জন্ম সময়</span><span class="ki-value">{{ kundli_data.tob }}</span></div>
+                        <div class="ki-row"><span class="ki-label">জন্ম স্থান</span><span class="ki-value">{{ kundli_data.place }}</span></div>
+                        <div class="ki-row"><span class="ki-label">লগ্ন</span><span class="ki-value" id="kiAscRasi">—</span></div>
+                        <div class="ki-row"><span class="ki-label">চন্দ্ৰ ৰাশি</span><span class="ki-value" id="kiMoonRasi">—</span></div>
+                        <div class="ki-row"><span class="ki-label">চন্দ্ৰ নক্ষত্ৰ</span><span class="ki-value" id="kiMoonNak">—</span></div>
+                    </div>
+                    {% else %}
+                    <div class="no-kundli">
+                        <div class="nk-icon">🔍</div>
+                        <div class="nk-text">চেট কৰিবলৈ প্ৰথমে এখন কুণ্ডলী গণনা কৰক।</div>
+                        <a href="/" class="btn-sm btn-fill">🏠 নতুন কুণ্ডলী</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">❓ প্ৰশ্ন বাছনি কৰক</div>
+                <div class="card-body">
+                    <div class="question-select-wrap">
+                        <label for="questionSelect">তলৰ প্ৰশ্নসমূহৰ পৰা এটা বাছনি কৰক:</label>
+                        <select id="questionSelect" onchange="onQuestionSelect()">
+                            <option value="">— প্ৰশ্ন বাছনি কৰক —</option>
+                            {% for q in predefined_questions %}
+                            <option value="{{ q.label }}">{{ q.label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button class="btn-ask" id="btnAsk" onclick="askQuestion()" disabled>
+                        🤖 AI ক সুধক
+                    </button>
+                    <div style="font-size:0.72rem;color:var(--text-light);text-align:center;">
+                        আপোনাৰ কুণ্ডলীৰ ভিত্তিত AI য়ে উত্তৰ দিব
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Chat Messages -->
+        <div>
+            <div class="card">
+                <div class="card-header">💬 AI জ্যোতিষীৰ সৈতে কথা পাতক</div>
+                <div class="card-body">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="empty-chat" id="emptyChat">
+                            <div class="ec-icon">🤖</div>
+                            <div class="ec-text">বাওঁফালৰ পৰা এটা প্ৰশ্ন বাছনি কৰক আৰু AI ক সুধক।<br>আপোনাৰ কুণ্ডলীৰ ভিত্তিত AI য়ে বিতংভাৱে উত্তৰ দিব।</div>
+                        </div>
+                        <div class="typing-indicator" id="typingIndicator">
+                            <span class="typing-dot"></span>
+                            <span class="typing-dot"></span>
+                            <span class="typing-dot"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Store kundli data from the server or sessionStorage
+let kundliData = null;
+{% if kundli_data %}
+kundliData = {
+    name: "{{ kundli_data.name }}",
+    dob: "{{ kundli_data.dob }}",
+    tob: "{{ kundli_data.tob }}",
+    place: "{{ kundli_data.place }}",
+    gender: "{{ kundli_data.gender or 'male' }}",
+    lat: {{ kundli_data.lat or 26.1445 }},
+    lon: {{ kundli_data.lon or 91.7362 }},
+    timezone: {{ kundli_data.timezone or 5.5 }}
+};
+{% endif %}
+
+// Check sessionStorage for kundli data from result page
+if (!kundliData) {
+    const stored = sessionStorage.getItem('chatKundliData');
+    if (stored) {
+        try {
+            kundliData = JSON.parse(stored);
+            // Update the kundli info display
+            document.getElementById('kundliInfo').innerHTML = `
+                <div class="ki-row"><span class="ki-label">নাম</span><span class="ki-value">${kundliData.name}</span></div>
+                <div class="ki-row"><span class="ki-label">জন্ম তাৰিখ</span><span class="ki-value">${kundliData.dob}</span></div>
+                <div class="ki-row"><span class="ki-label">জন্ম সময়</span><span class="ki-value">${kundliData.tob}</span></div>
+                <div class="ki-row"><span class="ki-label">জন্ম স্থান</span><span class="ki-value">${kundliData.place}</span></div>
+                <div class="ki-row"><span class="ki-label">লগ্ন</span><span class="ki-value" id="kiAscRasi">—</span></div>
+                <div class="ki-row"><span class="ki-label">চন্দ্ৰ ৰাশি</span><span class="ki-value" id="kiMoonRasi">—</span></div>
+                <div class="ki-row"><span class="ki-label">চন্দ্ৰ নক্ষত্ৰ</span><span class="ki-value" id="kiMoonNak">—</span></div>
+            `;
+            // Hide the no-kundli message
+            const noKundli = document.querySelector('.no-kundli');
+            if (noKundli) noKundli.style.display = 'none';
+        } catch(e) {}
+    }
+}
+
+function onQuestionSelect() {
+    const sel = document.getElementById('questionSelect');
+    const btn = document.getElementById('btnAsk');
+    btn.disabled = !sel.value;
+}
+
+async function askQuestion() {
+    const sel = document.getElementById('questionSelect');
+    const question = sel.value;
+    if (!question) return;
+
+    if (!kundliData) {
+        alert('প্ৰথমে এখন কুণ্ডলী গণনা কৰক।');
+        return;
+    }
+
+    const btn = document.getElementById('btnAsk');
+    const emptyChat = document.getElementById('emptyChat');
+    const typing = document.getElementById('typingIndicator');
+    const messages = document.getElementById('chatMessages');
+
+    btn.disabled = true;
+    btn.textContent = '⏳ চিন্তা কৰি আছে...';
+    emptyChat.style.display = 'none';
+    typing.classList.add('show');
+
+    // Add user message
+    const userMsg = document.createElement('div');
+    userMsg.className = 'chat-msg user';
+    userMsg.innerHTML = `<div class="msg-label">আপুনি</div><div class="msg-bubble">${question}</div>`;
+    messages.insertBefore(userMsg, typing);
+
+    // Scroll to bottom
+    messages.scrollTop = messages.scrollHeight;
+
+    try {
+        // First, calculate kundli via API
+        const calcResp = await fetch('/api/calculate-kundli', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(kundliData)
+        });
+        const calcData = await calcResp.json();
+
+        if (!calcData.success) {
+            throw new Error(calcData.message || 'গণনা ত্ৰুটি');
+        }
+
+        // Now send chat request
+        const chatResp = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                question: question,
+                name: kundliData.name,
+                gender: kundliData.gender,
+                planets: calcData.planets,
+                planet_houses: calcData.planet_houses,
+                planet_signs: calcData.planet_signs,
+                asc_rasi: calcData.asc_rasi,
+                asc_rasi_idx: calcData.asc_rasi_idx,
+                moon_nak_name: calcData.moon_nak_name,
+                moon_rasi: calcData.moon_rasi,
+                dosha_results: calcData.dosha_results,
+                dasa_data: calcData.dasa_data,
+                lagna_lord: calcData.lagna_lord,
+                moon_rashi_lord: calcData.moon_rashi_lord
+            })
+        });
+        const chatData = await chatResp.json();
+
+        typing.classList.remove('show');
+
+        // Add AI response
+        const aiMsg = document.createElement('div');
+        aiMsg.className = 'chat-msg ai';
+        if (chatData.success) {
+            aiMsg.innerHTML = `<div class="msg-label">🤖 ধ্ৰুৱতৰা AI</div><div class="msg-bubble">${chatData.response}</div>`;
+        } else {
+            aiMsg.innerHTML = `<div class="msg-label">🤖 ধ্ৰুৱতৰা AI</div><div class="msg-bubble" style="color:var(--red);">⚠️ ${chatData.message}</div>`;
+        }
+        messages.insertBefore(aiMsg, typing);
+
+        // Update kundli info display
+        document.getElementById('kiAscRasi').textContent = calcData.asc_rasi;
+        document.getElementById('kiMoonRasi').textContent = calcData.moon_rasi;
+        document.getElementById('kiMoonNak').textContent = calcData.moon_nak_name;
+
+    } catch (err) {
+        typing.classList.remove('show');
+        const errMsg = document.createElement('div');
+        errMsg.className = 'chat-msg ai';
+        errMsg.innerHTML = `<div class="msg-label">🤖 ধ্ৰুৱতৰা AI</div><div class="msg-bubble" style="color:var(--red);">⚠️ ত্ৰুটি: ${err.message}</div>`;
+        messages.insertBefore(errMsg, typing);
+    }
+
+    btn.disabled = false;
+    btn.textContent = '🤖 AI ক সুধক';
+    messages.scrollTop = messages.scrollHeight;
+}
+</script>
+
+</body>
+</html>
