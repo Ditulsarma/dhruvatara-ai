@@ -1,7 +1,9 @@
 """
 ধ্ৰুৱতৰা AI - পঞ্চাঙ্গ গণনা ইঞ্জিন
 Panchanga Calculation Engine: Tithi, Nakshatra, Yoga, Karana, Vaar, Paksha, Ritu, Ayan
-Uses high-precision astronomical calculations
+Uses high-precision astronomical calculations with place-wise accurate sunrise/sunset.
+Includes: Rahukal, Yamaganda, Gulik Kaal, Abhijit Muhurta, Yama Kaal, Kaal Bela, Rar Bela,
+Divaman, Ratriman, Varna, Gana, Yoni, Nadi, Jata Danda, and more.
 """
 
 import swisseph as swe
@@ -44,6 +46,63 @@ MASA_NAMES = [
 ]
 
 PAKSHA_NAMES = ["শুক্ল পক্ষ", "কৃষ্ণ পক্ষ"]
+
+# ─── Rashi Lords (ৰাশিৰ অধিপতি) ─────────────────────────────────
+RASHI_LORDS = [
+    "মংগল", "শুক্ৰ", "বুধ", "চন্দ্ৰ", "ৰবি", "বুধ",
+    "শুক্ৰ", "মংগল", "বৃহস্পতি", "শনি", "শনি", "বৃহস্পতি"
+]
+
+# ─── Nakshatra Attributes ───────────────────────────────────────
+# Varna (বৰ্ণ): 0=ব্ৰাহ্মণ, 1=ক্ষত্ৰিয়, 2=বৈশ্য, 3=শূদ্ৰ
+NAKSHATRA_VARNA = [
+    1, 2, 0, 3, 0, 2, 1, 0, 3, 1, 0, 0, 2,
+    0, 2, 1, 0, 1, 1, 2, 0, 0, 2, 3, 1, 0, 0
+]
+VARNA_NAMES = ["ব্ৰাহ্মণ", "ক্ষত্ৰিয়", "বৈশ্য", "শূদ্ৰ"]
+
+# Gana (গণ): 0=দেৱ, 1=মানুষ্য, 2=ৰাক্ষস
+NAKSHATRA_GANA = [
+    0, 1, 2, 1, 0, 1, 0, 0, 2, 2, 1, 1, 0,
+    2, 0, 2, 0, 2, 2, 1, 1, 0, 2, 2, 1, 1, 0
+]
+GANA_NAMES = ["দেৱ", "মানুষ্য", "ৰাক্ষস"]
+
+# Yoni (যোনি) - Animal symbols
+NAKSHATRA_YONI = [
+    "অশ্ব (ঘোঁৰা)", "গজ (হাতী)", "মেষ (ভেড়া)", "সৰ্প (সাপ)", "সৰ্প (সাপ)",
+    "শ্বান (কুকুৰ)", "মাৰ্জাৰ (মেকুৰী)", "মেষ (ভেড়া)", "মাৰ্জাৰ (মেকুৰী)",
+    "মূষিক (নিগনি)", "মূষিক (নিগনি)", "গো (গৰু)", "মহিষ (ম'হ)",
+    "ব্যাঘ্ৰ (বাঘ)", "মহিষ (ম'হ)", "ব্যাঘ্ৰ (বাঘ)", "হৰিণ", "হৰিণ",
+    "শ্বান (কুকুৰ)", "বানৰ", "গজ (হাতী)", "অশ্ব (ঘোঁৰা)", "সিংহ",
+    "অশ্ব (ঘোঁৰা)", "সিংহ", "গো (গৰু)", "গজ (হাতী)"
+]
+
+# Nadi (নাড়ী): 0=আদি, 1=মধ্য, 2=অন্ত্য
+NAKSHATRA_NADI = [
+    0, 1, 2, 1, 2, 0, 0, 1, 2, 0, 1, 2, 1,
+    2, 0, 0, 1, 2, 0, 1, 2, 1, 2, 0, 0, 1, 2
+]
+NADI_NAMES = ["আদি", "মধ্য", "অন্ত্য"]
+
+# ─── Rahu Kaal part index (0-indexed) by weekday ────────────────
+# Sunday=6, Monday=0, Tuesday=1, Wednesday=2, Thursday=3, Friday=4, Saturday=5
+RAHU_KAAL_PART = [1, 6, 4, 5, 3, 2, 0]  # 0-indexed part of 8
+
+# Yama Gandam part index by weekday
+YAMA_GANDAM_PART = [4, 3, 2, 1, 0, 6, 5]
+
+# Gulika Kaal part index by weekday
+GULIKA_KAAL_PART = [5, 4, 3, 2, 1, 0, 6]
+
+# Yama Kaal (যমকাল) part index by weekday - different from Yama Gandam
+YAMA_KAAL_PART = [3, 2, 1, 0, 6, 5, 4]
+
+# Kaal Bela (কালবেলা) part index by weekday
+KAAL_BELA_PART = [6, 5, 4, 3, 2, 1, 0]
+
+# Rar Bela (ৰাৰবেলা) part index by weekday
+RAR_BELA_PART = [0, 1, 2, 3, 4, 5, 6]
 
 
 def get_julian_day(dt: datetime, offset_hours: float = -5.5) -> float:
@@ -141,94 +200,198 @@ def calculate_ayanamsa(jd: float) -> float:
     return swe.get_ayanamsa(jd)
 
 
-def calculate_sunrise(jd: float, lat: float, lon: float) -> str:
-    """Calculate sunrise time for given location"""
+def calculate_sunrise(jd: float, lat: float, lon: float, tz_offset: float = 5.5) -> str:
+    """Calculate sunrise time for given location using Swiss Ephemeris.
+    Returns local time as HH:MM string in the given timezone.
+    Note: JD .0 = noon UT, so frac*24 gives hours from noon. Add 12 for UT hours."""
     try:
-        rise_time = swe.rise_trans(jd, swe.SUN, lon, lat, 0, 0, 0, swe.CALC_RISE)[1][0]
-        hour = int(rise_time)
-        minute = int((rise_time - hour) * 60)
+        geopos = (lon, lat, 0)  # longitude, latitude, altitude
+        # Search from 1.5 days before to catch today's sunrise
+        rise_jd = swe.rise_trans(jd - 1.5, swe.SUN, swe.CALC_RISE, geopos)[1][0]
+        frac = rise_jd - int(rise_jd)
+        # JD .0 = noon UT, so convert: frac*24 = hours from noon, +12 = UT hours
+        ut_hours = (frac * 24 + 12) % 24
+        # Convert UT to local time using the user's timezone offset
+        local_hours = (ut_hours + tz_offset) % 24
+        hour = int(local_hours)
+        minute = int((local_hours - hour) * 60)
         return f"{hour:02d}:{minute:02d}"
     except:
         return "06:00"
 
 
-def calculate_sunset(jd: float, lat: float, lon: float) -> str:
-    """Calculate sunset time for given location"""
+def calculate_sunset(jd: float, lat: float, lon: float, tz_offset: float = 5.5) -> str:
+    """Calculate sunset time for given location using Swiss Ephemeris.
+    Returns local time as HH:MM string in the given timezone.
+    Note: JD .0 = noon UT, so frac*24 gives hours from noon. Add 12 for UT hours."""
     try:
-        set_time = swe.rise_trans(jd, swe.SUN, lon, lat, 0, 0, 0, swe.CALC_SET)[1][0]
-        hour = int(set_time)
-        minute = int((set_time - hour) * 60)
+        geopos = (lon, lat, 0)  # longitude, latitude, altitude
+        # Search from 1.5 days before to catch today's sunset
+        set_jd = swe.rise_trans(jd - 1.5, swe.SUN, swe.CALC_SET, geopos)[1][0]
+        frac = set_jd - int(set_jd)
+        # JD .0 = noon UT, so convert: frac*24 = hours from noon, +12 = UT hours
+        ut_hours = (frac * 24 + 12) % 24
+        # Convert UT to local time using the user's timezone offset
+        local_hours = (ut_hours + tz_offset) % 24
+        hour = int(local_hours)
+        minute = int((local_hours - hour) * 60)
         return f"{hour:02d}:{minute:02d}"
     except:
         return "18:00"
 
 
-def get_rahu_kalam(sunrise_time: str, weekday: int) -> str:
-    """Calculate Rahu Kalam based on weekday"""
-    rahu_times = {
-        0: ("07:30", "09:00"),   # Monday
-        1: ("15:00", "16:30"),   # Tuesday
-        2: ("12:00", "13:30"),   # Wednesday
-        3: ("13:30", "15:00"),   # Thursday
-        4: ("10:30", "12:00"),   # Friday
-        5: ("09:00", "10:30"),   # Saturday
-        6: ("16:30", "18:00"),   # Sunday
-    }
-    start, end = rahu_times.get(weekday, ("07:30", "09:00"))
-    return f"{start} - {end}"
+def _time_to_minutes(time_str: str) -> int:
+    """Convert HH:MM string to total minutes"""
+    try:
+        h, m = map(int, time_str.split(":"))
+        return h * 60 + m
+    except:
+        return 0
 
 
-def get_yama_gandam(weekday: int) -> str:
-    """Calculate Yama Gandam based on weekday"""
-    yama_times = {
-        0: ("10:30", "12:00"),
-        1: ("09:00", "10:30"),
-        2: ("07:30", "09:00"),
-        3: ("06:00", "07:30"),
-        4: ("15:00", "16:30"),
-        5: ("13:30", "15:00"),
-        6: ("12:00", "13:30"),
-    }
-    start, end = yama_times.get(weekday, ("10:30", "12:00"))
-    return f"{start} - {end}"
+def _minutes_to_time(minutes: int) -> str:
+    """Convert total minutes to HH:MM string"""
+    h = (minutes // 60) % 24
+    m = minutes % 60
+    return f"{h:02d}:{m:02d}"
 
 
-def get_gulika_kalam(weekday: int) -> str:
-    """Calculate Gulika Kalam based on weekday"""
-    gulika_times = {
-        0: ("13:30", "15:00"),
-        1: ("12:00", "13:30"),
-        2: ("10:30", "12:00"),
-        3: ("09:00", "10:30"),
-        4: ("07:30", "09:00"),
-        5: ("06:00", "07:30"),
-        6: ("15:00", "16:30"),
-    }
-    start, end = gulika_times.get(weekday, ("13:30", "15:00"))
-    return f"{start} - {end}"
+def _get_kala_from_part(sunrise_str: str, sunset_str: str, part_index: int) -> str:
+    """
+    Calculate an inauspicious time (Kala) based on the 8-part division of the day.
+    The day (sunrise to sunset) is divided into 8 equal parts.
+    part_index: 0-7 (which part of the 8 is the kala)
+    """
+    sr_min = _time_to_minutes(sunrise_str)
+    ss_min = _time_to_minutes(sunset_str)
+    day_duration = ss_min - sr_min
+    if day_duration <= 0:
+        day_duration = 720  # fallback 12 hours
+    part_duration = day_duration / 8.0
+    start_min = sr_min + part_index * part_duration
+    end_min = start_min + part_duration
+    return f"{_minutes_to_time(int(start_min))} - {_minutes_to_time(int(end_min))}"
+
+
+def get_rahu_kalam(sunrise_str: str, sunset_str: str, weekday: int) -> str:
+    """Calculate accurate Rahu Kalam based on actual sunrise/sunset at the location"""
+    part_idx = RAHU_KAAL_PART[weekday]
+    return _get_kala_from_part(sunrise_str, sunset_str, part_idx)
+
+
+def get_yama_gandam(sunrise_str: str, sunset_str: str, weekday: int) -> str:
+    """Calculate accurate Yama Gandam based on actual sunrise/sunset at the location"""
+    part_idx = YAMA_GANDAM_PART[weekday]
+    return _get_kala_from_part(sunrise_str, sunset_str, part_idx)
+
+
+def get_gulika_kalam(sunrise_str: str, sunset_str: str, weekday: int) -> str:
+    """Calculate accurate Gulika Kalam based on actual sunrise/sunset at the location"""
+    part_idx = GULIKA_KAAL_PART[weekday]
+    return _get_kala_from_part(sunrise_str, sunset_str, part_idx)
+
+
+def get_yama_kaal(sunrise_str: str, sunset_str: str, weekday: int) -> str:
+    """Calculate Yama Kaal (যমকাল) based on actual sunrise/sunset"""
+    part_idx = YAMA_KAAL_PART[weekday]
+    return _get_kala_from_part(sunrise_str, sunset_str, part_idx)
+
+
+def get_kaal_bela(sunrise_str: str, sunset_str: str, weekday: int) -> str:
+    """Calculate Kaal Bela (কালবেলা) based on actual sunrise/sunset"""
+    part_idx = KAAL_BELA_PART[weekday]
+    return _get_kala_from_part(sunrise_str, sunset_str, part_idx)
+
+
+def get_rar_bela(sunrise_str: str, sunset_str: str, weekday: int) -> str:
+    """Calculate Rar Bela (ৰাৰবেলা) based on actual sunrise/sunset"""
+    part_idx = RAR_BELA_PART[weekday]
+    return _get_kala_from_part(sunrise_str, sunset_str, part_idx)
 
 
 def get_abhijit_muhurta(sunrise_str: str, sunset_str: str) -> str:
-    """Calculate Abhijit Muhurta (midday auspicious time)"""
+    """Calculate Abhijit Muhurta (midday auspicious time ~24 min before/after local noon)"""
     try:
-        sr_h, sr_m = map(int, sunrise_str.split(":"))
-        ss_h, ss_m = map(int, sunset_str.split(":"))
-        sr_total = sr_h * 60 + sr_m
-        ss_total = ss_h * 60 + ss_m
-        midday = sr_total + (ss_total - sr_total) // 2
-        start_h = (midday - 24) // 60
-        start_m = (midday - 24) % 60
-        end_h = (midday + 24) // 60
-        end_m = (midday + 24) % 60
-        return f"{start_h:02d}:{start_m:02d} - {end_h:02d}:{end_m:02d}"
+        sr_min = _time_to_minutes(sunrise_str)
+        ss_min = _time_to_minutes(sunset_str)
+        midday = sr_min + (ss_min - sr_min) // 2
+        start_min = midday - 24
+        end_min = midday + 24
+        return f"{_minutes_to_time(start_min)} - {_minutes_to_time(end_min)}"
     except:
         return "11:36 - 12:24"
 
 
-def get_full_panchanga(dt: datetime, lat: float, lon: float) -> dict:
+def get_divaman(sunrise_str: str, sunset_str: str) -> str:
+    """Calculate day duration (দিবামান)"""
+    sr_min = _time_to_minutes(sunrise_str)
+    ss_min = _time_to_minutes(sunset_str)
+    duration = ss_min - sr_min
+    if duration <= 0:
+        duration = 720
+    h = duration // 60
+    m = duration % 60
+    return f"{h} ঘণ্টা {m} মিনিট"
+
+
+def get_ratriman(sunrise_str: str, sunset_str: str) -> str:
+    """Calculate night duration (ৰাত্ৰিমান)"""
+    sr_min = _time_to_minutes(sunrise_str)
+    ss_min = _time_to_minutes(sunset_str)
+    day_dur = ss_min - sr_min
+    if day_dur <= 0:
+        day_dur = 720
+    night_dur = 1440 - day_dur
+    h = night_dur // 60
+    m = night_dur % 60
+    return f"{h} ঘণ্টা {m} মিনিট"
+
+
+def get_jata_danda(birth_time_str: str, sunrise_str: str) -> str:
+    """
+    Calculate Jata Danda (জাতদণ্ড) - time elapsed since sunrise in danda/pala.
+    1 danda = 24 minutes, 1 pala = 24 seconds
+    """
+    try:
+        bt_h, bt_m = map(int, birth_time_str.split(":"))
+        sr_h, sr_m = map(int, sunrise_str.split(":"))
+        bt_total = bt_h * 60 + bt_m
+        sr_total = sr_h * 60 + sr_m
+        elapsed = bt_total - sr_total
+        if elapsed < 0:
+            elapsed += 1440  # birth before sunrise (previous day sunrise)
+        danda = elapsed // 24
+        remaining_min = elapsed % 24
+        pala = remaining_min * 60 // 24
+        return f"{danda} দণ্ড {pala} পল"
+    except:
+        return "0 দণ্ড 0 পল"
+
+
+def get_nakshatra_attributes(nak_idx: int) -> dict:
+    """Get Varna, Gana, Yoni, Nadi for a given nakshatra index (0-26)"""
+    if nak_idx < 0 or nak_idx > 26:
+        nak_idx = 0
+    return {
+        "varna": VARNA_NAMES[NAKSHATRA_VARNA[nak_idx]],
+        "gana": GANA_NAMES[NAKSHATRA_GANA[nak_idx]],
+        "yoni": NAKSHATRA_YONI[nak_idx],
+        "nadi": NADI_NAMES[NAKSHATRA_NADI[nak_idx]],
+    }
+
+
+def get_rashi_lord(rashi_index: int) -> str:
+    """Get the lord of a rashi (0-11)"""
+    if rashi_index < 0 or rashi_index > 11:
+        return ""
+    return RASHI_LORDS[rashi_index]
+
+
+def get_full_panchanga(dt: datetime, lat: float, lon: float, tz_offset: float = 5.5) -> dict:
     """
     Calculate complete Panchanga for a given datetime and location.
-    Returns all five limbs + additional Muhurta info.
+    Returns all five limbs + additional Muhurta info + nakshatra attributes.
+    tz_offset: timezone offset from UTC in hours (e.g., 5.5 for IST)
     """
     jd = get_julian_day(dt)
     sun_lon, moon_lon = calculate_sun_moon(jd)
@@ -242,8 +405,18 @@ def get_full_panchanga(dt: datetime, lat: float, lon: float) -> dict:
     masa = calculate_masa(sun_lon)
     ayanamsa = calculate_ayanamsa(jd)
 
-    sunrise = calculate_sunrise(jd, lat, lon)
-    sunset = calculate_sunset(jd, lat, lon)
+    sunrise = calculate_sunrise(jd, lat, lon, tz_offset)
+    sunset = calculate_sunset(jd, lat, lon, tz_offset)
+
+    # Nakshatra attributes
+    nak_attrs = get_nakshatra_attributes(nakshatra["index"])
+
+    # Day/Night duration
+    divaman = get_divaman(sunrise, sunset)
+    ratriman = get_ratriman(sunrise, sunset)
+
+    # Jata Danda
+    jata_danda = get_jata_danda(dt.strftime("%H:%M"), sunrise)
 
     return {
         "tithi": tithi,
@@ -257,10 +430,20 @@ def get_full_panchanga(dt: datetime, lat: float, lon: float) -> dict:
         "ayanamsa": round(ayanamsa, 4),
         "sunrise": sunrise,
         "sunset": sunset,
-        "rahu_kalam": get_rahu_kalam(sunrise, vaar["index"]),
-        "yama_gandam": get_yama_gandam(vaar["index"]),
-        "gulika_kalam": get_gulika_kalam(vaar["index"]),
+        "rahu_kalam": get_rahu_kalam(sunrise, sunset, vaar["index"]),
+        "yama_gandam": get_yama_gandam(sunrise, sunset, vaar["index"]),
+        "gulika_kalam": get_gulika_kalam(sunrise, sunset, vaar["index"]),
         "abhijit_muhurta": get_abhijit_muhurta(sunrise, sunset),
+        "yama_kaal": get_yama_kaal(sunrise, sunset, vaar["index"]),
+        "kaal_bela": get_kaal_bela(sunrise, sunset, vaar["index"]),
+        "rar_bela": get_rar_bela(sunrise, sunset, vaar["index"]),
+        "divaman": divaman,
+        "ratriman": ratriman,
+        "jata_danda": jata_danda,
+        "varna": nak_attrs["varna"],
+        "gana": nak_attrs["gana"],
+        "yoni": nak_attrs["yoni"],
+        "nadi": nak_attrs["nadi"],
         "sun_longitude": round(sun_lon, 2),
         "moon_longitude": round(moon_lon, 2),
     }

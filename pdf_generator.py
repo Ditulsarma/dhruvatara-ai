@@ -91,7 +91,11 @@ def _build_html(
     lagna_phala_html: str = "",
     rashi_phala_html: str = "",
     graha_bichar_html: str = "",
-    selected_sections: list = None
+    selected_sections: list = None,
+    lagna_lord: str = "",
+    moon_rashi_lord: str = "",
+    moon_rasi: str = "",
+    gender: str = "male"
 ) -> str:
     """Build complete HTML for the PDF report.
     selected_sections: list of section keys to include. If None, include all.
@@ -132,11 +136,23 @@ def _build_html(
         ('বাৰ', panchanga.get('vaar', {}).get('name', '—'), ''),
         ('ঋতু', panchanga.get('ritu', {}).get('name', '—'), ''),
         ('অসমীয়া মাহ', panchanga.get('masa', {}).get('name', '—'), ''),
+        ('অয়নাংশ', f"{panchanga.get('ayanamsa', '—')}°", 'লাহিড়ী'),
         ('সূৰ্য্যোদয়', panchanga.get('sunrise', '—'), ''),
         ('সূৰ্য্যাস্ত', panchanga.get('sunset', '—'), ''),
         ('ৰাহুকাল', panchanga.get('rahu_kalam', '—'), ''),
         ('যমগণ্ড', panchanga.get('yama_gandam', '—'), ''),
+        ('গুলিক কাল', panchanga.get('gulika_kalam', '—'), ''),
         ('অভিজিৎ মুহূৰ্ত', panchanga.get('abhijit_muhurta', '—'), ''),
+        ('যমকাল', panchanga.get('yama_kaal', '—'), ''),
+        ('কালবেলা', panchanga.get('kaal_bela', '—'), ''),
+        ('ৰাৰবেলা', panchanga.get('rar_bela', '—'), ''),
+        ('দিবামান', panchanga.get('divaman', '—'), ''),
+        ('ৰাত্ৰিমান', panchanga.get('ratriman', '—'), ''),
+        ('জাতদণ্ড', panchanga.get('jata_danda', '—'), ''),
+        ('বৰ্ণ', panchanga.get('varna', '—'), ''),
+        ('গণ', panchanga.get('gana', '—'), ''),
+        ('যোনি', panchanga.get('yoni', '—'), ''),
+        ('নাড়ী', panchanga.get('nadi', '—'), ''),
     ]
     panchanga_html = ""
     for label, value, sub in panchanga_items:
@@ -565,9 +581,21 @@ def _build_html(
 <h2 class="section-heading">📋 ব্যক্তিগত তথ্য</h2>
 <div class="info-grid">
     <div class="info-item"><b>নাম:</b> {user_name}</div>
+    <div class="info-item"><b>লিংগ:</b> {"মহিলা (জাতিকা)" if gender == "female" else "পুৰুষ (জাতক)"}</div>
     <div class="info-item"><b>জন্মৰ স্থান:</b> {user_place}</div>
     <div class="info-item"><b>জন্মৰ তাৰিখ:</b> {user_dob}</div>
     <div class="info-item"><b>জন্মৰ সময়:</b> {user_tob}</div>
+    <div class="info-item"><b>লগ্ন:</b> {asc_rasi}</div>
+    <div class="info-item"><b>লগ্নৰ অধিপতি:</b> {lagna_lord}</div>
+    <div class="info-item"><b>জন্ম ৰাশি:</b> {moon_rasi}</div>
+    <div class="info-item"><b>জন্ম ৰাশিৰ অধিপতি:</b> {moon_rashi_lord}</div>
+    <div class="info-item"><b>বৰ্ণ:</b> {panchanga.get('varna', '—')}</div>
+    <div class="info-item"><b>গণ:</b> {panchanga.get('gana', '—')}</div>
+    <div class="info-item"><b>যোনি:</b> {panchanga.get('yoni', '—')}</div>
+    <div class="info-item"><b>নাড়ী:</b> {panchanga.get('nadi', '—')}</div>
+    <div class="info-item"><b>জাতদণ্ড:</b> {panchanga.get('jata_danda', '—')}</div>
+    <div class="info-item"><b>দিবামান:</b> {panchanga.get('divaman', '—')}</div>
+    <div class="info-item"><b>ৰাত্ৰিমান:</b> {panchanga.get('ratriman', '—')}</div>
 </div>
 """
 
@@ -648,7 +676,11 @@ def generate_pdf_report(
     lagna_phala_html: str = "",
     rashi_phala_html: str = "",
     graha_bichar_html: str = "",
-    selected_sections: list = None
+    selected_sections: list = None,
+    lagna_lord: str = "",
+    moon_rashi_lord: str = "",
+    moon_rasi: str = "",
+    gender: str = "male"
 ) -> bytes:
     """
     Generate a complete professional PDF astrology report in Assamese.
@@ -663,7 +695,11 @@ def generate_pdf_report(
         all_dasha_predictions, sannari_html, navatara_html,
         nakshatra_phala_html, lagna_phala_html, rashi_phala_html,
         graha_bichar_html=graha_bichar_html,
-        selected_sections=selected_sections
+        selected_sections=selected_sections,
+        lagna_lord=lagna_lord,
+        moon_rashi_lord=moon_rashi_lord,
+        moon_rasi=moon_rasi,
+        gender=gender
     )
 
     # Write HTML to temp file, call pdf_worker.py in subprocess, read PDF back

@@ -16,7 +16,7 @@ from functools import wraps
 from werkzeug.utils import secure_filename
 from config import DB_PATH
 
-from panchanga import get_full_panchanga
+from panchanga import get_full_panchanga, get_rashi_lord
 from dosha_engine import get_complete_dosha_analysis
 from yoga_engine import get_complete_yoga_analysis
 from ai_engine import generate_ai_interpretation
@@ -690,7 +690,7 @@ def calculate():
         dasa_hierarchy = get_full_dasa_hierarchy(p_sidereal_longitudes["চন্দ্ৰ"], ist_time)
 
         # Panchanga
-        panchanga = get_full_panchanga(ist_time, lat, lon)
+        panchanga = get_full_panchanga(ist_time, lat, lon, tz_offset)
 
         # Dosha Analysis
         dosha_results = get_complete_dosha_analysis(planet_houses, p_sidereal_longitudes)
@@ -720,6 +720,10 @@ def calculate():
         # Rashi Phala (Moon sign based)
         moon_rasi_idx = get_rasi_and_degree(p_sidereal_longitudes["চন্দ্ৰ"])[0]
         rashi_phala_text = apply_gender(get_rashi_phala(moon_rasi_idx), gender)
+
+        # Lagna Lord and Moon Rashi Lord
+        lagna_lord = get_rashi_lord(asc_rasi_idx)
+        moon_rashi_lord = get_rashi_lord(moon_rasi_idx)
 
         # Graha Bichar - all planets house-wise analysis
         graha_bichar_data = get_all_graha_bichar(planet_houses)
@@ -785,6 +789,7 @@ def calculate():
                            gender=gender, lat=lat, lon=lon, timezone=tz_offset,
                            planets=planets_data, all_vargas=all_vargas,
                            asc_rasi_index=asc_rasi_idx, asc_rasi=asc_rasi,
+                           lagna_lord=lagna_lord, moon_rashi_lord=moon_rashi_lord,
                            dasa_data=dasa_hierarchy, panchanga=panchanga,
                            dosha_results=dosha_results, yoga_results=yoga_results,
                            ai_interpretation=ai_interpretation,
@@ -888,7 +893,7 @@ def download_pdf():
             planet_houses[p_name] = house_idx
 
         dasa_hierarchy = get_full_dasa_hierarchy(p_sidereal_longitudes["চন্দ্ৰ"], ist_time)
-        panchanga = get_full_panchanga(ist_time, lat, lon)
+        panchanga = get_full_panchanga(ist_time, lat, lon, tz_offset)
         dosha_results = get_complete_dosha_analysis(planet_houses, p_sidereal_longitudes)
         yoga_results = get_complete_yoga_analysis(planet_houses, planet_signs, asc_rasi_idx)
 
@@ -943,6 +948,11 @@ def download_pdf():
         # Rashi Phala for PDF (Moon sign based)
         rashi_phala_html = apply_gender(get_rashi_phala_html(moon_rasi_idx), gender)
 
+        # Lagna Lord and Moon Rashi Lord for PDF
+        lagna_lord = get_rashi_lord(asc_rasi_idx)
+        moon_rashi_lord = get_rashi_lord(moon_rasi_idx)
+        moon_rasi = rasis[moon_rasi_idx]
+
         # Graha Bichar for PDF
         graha_bichar_html = get_graha_bichar_html(planet_houses)
 
@@ -966,7 +976,9 @@ def download_pdf():
             all_vargas, tripap_data, tripap_ages, asc_rasi,
             all_dasha_predictions, sannari_html, navatara_html,
             nakshatra_phala_html, lagna_phala_html, rashi_phala_html,
-            graha_bichar_html=graha_bichar_html
+            graha_bichar_html=graha_bichar_html,
+            lagna_lord=lagna_lord, moon_rashi_lord=moon_rashi_lord,
+            moon_rasi=moon_rasi, gender=gender
         )
 
         return send_file(
@@ -1076,7 +1088,7 @@ def custom_pdf():
             planet_houses[p_name] = house_idx
 
         dasa_hierarchy = get_full_dasa_hierarchy(p_sidereal_longitudes["চন্দ্ৰ"], ist_time)
-        panchanga = get_full_panchanga(ist_time, lat, lon)
+        panchanga = get_full_panchanga(ist_time, lat, lon, tz_offset)
         dosha_results = get_complete_dosha_analysis(planet_houses, p_sidereal_longitudes)
         yoga_results = get_complete_yoga_analysis(planet_houses, planet_signs, asc_rasi_idx)
 
@@ -1126,6 +1138,11 @@ def custom_pdf():
 
         rashi_phala_html = apply_gender(get_rashi_phala_html(moon_rasi_idx), gender)
 
+        # Lagna Lord and Moon Rashi Lord for PDF
+        lagna_lord = get_rashi_lord(asc_rasi_idx)
+        moon_rashi_lord = get_rashi_lord(moon_rasi_idx)
+        moon_rasi = rasis[moon_rasi_idx]
+
         # Graha Bichar for PDF
         graha_bichar_html = get_graha_bichar_html(planet_houses)
 
@@ -1153,7 +1170,9 @@ def custom_pdf():
             all_dasha_predictions, sannari_html, navatara_html,
             nakshatra_phala_html, lagna_phala_html, rashi_phala_html,
             graha_bichar_html=graha_bichar_html,
-            selected_sections=selected_sections
+            selected_sections=selected_sections,
+            lagna_lord=lagna_lord, moon_rashi_lord=moon_rashi_lord,
+            moon_rasi=moon_rasi, gender=gender
         )
 
         return send_file(
@@ -1172,7 +1191,7 @@ def api_panchanga():
     lat = float(request.args.get("lat", 26.1445))
     lon = float(request.args.get("lon", 91.7362))
     now = datetime.now()
-    panchanga = get_full_panchanga(now, lat, lon)
+    panchanga = get_full_panchanga(now, lat, lon, tz_offset)
     return jsonify(panchanga)
 
 
