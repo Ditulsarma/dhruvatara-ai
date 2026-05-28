@@ -186,6 +186,27 @@ def setup_database():
         )
     ''')
 
+    # ─── Astrologer Profiles table ───
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS astrologer_profiles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER UNIQUE NOT NULL,
+            institution_name TEXT DEFAULT '',
+            astrologer_name TEXT DEFAULT '',
+            astrologer_bio TEXT DEFAULT '',
+            address TEXT DEFAULT '',
+            mobile TEXT DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    # ─── Insert default admin astrologer profile (user_id=0 for admin fallback) ───
+    cursor.execute('''
+        INSERT OR IGNORE INTO astrologer_profiles (user_id, institution_name, astrologer_name, astrologer_bio, address, mobile)
+        VALUES (0, '', '', '', '', '')
+    ''')
+
     # ─── Insert default admin ───
     admin_username = "DitulSarma"
     admin_password = "HARIPUR1----"

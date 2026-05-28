@@ -97,6 +97,40 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def get_astrologer_footer_html(user_id=None):
+    """Generate HTML for astrologer details footer. Falls back to admin profile if user has none."""
+    if user_id is None:
+        user_id = session.get('user_id', 0)
+    profile = get_astrologer_profile(user_id)
+    if not profile:
+        return ""
+
+    lines = []
+    inst = profile.get('institution_name', '').strip()
+    name = profile.get('astrologer_name', '').strip()
+    bio = profile.get('astrologer_bio', '').strip()
+    addr = profile.get('address', '').strip()
+    mob = profile.get('mobile', '').strip()
+
+    if inst:
+        lines.append(f'<div class="astro-footer-line astro-inst">{inst}</div>')
+    if name:
+        lines.append(f'<div class="astro-footer-line astro-name">{name}</div>')
+    if bio:
+        lines.append(f'<div class="astro-footer-line astro-bio">{bio}</div>')
+    if addr:
+        lines.append(f'<div class="astro-footer-line astro-addr">{addr}</div>')
+    if mob:
+        lines.append(f'<div class="astro-footer-line astro-mob">📞 {mob}</div>')
+
+    if not lines:
+        return ""
+
+    return f"""
+<div class="astrologer-page-footer">
+    {''.join(lines)}
+</div>"""
+
 def get_all_images():
     """Get all admin images from DB."""
     conn = sqlite3.connect(DB_PATH)
@@ -971,6 +1005,9 @@ def download_pdf():
         # Apply gender to AI interpretation
         ai_interpretation = apply_gender(ai_interpretation, gender)
 
+        # Get astrologer profile for PDF footer (user's profile, fallback to admin)
+        astrologer_profile = get_astrologer_profile(session.get('user_id', 0))
+
         pdf_bytes = generate_pdf_report(
             name, dob, tob, place, planets_data, panchanga,
             dosha_results, yoga_results, dasa_hierarchy, ai_interpretation,
@@ -979,7 +1016,8 @@ def download_pdf():
             nakshatra_phala_html, lagna_phala_html, rashi_phala_html,
             graha_bichar_html=graha_bichar_html,
             lagna_lord=lagna_lord, moon_rashi_lord=moon_rashi_lord,
-            moon_rasi=moon_rasi, gender=gender
+            moon_rasi=moon_rasi, gender=gender,
+            astrologer_profile=astrologer_profile
         )
 
         return send_file(
@@ -1164,6 +1202,9 @@ def custom_pdf():
         elif dasha_limit > 0 and dasha_limit < len(all_dasha_predictions):
             all_dasha_predictions = all_dasha_predictions[:dasha_limit]
 
+        # Get astrologer profile for PDF footer (user's profile, fallback to admin)
+        astrologer_profile = get_astrologer_profile(session.get('user_id', 0))
+
         pdf_bytes = generate_pdf_report(
             name, dob, tob, place, planets_data, panchanga,
             dosha_results, yoga_results, dasa_hierarchy, ai_interpretation,
@@ -1173,7 +1214,8 @@ def custom_pdf():
             graha_bichar_html=graha_bichar_html,
             selected_sections=selected_sections,
             lagna_lord=lagna_lord, moon_rashi_lord=moon_rashi_lord,
-            moon_rasi=moon_rasi, gender=gender
+            moon_rasi=moon_rasi, gender=gender,
+            astrologer_profile=astrologer_profile
         )
 
         return send_file(
@@ -2073,6 +2115,104 @@ def api_chat():
     except Exception as e:
         logger.error(f"Chat error: {e}")
         return jsonify({"success": False, "message": f"ত্ৰুটি: {str(e)}"}), 500
+
+
+# ═══════════════════════════════════════════
+#  ASTROLOGER PROFILE ROUTES (Admin manages per-user astrologer details)
+# ═══════════════════════════════════════════
+
+def get_astrologer_profile(user_id: int) -> dict:
+    """Get astrologer profile for a user. Falls back to admin (user_id=0) if not set."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    try:
+        row = conn.execute(
+            "SELECT * FROM astrologer_profiles WHERE user_id = ?", (user_id,)
+        ).fetchone()
+        if row:
+            return dict(row)
+        # Fallback to admin profile (user_id=0)
+        row = conn.execute(
+            "SELECT * FROM astrologer_profiles WHERE user_id = 0"
+        ).fetchone()
+        return dict(row) if row else {}
+    finally:
+        conn.close()
+
+
+def save_astrologer_profile(user_id: int, data: dict) -> tuple:
+    """Save or update astrologer profile for a user. Returns (success, message)."""
+    conn = sqlite3.connect(DB_PATH)
+    try:
+        existing = conn.execute(
+            "SELECT id FROM astrologer_profiles WHERE user_id = ?", (user_id,)
+        ).fetchone()
+        if existing:
+            conn.execute('''
+                UPDATE astrologer_profiles
+                SET institution_name=?, astrologer_name=?, astrologer_bio=?,
+                    address=?, mobile=?, updated_at=CURRENT_TIMESTAMP
+                WHERE user_id=?
+            ''', (
+                data.get('institution_name', ''),
+                data.get('astrologer_name', ''),
+                data.get('astrologer_bio', ''),
+                data.get('address', ''),
+                data.get('mobile', ''),
+                user_id
+            ))
+        else:
+            conn.execute('''
+                INSERT INTO astrologer_profiles (user_id, institution_name, astrologer_name, astrologer_bio, address, mobile)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (
+                user_id,
+                data.get('institution_name', ''),
+                data.get('astrologer_name', ''),
+                data.get('astrologer_bio', ''),
+                data.get('address', ''),
+                data.get('mobile', '')
+            ))
+        conn.commit()
+        return True, "জ্যোতিষীৰ বিৱৰণ সফলভাৱে ছেভ কৰা হ'ল।"
+    except Exception as e:
+        return False, f"ছেভ কৰাত বিফল: {str(e)}"
+    finally:
+        conn.close()
+
+
+@app.route("/admin/api/astrologer-profile/<int:user_id>", methods=["GET"])
+@admin_required
+def admin_api_get_astrologer_profile(user_id):
+    """API: Get astrologer profile for a user."""
+    profile = get_astrologer_profile(user_id)
+    return jsonify({"success": True, "profile": profile})
+
+
+@app.route("/admin/api/astrologer-profile/<int:user_id>", methods=["POST"])
+@admin_required
+def admin_api_save_astrologer_profile(user_id):
+    """API: Save astrologer profile for a user."""
+    data = request.get_json()
+    success, message = save_astrologer_profile(user_id, data)
+    return jsonify({"success": success, "message": message})
+
+
+@app.route("/admin/api/astrologer-profile/admin", methods=["GET"])
+@admin_required
+def admin_api_get_admin_astrologer_profile():
+    """API: Get admin's own astrologer profile (user_id=0)."""
+    profile = get_astrologer_profile(0)
+    return jsonify({"success": True, "profile": profile})
+
+
+@app.route("/admin/api/astrologer-profile/admin", methods=["POST"])
+@admin_required
+def admin_api_save_admin_astrologer_profile():
+    """API: Save admin's own astrologer profile (user_id=0)."""
+    data = request.get_json()
+    success, message = save_astrologer_profile(0, data)
+    return jsonify({"success": success, "message": message})
 
 
 if __name__ == "__main__":

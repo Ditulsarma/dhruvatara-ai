@@ -222,6 +222,9 @@
         <button class="nav-item" onclick="showSection('images')">
             <span class="icon">🖼️</span> ফটো ব্যৱস্থাপনা
         </button>
+        <button class="nav-item" onclick="showSection('astrologer')">
+            <span class="icon">🔮</span> জ্যোতিষীৰ বিৱৰণ
+        </button>
         <a href="/admin/logout" class="nav-item">
             <span class="icon">🚪</span> লগআউট
         </a>
@@ -510,6 +513,42 @@
                 </div>
             </div>
         </div>
+
+        <!-- Astrologer Profile Section -->
+        <div id="section-astrologer" class="section">
+            <div class="card">
+                <h3>🔮 জ্যোতিষীৰ বিৱৰণ ব্যৱস্থাপনা</h3>
+                <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:16px;">
+                    প্ৰতিজন ব্যৱহাৰকাৰীৰ বাবে জ্যোতিষীৰ বিৱৰণ (অনুষ্ঠানৰ নাম, জ্যোতিষীৰ নাম, বিৱৰণ, ঠিকনা, মোবাইল নং) ছেট কৰক।
+                    যদি কোনো ব্যৱহাৰকাৰীয়ে নিজৰ বিৱৰণ ফিল আপ নকৰে, তেন্তে এডমিনৰ বিৱৰণ PDF ফুটাৰত দেখুওৱা হ'ব।
+                </p>
+
+                <!-- Admin's own profile -->
+                <div style="background:var(--bg);border-radius:var(--radius-sm);padding:16px;margin-bottom:20px;border:2px solid var(--orange);">
+                    <h4 style="margin-bottom:12px;color:var(--deep-blue);">👑 এডমিনৰ নিজৰ জ্যোতিষী বিৱৰণ (ফলবেক)</h4>
+                    <p style="font-size:0.75rem;color:var(--text-light);margin-bottom:12px;">
+                        এই বিৱৰণ সেই ব্যৱহাৰকাৰীসকলৰ PDF ত দেখুওৱা হ'ব যিসকলে নিজৰ বিৱৰণ ফিল আপ কৰা নাই।
+                    </p>
+                    <div id="adminAstrologerForm"></div>
+                </div>
+
+                <!-- User selector for profile editing -->
+                <div style="background:var(--bg);border-radius:var(--radius-sm);padding:16px;border:1px solid var(--border);">
+                    <h4 style="margin-bottom:12px;color:var(--deep-blue);">👤 ব্যৱহাৰকাৰীৰ জ্যোতিষী বিৱৰণ সম্পাদনা</h4>
+                    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px;">
+                        <select id="astrologerUserSelect" onchange="loadUserAstrologerProfile()" style="padding:10px 16px;border:2px solid var(--border);border-radius:8px;font-size:0.9rem;font-family:inherit;background:white;cursor:pointer;min-width:280px;">
+                            <option value="">-- ব্যৱহাৰকাৰী বাছনি কৰক --</option>
+                            {% for u in all_users %}
+                            <option value="{{ u.id }}">{{ u.name }} ({{ u.email }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div id="userAstrologerForm">
+                        <p style="color:var(--text-light);font-size:0.85rem;">ওপৰৰ পৰা এজন ব্যৱহাৰকাৰী বাছনি কৰক।</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 </div>
 
@@ -519,6 +558,12 @@
     <img src="/api/images/{{ img.id }}" alt="{{ img.alt_text }}" style="width:{{ img.width }}px;height:{{ img.height }}px;object-fit:contain;margin:4px 8px;border-radius:4px;display:inline-block;">
     {% endfor %}
 </div>
+
+{% if astrologer_footer_html %}
+<div style="margin-left:260px;">
+{{ astrologer_footer_html | safe }}
+</div>
+{% endif %}
 
 <!-- User Management Modal -->
 <div class="modal-overlay" id="userModal">
@@ -544,7 +589,7 @@
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         document.getElementById('section-' + name).classList.add('active');
         document.querySelector(`[onclick="showSection('${name}')"]`).classList.add('active');
-        const titles = {dashboard:'📊 ডেশ্ববৰ্ড', users:'👥 ব্যৱহাৰকাৰীসকল', subscriptions:'💳 চাবস্ক্ৰিপশ্যন', features:'⚙️ ফিচাৰ ব্যৱস্থাপনা', images:'🖼️ ফটো ব্যৱস্থাপনা'};
+        const titles = {dashboard:'📊 ডেশ্ববৰ্ড', users:'👥 ব্যৱহাৰকাৰীসকল', subscriptions:'💳 চাবস্ক্ৰিপশ্যন', features:'⚙️ ফিচাৰ ব্যৱস্থাপনা', images:'🖼️ ফটো ব্যৱস্থাপনা', astrologer:'🔮 জ্যোতিষীৰ বিৱৰণ'};
         document.getElementById('pageTitle').textContent = titles[name] || '';
     }
 
@@ -962,7 +1007,119 @@
     showSection = function(name) {
         origShowSection(name);
         if (name === 'images') loadImages();
+        if (name === 'astrologer') { loadAdminAstrologerProfile(); }
     };
+
+    // ─── Astrologer Profile Management ───
+
+    function buildAstrologerForm(profile, userId, isAdmin) {
+        const inst = profile.institution_name || '';
+        const name = profile.astrologer_name || '';
+        const bio = profile.astrologer_bio || '';
+        const addr = profile.address || '';
+        const mob = profile.mobile || '';
+
+        return `
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div class="form-group">
+                    <label>অনুষ্ঠানৰ নাম</label>
+                    <input type="text" id="astro_inst_${userId}" value="${inst.replace(/"/g, '&quot;')}" placeholder="মহৰ্ষি পৰাশৰ জ্যোতিষ চৰ্চা কেন্দ্ৰ" style="width:100%;">
+                </div>
+                <div class="form-group">
+                    <label>জ্যোতিষীৰ নাম</label>
+                    <input type="text" id="astro_name_${userId}" value="${name.replace(/"/g, '&quot;')}" placeholder="শ্ৰী দিতুল শৰ্মা" style="width:100%;">
+                </div>
+                <div class="form-group" style="grid-column:1/-1;">
+                    <label>জ্যোতিষীৰ বিৱৰণ</label>
+                    <input type="text" id="astro_bio_${userId}" value="${bio.replace(/"/g, '&quot;')}" placeholder="মোৰ সৃষ্টি 'ধ্ৰুৱতৰা Ai' সৰ্বপ্ৰথম অসমীয়া ব্যৱসায়িক জ্যোতিষ ছফট'ৱেৰ | ২০০৯ চনৰ পৰা Windows Version আৰু এতিয়া ৱেবচাইট dhrubataraai.com" style="width:100%;">
+                </div>
+                <div class="form-group">
+                    <label>ঠিকনা</label>
+                    <input type="text" id="astro_addr_${userId}" value="${addr.replace(/"/g, '&quot;')}" placeholder="পাঠশালা, বজালী, অসম" style="width:100%;">
+                </div>
+                <div class="form-group">
+                    <label>মোবাইল নং</label>
+                    <input type="text" id="astro_mob_${userId}" value="${mob.replace(/"/g, '&quot;')}" placeholder="৮৪৭৩০০২৬৫৮" style="width:100%;">
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="saveAstrologerProfile('${userId}', ${isAdmin})" style="margin-top:12px;">💾 ছেভ কৰক</button>
+            <span id="astroSaveStatus_${userId}" style="margin-left:12px;font-size:0.85rem;"></span>
+        `;
+    }
+
+    function loadAdminAstrologerProfile() {
+        const container = document.getElementById('adminAstrologerForm');
+        container.innerHTML = '<p style="color:var(--text-light);">লোড হৈ আছে...</p>';
+        fetch('/admin/api/astrologer-profile/admin')
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    container.innerHTML = buildAstrologerForm(data.profile, 'admin', true);
+                } else {
+                    container.innerHTML = '<p style="color:var(--red);">লোড কৰাত বিফল।</p>';
+                }
+            })
+            .catch(e => {
+                container.innerHTML = '<p style="color:var(--red);">ত্ৰুটি: ' + e + '</p>';
+            });
+    }
+
+    function loadUserAstrologerProfile() {
+        const userId = document.getElementById('astrologerUserSelect').value;
+        const container = document.getElementById('userAstrologerForm');
+        if (!userId) {
+            container.innerHTML = '<p style="color:var(--text-light);font-size:0.85rem;">ওপৰৰ পৰা এজন ব্যৱহাৰকাৰী বাছনি কৰক।</p>';
+            return;
+        }
+        container.innerHTML = '<p style="color:var(--text-light);">লোড হৈ আছে...</p>';
+        fetch('/admin/api/astrologer-profile/' + userId)
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    container.innerHTML = buildAstrologerForm(data.profile, userId, false);
+                } else {
+                    container.innerHTML = '<p style="color:var(--red);">লোড কৰাত বিফল।</p>';
+                }
+            })
+            .catch(e => {
+                container.innerHTML = '<p style="color:var(--red);">ত্ৰুটি: ' + e + '</p>';
+            });
+    }
+
+    function saveAstrologerProfile(userId, isAdmin) {
+        const inst = document.getElementById('astro_inst_' + userId).value;
+        const name = document.getElementById('astro_name_' + userId).value;
+        const bio = document.getElementById('astro_bio_' + userId).value;
+        const addr = document.getElementById('astro_addr_' + userId).value;
+        const mob = document.getElementById('astro_mob_' + userId).value;
+
+        const statusEl = document.getElementById('astroSaveStatus_' + userId);
+        statusEl.textContent = '⏳ ছেভ কৰি আছে...';
+        statusEl.style.color = 'var(--orange)';
+
+        const url = isAdmin ? '/admin/api/astrologer-profile/admin' : '/admin/api/astrologer-profile/' + userId;
+
+        fetch(url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                institution_name: inst,
+                astrologer_name: name,
+                astrologer_bio: bio,
+                address: addr,
+                mobile: mob
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            statusEl.textContent = data.message;
+            statusEl.style.color = data.success ? 'var(--green)' : 'var(--red)';
+        })
+        .catch(err => {
+            statusEl.textContent = 'ছেভ কৰাত বিফল।';
+            statusEl.style.color = 'var(--red)';
+        });
+    }
 </script>
 </body>
 </html>

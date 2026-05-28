@@ -120,13 +120,13 @@ def analyze_mangal_dosha(planet_house_map: dict) -> dict:
     """
     mangal_house = planet_house_map.get("মংগল")
     if mangal_house is None:
-        return {"present": False, "severity": 0, "houses": []}
+        return {"present": False, "severity": 0, "houses": [], "info": DOSHA_INFO["mangal_dosha"]}
 
     dosha_houses = [0, 3, 6, 7, 11]  # 1,4,7,8,12 (0-indexed)
     affected = [h + 1 for h in dosha_houses if h == mangal_house]
 
     if not affected:
-        return {"present": False, "severity": 0, "houses": []}
+        return {"present": False, "severity": 0, "houses": [], "info": DOSHA_INFO["mangal_dosha"]}
 
     severity = min(len(affected), 4)
     return {
@@ -146,7 +146,7 @@ def analyze_kaal_sarp_dosha(planet_house_map: dict, planet_longitudes: dict) -> 
     ketu_lon = planet_longitudes.get("কেতু", 0)
 
     if rahu_lon is None or ketu_lon is None:
-        return {"present": False, "severity": 0}
+        return {"present": False, "severity": 0, "info": DOSHA_INFO["kaal_sarp_dosha"]}
 
     # Determine the arc from Rahu to Ketu
     start = rahu_lon
@@ -183,7 +183,7 @@ def analyze_kaal_sarp_dosha(planet_house_map: dict, planet_longitudes: dict) -> 
             "info": DOSHA_INFO["kaal_sarp_dosha"]
         }
 
-    return {"present": False, "severity": 0}
+    return {"present": False, "severity": 0, "info": DOSHA_INFO["kaal_sarp_dosha"]}
 
 
 def analyze_pitra_dosha(planet_house_map: dict, planet_longitudes: dict) -> dict:
@@ -272,7 +272,7 @@ def analyze_shani_dosha(planet_house_map: dict, moon_house: int) -> dict:
     """
     shani_house = planet_house_map.get("শনি")
     if shani_house is None:
-        return {"present": False, "severity": 0}
+        return {"present": False, "severity": 0, "info": DOSHA_INFO["shani_dosha"]}
 
     # Sade Sati: Saturn in 12th, 1st, or 2nd from Moon
     relative = (shani_house - moon_house) % 12
@@ -297,7 +297,7 @@ def analyze_shani_dosha(planet_house_map: dict, moon_house: int) -> dict:
         severity_text = DOSHA_INFO["shani_dosha"]["severity_levels"][4]
         phase = "ঢৈয়া (অষ্টম ভাৱ)"
     else:
-        return {"present": False, "severity": 0}
+        return {"present": False, "severity": 0, "info": DOSHA_INFO["shani_dosha"]}
 
     return {
         "present": True,
@@ -329,7 +329,7 @@ def analyze_kemadruma_dosha(planet_house_map: dict) -> dict:
     """
     moon_house = planet_house_map.get("চন্দ্ৰ")
     if moon_house is None:
-        return {"present": False, "severity": 0}
+        return {"present": False, "severity": 0, "info": DOSHA_INFO["kemadruma_dosha"]}
 
     house_2nd = (moon_house + 1) % 12
     house_12th = (moon_house - 1) % 12

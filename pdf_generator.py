@@ -95,7 +95,8 @@ def _build_html(
     lagna_lord: str = "",
     moon_rashi_lord: str = "",
     moon_rasi: str = "",
-    gender: str = "male"
+    gender: str = "male",
+    astrologer_profile: dict = None
 ) -> str:
     """Build complete HTML for the PDF report.
     selected_sections: list of section keys to include. If None, include all.
@@ -314,7 +315,28 @@ def _build_html(
         <h2 class="section-heading">🤖 AI বিশ্লেষণ আৰু পৰামৰ্শ</h2>
         <div class="ai-content">{ai_lines}</div>"""
 
-    now_str = datetime.now().strftime("%d-%m-%Y %H:%M")
+    # ── Top-Right Astrologer Header (Full Details - First Page) ──
+    top_right_html = ""
+    if astrologer_profile:
+        tr_lines = []
+        tr_lines.append('<div class="trh-title">শ্ৰমেণ গণ্যতে কোষ্ঠিং</div>')
+        inst = astrologer_profile.get('institution_name', '').strip()
+        name = astrologer_profile.get('astrologer_name', '').strip()
+        bio = astrologer_profile.get('astrologer_bio', '').strip()
+        addr = astrologer_profile.get('address', '').strip()
+        mob = astrologer_profile.get('mobile', '').strip()
+        if inst:
+            tr_lines.append(f'<div class="trh-line trh-inst">{inst}</div>')
+        if name:
+            tr_lines.append(f'<div class="trh-line trh-name">{name}</div>')
+        if bio:
+            tr_lines.append(f'<div class="trh-line trh-bio">{bio}</div>')
+        if addr:
+            tr_lines.append(f'<div class="trh-line trh-addr">{addr}</div>')
+        if mob:
+            tr_lines.append(f'<div class="trh-line trh-mob">📞 {mob}</div>')
+        if len(tr_lines) > 1:  # more than just the title
+            top_right_html = '<div class="top-right-header">' + ''.join(tr_lines) + '</div>'
 
     html = f"""<!DOCTYPE html>
 <html lang="as">
@@ -326,11 +348,27 @@ def _build_html(
     * {{ margin: 0; padding: 0; box-sizing: border-box; }}
     body {{
         font-family: 'Noto Sans Bengali', 'Nirmala UI', 'Vrinda', sans-serif;
-        color: {DARK_GREY}; font-size: 10pt; line-height: 1.6;
+        color: {DARK_GREY}; font-size: 8pt; line-height: 1.4;
     }}
-    .header {{ text-align: center; margin-bottom: 16px; }}
+    .header {{ text-align: center; margin-bottom: 16px; position: relative; }}
     .header h1 {{ font-size: 22pt; color: {DEEP_BLUE}; font-weight: 800; }}
     .header .sub {{ font-size: 11pt; color: {DARK_GREY}; }}
+
+    /* Top-Right Astrologer Header */
+    .top-right-header {{
+        position: absolute; top: 0; right: 0;
+        text-align: right; max-width: 55%;
+    }}
+    .trh-title {{
+        font-size: 10pt; font-weight: 800; color: {ORANGE};
+        margin-bottom: 4px; letter-spacing: 0.5px;
+    }}
+    .trh-line {{ font-size: 7pt; line-height: 1.5; color: #555; }}
+    .trh-inst {{ font-weight: 700; color: {DEEP_BLUE}; font-size: 7.5pt; }}
+    .trh-name {{ font-weight: 600; color: {ORANGE}; font-size: 7pt; }}
+    .trh-bio {{ color: #666; font-size: 6.5pt; font-style: italic; }}
+    .trh-addr {{ color: #777; font-size: 6.5pt; }}
+    .trh-mob {{ color: {DEEP_BLUE}; font-size: 6.5pt; font-weight: 500; }}
     .divider {{ border: none; border-top: 2px solid {ORANGE}; margin: 10px 0 16px; }}
 
     h2.section-heading {{
@@ -550,17 +588,17 @@ def _build_html(
 
     /* Dasha Prediction Blocks */
     .dasha-pred-block {{
-        margin-bottom: 8px; page-break-inside: avoid;
-        border: 1px solid #e0e0e0; border-radius: 4px;
+        margin-bottom: 4px; page-break-inside: avoid;
+        border: 1px solid #e0e0e0; border-radius: 3px;
         overflow: hidden;
     }}
     .dp-header {{
-        font-weight: 700; font-size: 8pt; color: {DEEP_BLUE};
-        background: #E8EAF6; padding: 4px 8px;
+        font-weight: 700; font-size: 8.5pt; color: {DEEP_BLUE};
+        background: #E8EAF6; padding: 3px 6px;
     }}
     .dp-dates {{ font-size: 7pt; color: #888; font-weight: 400; }}
     .dp-body {{
-        font-size: 7.5pt; padding: 6px 8px; line-height: 1.5;
+        font-size: 8pt; padding: 4px 6px; line-height: 1.4;
         color: {DARK_GREY};
     }}
 
@@ -573,7 +611,8 @@ def _build_html(
 <body>
 
 <div class="header">
-    <h1>🌟 ধ্ৰুৱতৰা AI</h1>
+    {top_right_html}
+    <h1>🌟 জন্মকুণ্ডলী</h1>
     <div class="sub">বৈদিক জ্যোতিষ সম্পূৰ্ণ ৰিপৰ্ট</div>
 </div>
 <hr class="divider">
@@ -653,14 +692,27 @@ def _build_html(
 
     html += f"""
 <div class="footer">
-    <p>ধ্ৰুৱতৰা AI • বৈদিক জ্যোতিষ • {now_str}</p>
+    <p>ধ্ৰুৱতৰা AI • বৈদিক জ্যোতিষ</p>
     <p>এই ৰিপৰ্ট কেৱল জ্যোতিষীয় তথ্যৰ বাবে। ই কোনো চিকিৎসা, আইনী, বা বিত্তীয় পৰামৰ্শ নহয়।</p>
 </div>
 
 </body>
 </html>"""
 
-    return html
+    # ── Build Astrologer Footer HTML for Playwright footer_template ──
+    astro_footer_html = ""
+    if astrologer_profile:
+        name = astrologer_profile.get('astrologer_name', '').strip()
+        mob = astrologer_profile.get('mobile', '').strip()
+        parts = []
+        if name:
+            parts.append(f'<span style="font-weight:600;color:#FF6600;font-size:8px;">{name}</span>')
+        if mob:
+            parts.append(f'<span style="color:#1a237e;font-size:8px;">📞 {mob}</span>')
+        if parts:
+            astro_footer_html = ' &nbsp;|&nbsp; '.join(parts)
+
+    return html, astro_footer_html
 
 
 def generate_pdf_report(
@@ -680,14 +732,15 @@ def generate_pdf_report(
     lagna_lord: str = "",
     moon_rashi_lord: str = "",
     moon_rasi: str = "",
-    gender: str = "male"
+    gender: str = "male",
+    astrologer_profile: dict = None
 ) -> bytes:
     """
     Generate a complete professional PDF astrology report in Assamese.
     Uses Playwright (Chromium) via subprocess for perfect Assamese text rendering.
     Returns PDF as bytes.
     """
-    html_content = _build_html(
+    html_content, astro_footer_html = _build_html(
         user_name, user_dob, user_tob, user_place,
         planets_data, panchanga, dosha_results,
         yoga_results, dasa_data, ai_interpretation,
@@ -699,7 +752,8 @@ def generate_pdf_report(
         lagna_lord=lagna_lord,
         moon_rashi_lord=moon_rashi_lord,
         moon_rasi=moon_rasi,
-        gender=gender
+        gender=gender,
+        astrologer_profile=astrologer_profile
     )
 
     # Write HTML to temp file, call pdf_worker.py in subprocess, read PDF back
@@ -712,9 +766,20 @@ def generate_pdf_report(
 
     pdf_path = html_path + '.pdf'
 
+    # Write astrologer footer to temp file if present
+    footer_path = None
+    if astro_footer_html:
+        footer_file = tempfile.NamedTemporaryFile(mode='w', suffix='.html', encoding='utf-8', delete=False)
+        footer_file.write(astro_footer_html)
+        footer_file.close()
+        footer_path = footer_file.name
+
     try:
+        cmd = [python_exe, worker_script, html_path, pdf_path]
+        if footer_path:
+            cmd.append(footer_path)
         result = subprocess.run(
-            [python_exe, worker_script, html_path, pdf_path],
+            cmd,
             capture_output=True, text=True, timeout=30
         )
         if result.returncode != 0:
@@ -725,8 +790,9 @@ def generate_pdf_report(
         return pdf_bytes
     finally:
         # Clean up temp files
-        for path in [html_path, pdf_path]:
-            try:
-                os.unlink(path)
-            except OSError:
-                pass
+        for path in [html_path, pdf_path, footer_path]:
+            if path:
+                try:
+                    os.unlink(path)
+                except OSError:
+                    pass

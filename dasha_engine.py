@@ -612,21 +612,15 @@ def get_maha_antar_prediction(maha_eng: str, antar_eng: str, planet_degrees: dic
     if special_rules_text:
         result += f"\n\n【জ্যোতিষশাস্ত্ৰৰ বিশেষ নিয়মৰ প্ৰভাৱ】\n{special_rules_text}"
 
-    # ─── Graha Bichar Integration for Mahadasha Planet ───
+    # ─── Graha Bichar Integration for Mahadasha Planet ONLY ───
+    # (Antardasha graha bichar is NOT included here — it's already shown
+    #  in the separate Graha Bichar section of the PDF to avoid duplication)
     if get_graha_bichar and maha_asm in GRAHA_KARAKATTWA:
         maha_house_idx = maha_pd["house"] - 1  # 0-indexed for graha_bichar
         graha_bichar_maha = get_graha_bichar(maha_asm, maha_house_idx)
         if graha_bichar_maha:
             result += f"\n\n【{maha_asm} মহাদশাৰ গ্ৰহ বিচাৰ (ভাব অনুসৰি)】\n"
             result += graha_bichar_maha + "\n"
-
-    # ─── Graha Bichar Integration for Antardasha Planet ───
-    if get_graha_bichar and antar_asm in GRAHA_KARAKATTWA:
-        antar_house_idx = antar_pd["house"] - 1  # 0-indexed for graha_bichar
-        graha_bichar_text = get_graha_bichar(antar_asm, antar_house_idx)
-        if graha_bichar_text:
-            result += f"\n\n【{antar_asm} অন্তৰ্দশাৰ গ্ৰহ বিচাৰ (ভাব অনুসৰি)】\n"
-            result += graha_bichar_text + "\n"
 
     result += "\n"
     return result
