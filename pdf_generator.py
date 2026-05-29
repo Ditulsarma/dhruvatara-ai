@@ -251,6 +251,22 @@ def _build_html(
     """Build complete HTML for the PDF report.
     selected_sections: list of section keys to include. If None, include all.
     """
+    # Convert DOB from YYYY-MM-DD to DD-MM-YYYY format
+    def _format_dob(dob_str):
+        """Convert YYYY-MM-DD to DD-MM-YYYY"""
+        if not dob_str or len(dob_str) < 10:
+            return dob_str
+        try:
+            parts = dob_str.split('-')
+            if len(parts) == 3:
+                return f"{parts[2]}-{parts[1]}-{parts[0]}"
+        except Exception:
+            pass
+        return dob_str
+    
+    # Format the DOB for use throughout the HTML
+    user_dob_formatted = _format_dob(user_dob)
+    
     # Helper: check if a section should be included
     def _include(key):
         if selected_sections is None:
@@ -794,15 +810,15 @@ def _build_html(
 
     /* ── Invocatory Shlokas ── */
     .shloka-section {{
-        margin: 14px 0 16px; page-break-inside: avoid;
+        margin: 10px 0 14px; page-break-inside: avoid; page-break-after: avoid;
     }}
     .shloka-outer-box {{
         background: linear-gradient(135deg, #FFF8E1 0%, #FFF3E0 30%, #FCE4EC 70%, #F3E5F5 100%);
         border: 2px solid {ORANGE};
         border-radius: 12px;
-        padding: 18px 22px;
+        padding: 14px 20px;
         position: relative;
-        box-shadow: 0 3px 12px rgba(255,102,0,0.12);
+        box-shadow: 0 3px 12px rgba(255,102,0,0.10);
     }}
     .shloka-outer-box::before {{
         content: "🕉️";
@@ -810,40 +826,40 @@ def _build_html(
         top: -14px;
         left: 50%;
         transform: translateX(-50%);
-        font-size: 22pt;
+        font-size: 18pt;
         background: white;
         padding: 0 10px;
         border-radius: 50%;
     }}
     .shloka-title {{
         text-align: center;
-        font-size: 11pt;
+        font-size: 10pt;
         font-weight: 800;
         color: {ORANGE};
-        margin: 6px 0 12px;
+        margin: 6px 0 10px;
         letter-spacing: 1px;
         text-transform: uppercase;
     }}
     .shloka-block {{
         text-align: center;
-        margin-bottom: 14px;
-        padding: 12px 16px;
+        margin-bottom: 10px;
+        padding: 10px 14px;
         background: rgba(255,255,255,0.55);
         border-radius: 8px;
         border: 1px dashed #e0c8a0;
     }}
     .shloka-text {{
-        font-size: 9.5pt;
+        font-size: 9pt;
         font-weight: 600;
         color: {DEEP_BLUE};
-        line-height: 2.4;
+        line-height: 2.2;
         letter-spacing: 0.3px;
         font-family: 'Noto Sans Bengali', 'Nirmala UI', 'Vrinda', sans-serif;
     }}
     .shloka-divider {{
         text-align: center;
-        margin: 8px 0;
-        font-size: 14pt;
+        margin: 6px 0;
+        font-size: 13pt;
         color: {ORANGE};
         letter-spacing: 6px;
     }}
@@ -852,8 +868,79 @@ def _build_html(
         font-size: 8pt;
         font-weight: 600;
         color: #888;
-        margin-top: 8px;
+        margin-top: 6px;
         font-style: italic;
+    }}
+
+    /* ── জন্মপত্ৰিকা Title ── */
+    .patrika-title-section {{
+        text-align: center;
+        margin: 22px 0 14px;
+        page-break-inside: avoid;
+        page-break-before: avoid;
+    }}
+    .patrika-main-title {{
+        font-size: 24pt;
+        font-weight: 900;
+        color: {ORANGE};
+        letter-spacing: 3px;
+        text-shadow: 2px 2px 4px rgba(255,102,0,0.18);
+        font-family: 'Noto Sans Bengali', 'Nirmala UI', 'Vrinda', sans-serif;
+        line-height: 1.2;
+    }}
+    .patrika-ornament {{
+        color: {ORANGE};
+        font-size: 10pt;
+        letter-spacing: 5px;
+        margin: 4px 0;
+    }}
+
+    /* ── প্ৰকাশিত নাম ও ব্যক্তিগত তথ্য Card ── */
+    .patrika-info-card {{
+        display: inline-block;
+        background: linear-gradient(135deg, #FFF8E1 0%, #FFF3E0 40%, #FCE4EC 100%);
+        border: 2px solid {ORANGE};
+        border-radius: 14px;
+        padding: 16px 40px;
+        margin: 10px auto 20px;
+        box-shadow: 0 4px 18px rgba(255,102,0,0.14);
+        text-align: center;
+        min-width: 320px;
+        page-break-inside: avoid;
+        page-break-before: avoid;
+    }}
+    .patrika-published-label {{
+        font-size: 9pt;
+        font-weight: 600;
+        color: #999;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+        font-family: 'Noto Sans Bengali', 'Nirmala UI', 'Vrinda', sans-serif;
+    }}
+    .patrika-name {{
+        font-size: 16pt;
+        font-weight: 800;
+        color: {DEEP_BLUE};
+        letter-spacing: 1.5px;
+        font-family: 'Noto Sans Bengali', 'Nirmala UI', 'Vrinda', sans-serif;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px dashed #e0c8a0;
+    }}
+    .patrika-details {{
+        font-size: 10pt;
+        color: #444;
+        line-height: 2.2;
+        font-family: 'Noto Sans Bengali', 'Nirmala UI', 'Vrinda', sans-serif;
+    }}
+    .patrika-details b {{
+        color: {ORANGE};
+        font-weight: 700;
+    }}
+    .patrika-details span {{
+        color: {DEEP_BLUE};
+        font-weight: 600;
     }}
 
     .sare-sati-box {{
@@ -934,12 +1021,34 @@ def _build_html(
 </div>
 <!-- ═══════════════════════════════════════════════════ -->
 
+<!-- ═══════════════ জন্মপত্ৰিকা TITLE ═══════════════ -->
+<div class="patrika-title-section">
+    <div class="patrika-ornament">❖  ॐ  ❖</div>
+    <div class="patrika-main-title">জন্মপত্ৰিকা</div>
+</div>
+
+<!-- ═══════════ প্ৰকাশিত নাম ও তথ্য ═══════════ -->
+<div style="text-align:center;">
+    <div class="patrika-info-card">
+        <div class="patrika-published-label">প্ৰকাশিত নাম</div>
+        <div class="patrika-name">{user_name}</div>
+        <div class="patrika-details">
+            <b>জন্ম তাৰিখঃ</b> <span>{user_dob_formatted}</span> &nbsp;&nbsp;|&nbsp;&nbsp; <b>জন্মৰ সময়ঃ</b> <span>{user_tob}</span><br>
+            <b>জন্ম স্থানঃ</b> <span>{user_place}</span>
+        </div>
+    </div>
+</div>
+<!-- ═══════════════════════════════════════════════════ -->
+
+<!-- ═══════════════ PAGE BREAK → ২য় পৃষ্ঠা ═══════════════ -->
+<div style="page-break-before: always;"></div>
+
 <h2 class="section-heading">📋 ব্যক্তিগত তথ্য</h2>
 <div class="info-grid">
     <div class="info-item"><b>নাম:</b> {user_name}</div>
     <div class="info-item"><b>লিংগ:</b> {"মহিলা (জাতিকা)" if gender == "female" else "পুৰুষ (জাতক)"}</div>
     <div class="info-item"><b>জন্মৰ স্থান:</b> {user_place}</div>
-    <div class="info-item"><b>জন্মৰ তাৰিখ:</b> {user_dob}</div>
+    <div class="info-item"><b>জন্মৰ তাৰিখ:</b> {user_dob_formatted}</div>
     <div class="info-item"><b>জন্মৰ সময়:</b> {user_tob}</div>
     <div class="info-item"><b>লগ্ন:</b> {asc_rasi}</div>
     <div class="info-item"><b>লগ্নৰ অধিপতি:</b> {lagna_lord}</div>
