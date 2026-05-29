@@ -20,7 +20,7 @@ from panchanga import get_full_panchanga, get_rashi_lord
 from dosha_engine import get_complete_dosha_analysis
 from yoga_engine import get_complete_yoga_analysis
 from ai_engine import generate_ai_interpretation
-from pdf_generator import generate_pdf_report
+from pdf_generator import generate_pdf_report, get_shani_sare_sati_data
 from chat_engine import chat_with_ai, PREDEFINED_QUESTIONS
 from tripap_rista import get_tripap_rista, analyze_tripap_rista, TRIPAP_AGES
 from dasha_engine import (
@@ -33,6 +33,8 @@ from nakshatra_phala import get_nakshatra_phala, get_nakshatra_phala_html
 from lagna_phala import get_lagna_phala, get_lagna_phala_html
 from rashi_phala import get_rashi_phala, get_rashi_phala_html
 from graha_bichar import get_all_graha_bichar, get_graha_bichar_html
+from kundli_chart import draw_kundli_chart, draw_all_styles
+from patrika import generate_patrika_text
 from auth_module import (
     register_user, login_user, login_admin, verify_email, verify_mobile,
     resend_otp, get_user_features, check_feature_access,
@@ -223,7 +225,7 @@ rasis = ["মেষ", "বৃষ", "মিথুন", "কৰ্কট", "সি
 PLANET_SHORT = {
     "ৰবি": "ৰ", "চন্দ্ৰ": "চ", "মংগল": "ম", "বুধ": "বু",
     "বৃহস্পতি": "বৃ", "শুক্ৰ": "শু", "শনি": "শ",
-    "ৰাহু": "ৰা", "কেতু": "কে", "লগ্ন": "ল"
+    "ৰাহু": "ৰা", "কেতু": "কে", "লগ্ন": "লং"
 }
 
 nakshatras = [
@@ -819,6 +821,9 @@ def calculate():
         all_subscriptions = [dict(s) for s in subs]
         conn.close()
 
+    # Saturn Sare Sati / Dhaiya data for result page
+    shani_sare_sati_data = get_shani_sare_sati_data(moon_rasi=rasis[moon_rasi_idx], planets_data=planets_data, user_dob=dob)
+
     return render_template("result.html",
                            user_name=name, user_dob=dob, user_tob=tob, user_place=place,
                            gender=gender, lat=lat, lon=lon, timezone=tz_offset,
@@ -840,6 +845,7 @@ def calculate():
                            moon_rasi=rasis[moon_rasi_idx],
                            graha_bichar_data=graha_bichar_data,
                            graha_bichar_html=graha_bichar_html,
+                           shani_sare_sati_data=shani_sare_sati_data,
                            user_features=get_user_features(session.get('user_id', 0)),
                            user_subscription_name=user_subscription_name,
                            user_subscription_id=user_subscription_id,
@@ -853,6 +859,16 @@ def download_pdf():
     tob = request.form.get("tob")
     place = request.form.get("place", "")
     gender = request.form.get("gender", "male")
+
+    # If patrika public_name is provided, use it; otherwise fall back to name
+    patrika_public_name = request.form.get("public_name", "").strip()
+    if patrika_public_name:
+        name = patrika_public_name
+
+    # If patrika birth_district is provided, use it; otherwise fall back to place
+    patrika_birth_district = request.form.get("birth_district", "").strip()
+    if patrika_birth_district:
+        place = patrika_birth_district
 
     lat_str = request.form.get("lat", "")
     lon_str = request.form.get("lon", "")
@@ -1008,6 +1024,25 @@ def download_pdf():
         # Get astrologer profile for PDF footer (user's profile, fallback to admin)
         astrologer_profile = get_astrologer_profile(session.get('user_id', 0))
 
+        # Generate patrika text for PDF
+        patrika_text = generate_patrika_text(
+            public_name=name,
+            secret_name=request.form.get('secret_name', ''),
+            father_name=request.form.get('father_name', ''),
+            mother_name=request.form.get('mother_name', ''),
+            birth_district=patrika_birth_district if patrika_birth_district else place,
+            residence_district=request.form.get('residence_district', ''),
+            residence=request.form.get('residence', ''),
+            gender=gender,
+            dob=dob, tob=tob,
+            asc_rasi=asc_rasi, asc_rasi_idx=asc_rasi_idx, asc_degree=asc_deg,
+            moon_rasi=moon_rasi, moon_rasi_idx=moon_rasi_idx,
+            nakshatra_name=nakshatras[moon_nak_idx - 1],
+            nakshatra_idx=moon_nak_idx - 1,
+            nakshatra_pada=panchanga.get('nakshatra', {}).get('pada', 1),
+            panchanga=panchanga,
+        )
+
         pdf_bytes = generate_pdf_report(
             name, dob, tob, place, planets_data, panchanga,
             dosha_results, yoga_results, dasa_hierarchy, ai_interpretation,
@@ -1017,7 +1052,8 @@ def download_pdf():
             graha_bichar_html=graha_bichar_html,
             lagna_lord=lagna_lord, moon_rashi_lord=moon_rashi_lord,
             moon_rasi=moon_rasi, gender=gender,
-            astrologer_profile=astrologer_profile
+            astrologer_profile=astrologer_profile,
+            patrika_text=patrika_text
         )
 
         return send_file(
@@ -1030,6 +1066,241 @@ def download_pdf():
     except Exception as e:
         return f"<div style='padding:40px;font-family:Arial;text-align:center;'><h2 style='color:#c62828;'>PDF নিৰ্মাণ ত্ৰুটি</h2><p>{str(e)}</p><a href='/'>আকৌ চেষ্টা কৰক</a></div>"
 
+@app.route("/generate-patrika", methods=["POST"])
+def generate_patrika():
+    """Generate patrika text from form data."""
+    # Check feature access - only paid users can generate patrika
+    if session.get('user_id'):
+        if not check_feature_access(session['user_id'], 'patrika_pdf'):
+            return jsonify({'error': 'পত্ৰিকা বনাবলৈ প্ৰ\' ভাৰ্চনলৈ আপগ্ৰেড কৰক।'}), 403
+    try:
+        data = request.get_json()
+        patrika_text = generate_patrika_text(
+            public_name=data.get('public_name', ''),
+            secret_name=data.get('secret_name', ''),
+            father_name=data.get('father_name', ''),
+            mother_name=data.get('mother_name', ''),
+            birth_district=data.get('birth_district', ''),
+            residence_district=data.get('residence_district', ''),
+            residence=data.get('residence', ''),
+            gender=data.get('blessing', data.get('gender', 'male')),
+            dob=data.get('dob', ''),
+            tob=data.get('tob', ''),
+            asc_rasi=data.get('asc_rasi', ''),
+            asc_rasi_idx=int(data.get('asc_rasi_idx', 0)),
+            asc_degree=float(data.get('asc_degree', 0)),
+            moon_rasi=data.get('moon_rasi', ''),
+            moon_rasi_idx=int(data.get('moon_rasi_idx', 0)),
+            nakshatra_name=data.get('nakshatra_name', ''),
+            nakshatra_idx=int(data.get('nakshatra_idx', 0)),
+            nakshatra_pada=int(data.get('nakshatra_pada', 1)),
+            panchanga={
+                'tithi': {'name': data.get('tithi_name', '—')},
+                'paksha': data.get('paksha', ''),
+                'nakshatra': {'name': data.get('nakshatra_name', '—'), 'index': int(data.get('nakshatra_idx', 0)), 'pada': int(data.get('nakshatra_pada', 1))},
+                'yoga': {'name': data.get('yoga_name', '—')},
+                'karana': {'name': data.get('karana_name', '—')},
+                'vaar': {'name': data.get('vaar_name', '—'), 'index': int(data.get('vaar_idx', 0))},
+                'masa': {'name': data.get('masa_name', '—')},
+                'varna': data.get('varna', '—'),
+                'gana': data.get('gana', '—'),
+                'sunrise': data.get('sunrise', '06:00'),
+            },
+        )
+        return jsonify({'patrika_text': patrika_text})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route("/download-patrika-pdf", methods=["POST"])
+def download_patrika_pdf():
+    """Generate PDF with patrika text below D1 chart."""
+    # Check feature access - only paid users can download patrika PDF
+    if session.get('user_id'):
+        if not check_feature_access(session['user_id'], 'patrika_pdf'):
+            return "<div style='padding:40px;font-family:Arial;text-align:center;'><h2 style='color:#c62828;'>🔒 প্ৰৱেশ নিষেধ</h2><p>পত্ৰিকা PDF ডাউনলোড কৰিবলৈ প্ৰ' ভাৰ্চনলৈ আপগ্ৰেড কৰক।</p><a href='/'>আকৌ চেষ্টা কৰক</a></div>"
+    # Recalculate everything (same as download_pdf) but add patrika text
+    name = request.form.get("name", request.form.get("public_name", ""))
+    dob = request.form.get("dob")
+    tob = request.form.get("tob")
+    place = request.form.get("place", "")
+    gender = request.form.get("gender", request.form.get("blessing", "male"))
+
+    # If patrika public_name is provided, use it; otherwise fall back to name
+    patrika_public_name = request.form.get("public_name", "").strip()
+    if patrika_public_name:
+        name = patrika_public_name
+
+    # If patrika birth_district is provided, use it; otherwise fall back to place
+    patrika_birth_district = request.form.get("birth_district", "").strip()
+    if patrika_birth_district:
+        place = patrika_birth_district
+    
+    lat_str = request.form.get("lat", "")
+    lon_str = request.form.get("lon", "")
+    tz_str = request.form.get("timezone", "5.5")
+    
+    try:
+        lat = float(lat_str) if lat_str else None
+        lon = float(lon_str) if lon_str else None
+    except (ValueError, TypeError):
+        lat, lon = None, None
+    
+    if lat is None or lon is None:
+        if place:
+            coords = get_coordinates(place)
+            if coords:
+                lat, lon = coords
+            else:
+                lat, lon = 26.1445, 91.7362
+        else:
+            lat, lon = 26.1445, 91.7362
+    
+    try:
+        tz_offset = float(tz_str)
+    except (ValueError, TypeError):
+        tz_offset = 5.5
+    
+    try:
+        ist_time = datetime.strptime(f"{dob} {tob}", "%Y-%m-%d %H:%M")
+        jd = swe.julday(ist_time.year, ist_time.month, ist_time.day,
+                        (ist_time.hour + ist_time.minute / 60.0) - tz_offset)
+        swe.set_sid_mode(swe.SIDM_LAHIRI)
+        ayanamsa = swe.get_ayanamsa(jd)
+        
+        planets_dict = {
+            "ৰবি": swe.SUN, "চন্দ্ৰ": swe.MOON, "মংগল": swe.MARS,
+            "বুধ": swe.MERCURY, "বৃহস্পতি": swe.JUPITER, "শুক্ৰ": swe.VENUS,
+            "শনি": swe.SATURN, "ৰাহু": swe.MEAN_NODE
+        }
+        
+        planets_data = []
+        p_sidereal_longitudes = {}
+        planet_signs = {}
+        planet_houses = {}
+        
+        for p_name, p_id in planets_dict.items():
+            pos, _ = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
+            p_sidereal_longitudes[p_name] = pos[0]
+            r_idx, rasi, deg = get_rasi_and_degree(pos[0])
+            _, nak, lord = get_nakshatra_details(pos[0])
+            planets_data.append({"name": p_name, "rasi": rasi, "degree": deg,
+                                 "nakshatra": nak, "lord": lord})
+            planet_signs[p_name] = r_idx
+        
+        p_sidereal_longitudes["কেতু"] = (p_sidereal_longitudes["ৰাহু"] + 180) % 360
+        r_idx_k, ketu_rasi, ketu_deg = get_rasi_and_degree(p_sidereal_longitudes["কেতু"])
+        _, ketu_nak, ketu_lord = get_nakshatra_details(p_sidereal_longitudes["কেতু"])
+        planets_data.append({"name": "কেতু", "rasi": ketu_rasi, "degree": ketu_deg,
+                             "nakshatra": ketu_nak, "lord": ketu_lord})
+        planet_signs["কেতু"] = r_idx_k
+        
+        cusps, ascmc = swe.houses(jd, lat, lon, b'P')
+        asc_sidereal = (ascmc[0] - ayanamsa) % 360
+        p_sidereal_longitudes["লগ্ন"] = asc_sidereal
+        asc_rasi_idx, asc_rasi, asc_deg = get_rasi_and_degree(asc_sidereal)
+        _, asc_nak, asc_nak_lord = get_nakshatra_details(asc_sidereal)
+        planets_data.append({"name": "লগ্ন", "rasi": asc_rasi, "degree": asc_deg,
+                             "nakshatra": asc_nak, "lord": asc_nak_lord})
+        planet_signs["লগ্ন"] = asc_rasi_idx
+        
+        for p_name, p_lon in p_sidereal_longitudes.items():
+            house_idx = (int(p_lon / 30) - asc_rasi_idx) % 12
+            planet_houses[p_name] = house_idx
+        
+        dasa_hierarchy = get_full_dasa_hierarchy(p_sidereal_longitudes["চন্দ্ৰ"], ist_time)
+        panchanga = get_full_panchanga(ist_time, lat, lon, tz_offset)
+        dosha_results = get_complete_dosha_analysis(planet_houses, p_sidereal_longitudes)
+        yoga_results = get_complete_yoga_analysis(planet_houses, planet_signs, asc_rasi_idx)
+        
+        moon_nak_idx = get_nakshatra_details(p_sidereal_longitudes["চন্দ্ৰ"])[0] + 1
+        moon_rasi_idx = get_rasi_and_degree(p_sidereal_longitudes["চন্দ্ৰ"])[0]
+        navatara_data = get_navatara_data(moon_nak_idx)
+        sannari_data = get_sannari_data(moon_nak_idx)
+        
+        ai_interpretation = generate_ai_interpretation(
+            name, planets_data, asc_rasi, dosha_results, yoga_results, dasa_hierarchy,
+            asc_rasi_idx=asc_rasi_idx, planet_signs=planet_signs,
+            moon_nak_name=nakshatras[moon_nak_idx - 1],
+            moon_rasi=rasis[moon_rasi_idx],
+            tripap_ages=TRIPAP_AGES.get(moon_nak_idx, []),
+            navatara_data=navatara_data, sannari_data=sannari_data
+        )
+        
+        vargas = {"D1": 1, "D2": 2, "D3": 3, "D4": 4, "D7": 7, "D9": 9,
+                  "D10": 10, "D12": 12, "D16": 16, "D20": 20, "D24": 24,
+                  "D27": 27, "D30": 30, "D40": 40, "D45": 45, "D60": 60}
+        all_vargas = {}
+        for v_code, v_num in vargas.items():
+            all_vargas[v_code] = {}
+            for p_key, p_lon in p_sidereal_longitudes.items():
+                v_idx = calculate_varga(p_lon, v_num)
+                if v_idx not in all_vargas[v_code]:
+                    all_vargas[v_code][v_idx] = []
+                all_vargas[v_code][v_idx].append(PLANET_SHORT.get(p_key, p_key[:2]))
+        
+        tripap_data = get_tripap_rista(moon_nak_idx)
+        tripap_ages = TRIPAP_AGES.get(moon_nak_idx, [])
+        sannari_html = generate_sannari_html_table(moon_nak_idx, nakshatras[moon_nak_idx - 1])
+        navatara_html = generate_navatara_html(moon_nak_idx)
+        nakshatra_phala_html = apply_gender(get_nakshatra_phala_html(moon_nak_idx), gender)
+        lagna_phala_html = apply_gender(get_lagna_phala_html(asc_rasi_idx), gender)
+        rashi_phala_html = apply_gender(get_rashi_phala_html(moon_rasi_idx), gender)
+        lagna_lord = get_rashi_lord(asc_rasi_idx)
+        moon_rashi_lord = get_rashi_lord(moon_rasi_idx)
+        moon_rasi = rasis[moon_rasi_idx]
+        graha_bichar_html = get_graha_bichar_html(planet_houses)
+        
+        all_dasha_predictions = get_all_maha_antar_predictions(
+            dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx
+        )
+        for dp in all_dasha_predictions:
+            dp["prediction"] = apply_gender(dp["prediction"], gender)
+        all_dasha_predictions = filter_future_dasha_predictions(all_dasha_predictions)
+        ai_interpretation = apply_gender(ai_interpretation, gender)
+        
+        # Generate patrika text
+        patrika_text = generate_patrika_text(
+            public_name=name,
+            secret_name=request.form.get('secret_name', ''),
+            father_name=request.form.get('father_name', ''),
+            mother_name=request.form.get('mother_name', ''),
+            birth_district=patrika_birth_district if patrika_birth_district else place,
+            residence_district=request.form.get('residence_district', ''),
+            residence=request.form.get('residence', ''),
+            gender=gender,
+            dob=dob, tob=tob,
+            asc_rasi=asc_rasi, asc_rasi_idx=asc_rasi_idx, asc_degree=asc_deg,
+            moon_rasi=moon_rasi, moon_rasi_idx=moon_rasi_idx,
+            nakshatra_name=nakshatras[moon_nak_idx - 1],
+            nakshatra_idx=moon_nak_idx - 1,
+            nakshatra_pada=panchanga.get('nakshatra', {}).get('pada', 1),
+            panchanga=panchanga,
+        )
+        
+        astrologer_profile = get_astrologer_profile(session.get('user_id', 0))
+        
+        pdf_bytes = generate_pdf_report(
+            name, dob, tob, place, planets_data, panchanga,
+            dosha_results, yoga_results, dasa_hierarchy, ai_interpretation,
+            all_vargas, tripap_data, tripap_ages, asc_rasi,
+            all_dasha_predictions, sannari_html, navatara_html,
+            nakshatra_phala_html, lagna_phala_html, rashi_phala_html,
+            graha_bichar_html=graha_bichar_html,
+            lagna_lord=lagna_lord, moon_rashi_lord=moon_rashi_lord,
+            moon_rasi=moon_rasi, gender=gender,
+            astrologer_profile=astrologer_profile,
+            patrika_text=patrika_text
+        )
+        
+        return send_file(
+            io.BytesIO(pdf_bytes),
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f'Dhruvatara_AI_Patrika_{name.replace(" ", "_")}.pdf'
+        )
+    except Exception as e:
+        return f"<div style='padding:40px;font-family:Arial;text-align:center;'><h2 style='color:#c62828;'>পত্ৰিকা PDF নিৰ্মাণ ত্ৰুটি</h2><p>{str(e)}</p><a href='/'>আকৌ চেষ্টা কৰক</a></div>"
+
 @app.route("/custom-pdf", methods=["POST"])
 def custom_pdf():
     """Generate custom PDF with user-selected sections."""
@@ -1040,6 +1311,16 @@ def custom_pdf():
     gender = request.form.get("gender", "male")
     selected_sections = request.form.getlist("sections")
     dasha_limit_str = request.form.get("dasha_limit", "0")
+
+    # If patrika public_name is provided, use it; otherwise fall back to name
+    patrika_public_name = request.form.get("public_name", "").strip()
+    if patrika_public_name:
+        name = patrika_public_name
+
+    # If patrika birth_district is provided, use it; otherwise fall back to place
+    patrika_birth_district = request.form.get("birth_district", "").strip()
+    if patrika_birth_district:
+        place = patrika_birth_district
 
     # Parse dasha_limit: "0"=all, "9"=first 9, "s9"=skip first 9
     dasha_limit = 0
@@ -1202,6 +1483,25 @@ def custom_pdf():
         elif dasha_limit > 0 and dasha_limit < len(all_dasha_predictions):
             all_dasha_predictions = all_dasha_predictions[:dasha_limit]
 
+        # Generate patrika text for custom PDF
+        patrika_text = generate_patrika_text(
+            public_name=name,
+            secret_name=request.form.get('secret_name', ''),
+            father_name=request.form.get('father_name', ''),
+            mother_name=request.form.get('mother_name', ''),
+            birth_district=patrika_birth_district if patrika_birth_district else place,
+            residence_district=request.form.get('residence_district', ''),
+            residence=request.form.get('residence', ''),
+            gender=gender,
+            dob=dob, tob=tob,
+            asc_rasi=asc_rasi, asc_rasi_idx=asc_rasi_idx, asc_degree=asc_deg,
+            moon_rasi=moon_rasi, moon_rasi_idx=moon_rasi_idx,
+            nakshatra_name=nakshatras[moon_nak_idx - 1],
+            nakshatra_idx=moon_nak_idx - 1,
+            nakshatra_pada=panchanga.get('nakshatra', {}).get('pada', 1),
+            panchanga=panchanga,
+        )
+
         # Get astrologer profile for PDF footer (user's profile, fallback to admin)
         astrologer_profile = get_astrologer_profile(session.get('user_id', 0))
 
@@ -1215,7 +1515,8 @@ def custom_pdf():
             selected_sections=selected_sections,
             lagna_lord=lagna_lord, moon_rashi_lord=moon_rashi_lord,
             moon_rasi=moon_rasi, gender=gender,
-            astrologer_profile=astrologer_profile
+            astrologer_profile=astrologer_profile,
+            patrika_text=patrika_text
         )
 
         return send_file(
@@ -2213,6 +2514,114 @@ def admin_api_save_admin_astrologer_profile():
     data = request.get_json()
     success, message = save_astrologer_profile(0, data)
     return jsonify({"success": success, "message": message})
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Matplotlib Kundli Chart Image Routes
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.route("/api/chart-image", methods=["GET"])
+def api_chart_image():
+    """
+    Generate a Kundli chart image using matplotlib.
+    Query params:
+        style: "bengali" (default), "north", "south", or "all"
+        asc: ascendant rasi index (0-11, default 0)
+        varga: which varga chart to use (default "D1")
+        name, dob, tob, place, gender, lat, lon, timezone: for full calculation
+    """
+    style = request.args.get("style", "bengali")
+    asc_str = request.args.get("asc", "0")
+    
+    try:
+        ascendant_index = int(asc_str) % 12
+    except (ValueError, TypeError):
+        ascendant_index = 0
+    
+    # If full birth data is provided, calculate planet positions
+    name = request.args.get("name", "")
+    dob = request.args.get("dob", "")
+    tob = request.args.get("tob", "")
+    place = request.args.get("place", "")
+    varga_code = request.args.get("varga", "D1")
+    
+    planet_data = {}
+    title = ""
+    
+    if dob and tob:
+        try:
+            lat_str = request.args.get("lat", "")
+            lon_str = request.args.get("lon", "")
+            tz_str = request.args.get("timezone", "5.5")
+            
+            lat = float(lat_str) if lat_str else None
+            lon = float(lon_str) if lon_str else None
+            
+            if (lat is None or lon is None) and place:
+                coords = get_coordinates(place)
+                if coords:
+                    lat, lon = coords
+                else:
+                    lat, lon = 26.1445, 91.7362
+            
+            tz_offset = float(tz_str) if tz_str else 5.5
+            
+            ist_time = datetime.strptime(f"{dob} {tob}", "%Y-%m-%d %H:%M")
+            jd = swe.julday(ist_time.year, ist_time.month, ist_time.day,
+                            (ist_time.hour + ist_time.minute / 60.0) - tz_offset)
+            
+            swe.set_sid_mode(swe.SIDM_LAHIRI)
+            ayanamsa = swe.get_ayanamsa(jd)
+            
+            planets_dict = {
+                "ৰবি": swe.SUN, "চন্দ্ৰ": swe.MOON, "মংগল": swe.MARS,
+                "বুধ": swe.MERCURY, "বৃহস্পতি": swe.JUPITER, "শুক্ৰ": swe.VENUS,
+                "শনি": swe.SATURN, "ৰাহু": swe.MEAN_NODE
+            }
+            
+            p_sidereal_longitudes = {}
+            for p_name, p_id in planets_dict.items():
+                pos, _ = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
+                p_sidereal_longitudes[p_name] = pos[0]
+            p_sidereal_longitudes["কেতু"] = (p_sidereal_longitudes["ৰাহু"] + 180) % 360
+            
+            # Lagna
+            cusps, ascmc = swe.houses(jd, lat, lon, b'P')
+            asc_sidereal = (ascmc[0] - ayanamsa) % 360
+            p_sidereal_longitudes["লগ্ন"] = asc_sidereal
+            ascendant_index = int(asc_sidereal / 30) % 12
+            
+            # Calculate varga
+            varga_num = int(varga_code[1:]) if varga_code.startswith("D") else 1
+            for p_key, p_lon in p_sidereal_longitudes.items():
+                v_idx = calculate_varga(p_lon, varga_num)
+                if v_idx not in planet_data:
+                    planet_data[v_idx] = []
+                planet_data[v_idx].append(PLANET_SHORT.get(p_key, p_key[:2]))
+            
+            if name:
+                title = f"{name}ৰ কুণ্ডলী ({varga_code})"
+            else:
+                title = f"কুণ্ডলী চক্ৰ ({varga_code})"
+        except Exception as e:
+            logger.error(f"Chart image calculation error: {e}")
+            # Fall back to empty chart
+            title = f"কুণ্ডলী চক্ৰ ({varga_code})"
+    
+    try:
+        if style == "all":
+            buf = draw_all_styles(ascendant_index=ascendant_index, planet_data=planet_data)
+        else:
+            buf = draw_kundli_chart(
+                style=style,
+                ascendant_index=ascendant_index,
+                planet_data=planet_data,
+                title=title
+            )
+        return send_file(buf, mimetype="image/png")
+    except Exception as e:
+        logger.error(f"Chart drawing error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":

@@ -233,6 +233,7 @@ def setup_database():
         ("navatara_chakra", "Navatara Chakra", "নৱতাৰা চক্ৰ", "নৱতাৰা চক্ৰ বিশ্লেষণ", "charts", 13),
         ("tripap_rista", "Tripap Rista", "ত্ৰিপাপ ৰিষ্ট", "ত্ৰিপাপ ৰিষ্ট বিশ্লেষণ", "analysis", 14),
         ("custom_pdf", "Custom PDF", "কাষ্টম PDF", "নিৰ্বাচিত অংশৰ PDF", "export", 15),
+        ("patrika_pdf", "Patrika PDF", "পত্ৰিকা PDF", "পত্ৰিকা PDF ডাউনলোড", "export", 16),
     ]
 
     for f_key, f_name, f_name_asm, f_desc, f_cat, f_order in features:
@@ -264,7 +265,7 @@ def setup_database():
         "tripap_rista"
     ]
     # PDF features are disabled by default for all plans
-    pdf_features = ["pdf_report", "custom_pdf"]
+    pdf_features = ["pdf_report", "custom_pdf", "patrika_pdf"]
 
     # All subscriptions get all non-PDF features enabled
     for sub_id in [1, 2, 3, 4]:

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ধ্ৰুৱতৰা AI | {{ user_name }}ৰ কুণ্ডলী</title>
+    <title>ধ্ৰুৱতৰা এআই — {{ user_name }}ৰ কুণ্ডলী</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -19,6 +19,8 @@
             font-family: 'Noto Sans Bengali', 'Arial', sans-serif;
             background: linear-gradient(135deg, #FFF8F0 0%, #FFF3E0 30%, #FFECB3 60%, #FFF8F0 100%);
             background-attachment: fixed; min-height: 100vh; color: var(--text);
+            -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+            text-size-adjust: 100%;
         }
 
         .top-nav {
@@ -494,8 +496,15 @@
         <button class="btn-sm btn-fill" onclick="saveKundli()" style="background:var(--green);">💾 কুণ্ডলী সংৰক্ষণ কৰক</button>
         {% endif %}
         {% if user_features and user_features.get('pdf_report', False) %}
-        <form action="/download-pdf" method="POST" style="display:inline;">
+        <form id="downloadPdfForm" action="/download-pdf" method="POST" style="display:inline;">
             <input type="hidden" name="name" value="{{ user_name }}">
+            <input type="hidden" name="public_name" id="hidden_public_name_dl" value="">
+            <input type="hidden" name="secret_name" id="hidden_secret_name_dl" value="">
+            <input type="hidden" name="father_name" id="hidden_father_name_dl" value="">
+            <input type="hidden" name="mother_name" id="hidden_mother_name_dl" value="">
+            <input type="hidden" name="birth_district" id="hidden_birth_district_dl" value="">
+            <input type="hidden" name="residence_district" id="hidden_residence_district_dl" value="">
+            <input type="hidden" name="residence" id="hidden_residence_dl" value="">
             <input type="hidden" name="dob" value="{{ user_dob }}">
             <input type="hidden" name="tob" value="{{ user_tob }}">
             <input type="hidden" name="place" value="{{ user_place }}">
@@ -503,7 +512,7 @@
             <input type="hidden" name="lat" value="{{ lat }}">
             <input type="hidden" name="lon" value="{{ lon }}">
             <input type="hidden" name="timezone" value="{{ timezone }}">
-            <button type="submit" class="btn-sm btn-fill">📥 PDF ডাউনলোড</button>
+            <button type="submit" class="btn-sm btn-fill" onclick="populatePatrikaHiddenFields()">📥 PDF ডাউনলোড</button>
         </form>
         {% endif %}
         {% if user_features and user_features.get('custom_pdf', False) %}
@@ -582,10 +591,64 @@
         </div>
     </div>
 
+    <!-- পত্ৰিকা ফৰ্ম -->
+    <div class="info-card" id="patrika-card" style="margin-bottom:20px;">
+        <h3 style="color:var(--orange);margin-bottom:12px;font-size:1.1rem;">📜 পত্ৰিকা (জন্ম পত্ৰ)</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div>
+                <label style="font-size:0.82rem;font-weight:600;color:var(--deep-blue);">জাতক/জাতিকাৰ নাম (অসমীয়াত)</label>
+                <input type="text" id="patrika_public_name" placeholder="যেনে: শ্ৰীমান দিতুল শৰ্মা" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.85rem;">
+            </div>
+            <div>
+                <label style="font-size:0.82rem;font-weight:600;color:var(--deep-blue);">গুপ্ত নাম</label>
+                <input type="text" id="patrika_secret_name" placeholder="যেনে: শ্ৰীমান দিপাংকৰ শৰ্মা" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.85rem;">
+            </div>
+            <div>
+                <label style="font-size:0.82rem;font-weight:600;color:var(--deep-blue);">পিতৃৰ নাম</label>
+                <input type="text" id="patrika_father_name" placeholder="যেনে: মহেন্দ্ৰ নাথ শৰ্মা" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.85rem;">
+            </div>
+            <div>
+                <label style="font-size:0.82rem;font-weight:600;color:var(--deep-blue);">মাতৃৰ নাম</label>
+                <input type="text" id="patrika_mother_name" placeholder="যেনে: মনোমতী শৰ্মা" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.85rem;">
+            </div>
+            <div>
+                <label style="font-size:0.82rem;font-weight:600;color:var(--deep-blue);">জন্ম জিলা</label>
+                <input type="text" id="patrika_birth_district" placeholder="যেনে: বজালী" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.85rem;">
+            </div>
+            <div>
+                <label style="font-size:0.82rem;font-weight:600;color:var(--deep-blue);">বাসস্থান জিলা</label>
+                <input type="text" id="patrika_residence_district" placeholder="যেনে: বজালী" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.85rem;">
+            </div>
+            <div>
+                <label style="font-size:0.82rem;font-weight:600;color:var(--deep-blue);">বাসস্থান</label>
+                <input type="text" id="patrika_residence" placeholder="যেনে: ৰহাধৰ বিৰকলা, পাঠশালা" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.85rem;">
+            </div>
+            <div>
+                <label style="font-size:0.82rem;font-weight:600;color:var(--deep-blue);">আশীৰ্বাদ বাক্য</label>
+                <select id="patrika_blessing" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.85rem;">
+                    <option value="male" {% if gender == 'male' %}selected{% endif %}>বালক সু-কীৰ্তিশালী</option>
+                    <option value="female" {% if gender == 'female' %}selected{% endif %}>বালিকা সু-কীৰ্তিশালিনী</option>
+                </select>
+            </div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            {% if user_features and user_features.get('patrika_pdf', False) %}
+            <button class="btn-sm btn-fill" onclick="generatePatrika()" style="background:var(--deep-blue);">📜 পত্ৰিকা বনাওক</button>
+            <button class="btn-sm btn-outline" onclick="downloadPatrikaPDF()">📥 পত্ৰিকা PDF ডাউনলোড</button>
+            {% else %}
+            <button class="btn-sm btn-fill" disabled style="background:var(--deep-blue);opacity:0.5;cursor:not-allowed;" title="প্ৰ' ভাৰ্চনলৈ আপগ্ৰেড কৰক">📜 পত্ৰিকা বনাওক</button>
+            <button class="btn-sm btn-outline" disabled style="opacity:0.5;cursor:not-allowed;" title="প্ৰ' ভাৰ্চনলৈ আপগ্ৰেড কৰক">📥 পত্ৰিকা PDF ডাউনলোড</button>
+            <button class="btn-upgrade" onclick="openUpgradePlansModal()" style="padding:8px 18px;font-size:0.78rem;">💳 Upgrade to Pro Version</button>
+            {% endif %}
+        </div>
+        <div id="patrika-result" style="margin-top:12px;padding:12px;background:#FFF8E1;border:1px solid #FFCC80;border-radius:8px;font-size:0.85rem;line-height:2;white-space:pre-wrap;display:none;"></div>
+    </div>
+
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('planets')">🪐 গ্ৰহ অৱস্থান</button>
         {% if not user_features or user_features.get('varga_charts', True) %}
         <button class="tab-btn" onclick="switchTab('charts')">📊 বিভাগীয় কুণ্ডলী</button>
+        <button class="tab-btn" onclick="switchTab('all_charts')">🎨 সকলো চাৰ্ট (PIL)</button>
         {% endif %}
         {% if not user_features or user_features.get('panchanga', True) %}
         <button class="tab-btn" onclick="switchTab('panchanga')">🕉️ পঞ্চাঙ্গ</button>
@@ -593,6 +656,7 @@
         {% if not user_features or user_features.get('dosha_analysis', True) %}
         <button class="tab-btn" onclick="switchTab('dosha')">⚠️ দোষ বিশ্লেষণ</button>
         {% endif %}
+        <button class="tab-btn" onclick="switchTab('shani_sare_sati')">🌑 শনি সাৰেসাতী</button>
         {% if not user_features or user_features.get('yoga_analysis', True) %}
         <button class="tab-btn" onclick="switchTab('yoga')">✨ যোগ বিশ্লেষণ</button>
         {% endif %}
@@ -642,12 +706,12 @@
         <div class="section"><div class="section-body">
             <div class="chart-controls">
                 <select id="vargaSelect" onchange="changeVargaChart()">
-                    <option value="D1">D1 - ৰাশি চক্ৰ (Rashi)</option>
+                    <option value="D1" selected>D1 - ৰাশি চক্ৰ (Rashi)</option>
                     <option value="D2">D2 - হোৰা চক্ৰ (Hora)</option>
                     <option value="D3">D3 - দ্ৰেক্কান চক্ৰ (Drekkana)</option>
                     <option value="D4">D4 - চতুৰ্থাংশ চক্ৰ (Chaturthamsha)</option>
                     <option value="D7">D7 - সপ্তমাংশ চক্ৰ (Saptamsha)</option>
-                    <option value="D9" selected>D9 - নৱাংশ চক্ৰ (Navamsha)</option>
+                    <option value="D9">D9 - নৱাংশ চক্ৰ (Navamsha)</option>
                     <option value="D10">D10 - দশমাংশ চক্ৰ (Dashamsha)</option>
                     <option value="D12">D12 - দ্বাদশাংশ চক্ৰ (Dwadasamsha)</option>
                     <option value="D16">D16 - ষোড়শাংশ চক্ৰ (Shodashamsha)</option>
@@ -660,12 +724,52 @@
                     <option value="D60">D60 - ষষ্ট্যাংশ চক্ৰ (Shashtiamsha)</option>
                 </select>
                 <select id="chartStyle" onchange="changeVargaChart()">
-                    <option value="bengali_fixed">বঙালী আৰ্হি (স্থিৰ ৰাশি)</option>
+                    <option value="bengali_fixed" selected>বঙালী আৰ্হি (স্থিৰ ৰাশি)</option>
                     <option value="north_traditional">উত্তৰ ভাৰতীয় আৰ্হি (সংখ্যা)</option>
+                    <option value="south_indian">দক্ষিণ ভাৰতীয় আৰ্হি</option>
                 </select>
             </div>
             <div class="chart-canvas-wrap">
                 <canvas id="kundliCanvas" width="520" height="520"></canvas>
+            </div>
+        </div></div>
+    </div>
+
+    <!-- ─── PIL All Charts Tab ─── -->
+    <div id="tab-all_charts" class="tab-content">
+        <div class="section"><div class="section-body">
+            <div class="chart-controls">
+                <select id="mplVargaSelect" onchange="loadMplChart()">
+                    <option value="D1" selected>D1 - ৰাশি চক্ৰ (Rashi)</option>
+                    <option value="D2">D2 - হোৰা চক্ৰ (Hora)</option>
+                    <option value="D3">D3 - দ্ৰেক্কান চক্ৰ (Drekkana)</option>
+                    <option value="D4">D4 - চতুৰ্থাংশ চক্ৰ (Chaturthamsha)</option>
+                    <option value="D7">D7 - সপ্তমাংশ চক্ৰ (Saptamsha)</option>
+                    <option value="D9">D9 - নৱাংশ চক্ৰ (Navamsha)</option>
+                    <option value="D10">D10 - দশমাংশ চক্ৰ (Dashamsha)</option>
+                    <option value="D12">D12 - দ্বাদশাংশ চক্ৰ (Dwadasamsha)</option>
+                    <option value="D16">D16 - ষোড়শাংশ চক্ৰ (Shodashamsha)</option>
+                    <option value="D20">D20 - বিংশাংশ চক্ৰ (Vimshamsha)</option>
+                    <option value="D24">D24 - চতুৰ্বিংশাংশ চক্ৰ (Chaturvimshamsha)</option>
+                    <option value="D27">D27 - সপ্তবিংশাংশ চক্ৰ (Bhamsha)</option>
+                    <option value="D30">D30 - ত্ৰিংশাংশ চক্ৰ (Trimshamsha)</option>
+                    <option value="D40">D40 - খবেদাংশ চক্ৰ (Khavedamsha)</option>
+                    <option value="D45">D45 - অক্ষবেদাংশ চক্ৰ (Akshavedamsha)</option>
+                    <option value="D60">D60 - ষষ্ট্যাংশ চক্ৰ (Shashtiamsha)</option>
+                </select>
+                <select id="mplChartStyle" onchange="loadMplChart()">
+                    <option value="bengali" selected>বঙালী আৰ্হি (East Indian)</option>
+                    <option value="north">উত্তৰ ভাৰতীয় আৰ্হি (North Indian)</option>
+                    <option value="south">দক্ষিণ ভাৰতীয় আৰ্হি (South Indian)</option>
+                    <option value="all">সকলো আৰ্হি (একেলগে)</option>
+                </select>
+            </div>
+            <div class="chart-canvas-wrap" id="mplChartWrap">
+                <img id="mplChartImg" src="" alt="কুণ্ডলী চাৰ্ট" style="max-width:100%;height:auto;display:none;">
+                <div id="mplChartLoading" style="padding:40px;color:var(--text-light);text-align:center;">
+                    <span style="font-size:2rem;">🎨</span>
+                    <p>চাৰ্ট ল'ড কৰিবলে ওপৰৰ পৰা বাছনি কৰক...</p>
+                </div>
             </div>
         </div></div>
     </div>
@@ -726,6 +830,31 @@
                 </div>
                 {% endfor %}
             </div>
+        </div></div>
+    </div>
+
+    <div id="tab-shani_sare_sati" class="tab-content">
+        <div class="section"><div class="section-body">
+            {% if shani_sare_sati_data %}
+            <div style="background:#fff8f0;border:1px solid #ffd8b2;border-radius:8px;padding:12px 14px;margin-bottom:10px;">
+                <p style="font-size:0.8rem;color:#5d4037;margin-bottom:8px;line-height:1.5;">এই তালিকাখন শনিৰ প্ৰতি ৰাশীত প্ৰায় ২.৫ বছৰৰ চলাচলৰ ভিত্তিত অনুমান কৰা হৈছে। আসল সময়কাল বর্তমান গ্ৰহ গতিবিধি আৰু জন্মে থকা শনিৰ অবস্থানৰ ওপৰত নিৰ্ভৰ কৰে।</p>
+                <table style="width:100%;border-collapse:collapse;font-size:0.82rem;">
+                    <thead><tr style="background:#ffe0b2;color:#5d4037;font-weight:700;"><th>আনুমানিক বয়স</th><th>আনুমানিক চন</th><th>শনি ৰাশি</th><th>দশা</th></tr></thead>
+                    <tbody>
+                        {% for e in shani_sare_sati_data %}
+                        <tr>
+                            <td>{{ "%.1f"|format(e.age_start) }} - {{ "%.1f"|format(e.age_end) }}</td>
+                            <td>{% if e.year_start is not none %}{{ e.year_start }} - {{ e.year_end }}{% else %}—{% endif %}</td>
+                            <td>{{ e.rasi }}</td>
+                            <td>{{ e.phase }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="text-align:center;padding:30px;color:var(--text-light);"><span style="font-size:2rem;">🌑</span><p>শনি সাৰেসাতী বা ঢৈয়াৰ তথ্য উপলব্ধ নহয়।</p></div>
+            {% endif %}
         </div></div>
     </div>
 
@@ -1049,6 +1178,13 @@
         <div class="modal-body">
             <form id="customPdfForm" action="/custom-pdf" method="POST">
                 <input type="hidden" name="name" value="{{ user_name }}">
+                <input type="hidden" name="public_name" id="hidden_public_name_cp" value="">
+                <input type="hidden" name="secret_name" id="hidden_secret_name_cp" value="">
+                <input type="hidden" name="father_name" id="hidden_father_name_cp" value="">
+                <input type="hidden" name="mother_name" id="hidden_mother_name_cp" value="">
+                <input type="hidden" name="birth_district" id="hidden_birth_district_cp" value="">
+                <input type="hidden" name="residence_district" id="hidden_residence_district_cp" value="">
+                <input type="hidden" name="residence" id="hidden_residence_cp" value="">
                 <input type="hidden" name="dob" value="{{ user_dob }}">
                 <input type="hidden" name="tob" value="{{ user_tob }}">
                 <input type="hidden" name="place" value="{{ user_place }}">
@@ -1075,6 +1211,7 @@
 
                 <h4>⚠️ দোষ বিশ্লেষণ</h4>
                 <div class="cb-row"><input type="checkbox" name="sections" value="dosha" id="sec_dosha" checked><label for="sec_dosha">দোষ বিশ্লেষণ</label></div>
+                <div class="cb-row"><input type="checkbox" name="sections" value="shani_sare_sati" id="sec_shani_sare_sati" checked><label for="sec_shani_sare_sati">শনি সাৰেসাতী আৰু ঢৈয়া (০-১০০)</label></div>
 
                 <h4>✨ যোগ বিশ্লেষণ</h4>
                 <div class="cb-row"><input type="checkbox" name="sections" value="yoga" id="sec_yoga" checked><label for="sec_yoga">যোগ বিশ্লেষণ</label></div>
@@ -1144,6 +1281,7 @@
     const allVargasData = {{ all_vargas | tojson }};
     const ascRasiIndex = {{ asc_rasi_index }};
     const rasiNames = ["মেষ", "বৃষ", "মিথুন", "কৰ্কট", "সিংহ", "কন্যা", "তুলা", "বৃশ্চিক", "ধনু", "মকৰ", "কুম্ভ", "মীন"];
+    const rasiSymbols = ["", "", "", "", "", "", "", "", "", "", "", ""];
 
     // Dasha prediction API data
     const userDob = "{{ user_dob }}";
@@ -1167,29 +1305,32 @@
         const S = 520;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.font = "bold 14px 'Noto Sans Bengali', Arial"; ctx.lineWidth = 2; ctx.strokeStyle = "#2c3e50";
-        ctx.strokeRect(0, 0, S, S);
-        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(S, S); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(S, 0); ctx.lineTo(0, S); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(S/2, 0); ctx.lineTo(S, S/2); ctx.lineTo(S/2, S); ctx.lineTo(0, S/2); ctx.closePath(); ctx.stroke();
-        for (let i = 0; i < 12; i++) {
-            let h = housePositions[i];
-            if (style === "north_traditional") {
+
+        if (style === "south_indian") {
+            drawSouthIndianChart(ctx, chartData, S);
+        } else if (style === "bengali_fixed") {
+            drawBengaliChart(ctx, chartData, S);
+        } else {
+            // North Indian diamond chart
+            ctx.strokeRect(0, 0, S, S);
+            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(S, S); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(S, 0); ctx.lineTo(0, S); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(S/2, 0); ctx.lineTo(S, S/2); ctx.lineTo(S/2, S); ctx.lineTo(0, S/2); ctx.closePath(); ctx.stroke();
+            for (let i = 0; i < 12; i++) {
+                let h = housePositions[i];
+                // North Indian: rasi number based on ascendant rotation
                 let currentRasiIdx = (ascRasiIndex + i) % 12;
                 ctx.fillStyle = "#e74c3c"; ctx.font = "bold 13px 'Noto Sans Bengali', Arial";
                 ctx.fillText(currentRasiIdx + 1, h.cx + h.offsetXR, h.cx === S/2 ? h.cy - 12 : h.cy);
+                // Mark ascendant with "লং"NO
+                if (i === 0) {
+                    ctx.fillStyle = "#FF6600"; ctx.font = "bold 10px 'Noto Sans Bengali', Arial";
+                    ctx.fillText("", h.cx + h.offsetXR, h.cy + 4);
+                }
+                // Planets by rasi
                 if (chartData[currentRasiIdx]) {
                     ctx.fillStyle = "#1a237e"; ctx.font = "bold 15px 'Noto Sans Bengali', Arial";
                     let planets = chartData[currentRasiIdx];
-                    let startY = h.cy + h.offsetYP;
-                    let spacing = Math.min(18, Math.floor(60 / Math.max(planets.length, 1)));
-                    planets.forEach((p, pIdx) => { ctx.fillText(p, h.cx + h.offsetXP, startY + (pIdx * spacing)); });
-                }
-            } else {
-                ctx.fillStyle = "#7f8c8d"; ctx.font = "bold 12px 'Noto Sans Bengali', Arial";
-                ctx.fillText(rasiNames[i], h.cx + h.offsetXR, h.cx === S/2 ? h.cy - 12 : h.cy);
-                if (chartData[i]) {
-                    ctx.fillStyle = "#1a237e"; ctx.font = "bold 15px 'Noto Sans Bengali', Arial";
-                    let planets = chartData[i];
                     let startY = h.cy + h.offsetYP;
                     let spacing = Math.min(18, Math.floor(60 / Math.max(planets.length, 1)));
                     planets.forEach((p, pIdx) => { ctx.fillText(p, h.cx + h.offsetXP, startY + (pIdx * spacing)); });
@@ -1198,12 +1339,150 @@
         }
     }
 
+    // ─── Bengali (East Indian) Chart: 3x3 grid + diagonal corners ───
+    function drawBengaliChart(ctx, chartData, S) {
+        const M = 30; // margin
+        const cell = (S - 2*M) / 3;
+        const X0 = M, Y0 = M;
+
+        // Draw outer square
+        ctx.strokeStyle = "#2c3e50"; ctx.lineWidth = 2;
+        ctx.strokeRect(X0, Y0, cell*3, cell*3);
+        // Vertical inner lines
+        ctx.beginPath(); ctx.moveTo(X0 + cell, Y0); ctx.lineTo(X0 + cell, Y0 + cell*3); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(X0 + cell*2, Y0); ctx.lineTo(X0 + cell*2, Y0 + cell*3); ctx.stroke();
+        // Horizontal inner lines
+        ctx.beginPath(); ctx.moveTo(X0, Y0 + cell); ctx.lineTo(X0 + cell*3, Y0 + cell); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(X0, Y0 + cell*2); ctx.lineTo(X0 + cell*3, Y0 + cell*2); ctx.stroke();
+        // Diagonal lines in corners
+        ctx.beginPath(); ctx.moveTo(X0, Y0 + cell*3); ctx.lineTo(X0 + cell, Y0 + cell*2); ctx.stroke();  // Top-left
+        ctx.beginPath(); ctx.moveTo(X0 + cell*3, Y0 + cell*3); ctx.lineTo(X0 + cell*2, Y0 + cell*2); ctx.stroke();  // Top-right
+        ctx.beginPath(); ctx.moveTo(X0, Y0); ctx.lineTo(X0 + cell, Y0 + cell); ctx.stroke();  // Bottom-left
+        ctx.beginPath(); ctx.moveTo(X0 + cell*3, Y0); ctx.lineTo(X0 + cell*2, Y0 + cell); ctx.stroke();  // Bottom-right
+
+        // 12 houses counter-clockwise from top-middle (Aries fixed)
+        // Canvas Y: 0=top. So "top" = small Y, "bottom" = large Y.
+        const bengaliHouses = [
+            {cx: X0 + 1.5*cell, cy: Y0 + 0.5*cell},   // 0: Top-Middle → Aries (মেষ)
+            {cx: X0 + 0.65*cell, cy: Y0 + 0.25*cell},  // 1: TL top tri → Taurus (বৃষ)
+            {cx: X0 + 0.25*cell, cy: Y0 + 0.65*cell},  // 2: TL left tri → Gemini (মিথুন)
+            {cx: X0 + 0.5*cell, cy: Y0 + 1.5*cell},    // 3: Left-Middle → Cancer (কর্কট)
+            {cx: X0 + 0.25*cell, cy: Y0 + 2.35*cell},  // 4: BL left tri → Leo (সিংহ)
+            {cx: X0 + 0.65*cell, cy: Y0 + 2.75*cell},  // 5: BL bottom tri → Virgo (কন্যা)
+            {cx: X0 + 1.5*cell, cy: Y0 + 2.5*cell},    // 6: Bottom-Middle → Libra (তুলা)
+            {cx: X0 + 2.35*cell, cy: Y0 + 2.75*cell},  // 7: BR bottom tri → Scorpio (বৃশ্চিক)
+            {cx: X0 + 2.75*cell, cy: Y0 + 2.35*cell},  // 8: BR right tri → Sagittarius (ধনু)
+            {cx: X0 + 2.5*cell, cy: Y0 + 1.5*cell},    // 9: Right-Middle → Capricorn (মকর)
+            {cx: X0 + 2.75*cell, cy: Y0 + 0.65*cell},  // 10: TR right tri → Aquarius (কুম্ভ)
+            {cx: X0 + 2.35*cell, cy: Y0 + 0.25*cell},  // 11: TR top tri → Pisces (মীন)
+        ];
+
+        for (let i = 0; i < 12; i++) {
+            let h = bengaliHouses[i];
+            // Bengali: Aries ALWAYS at top-middle (position 0), counter-clockwise
+            let rasiIdx = i;
+            // Rasi SYMBOL in red
+            ctx.fillStyle = "#e74c3c"; ctx.font = "bold 16px 'Noto Sans Bengali', Arial";
+            ctx.fillText(rasiSymbols[rasiIdx], h.cx, h.cy - 6);
+            // Mark ascendant with "লং" no
+            if (rasiIdx === ascRasiIndex) {
+                ctx.fillStyle = "#FF6600"; ctx.font = "bold 11px 'Noto Sans Bengali', Arial";
+                ctx.fillText("", h.cx, h.cy + 8);
+            }
+            // Planets — LARGER font (16px)
+            if (chartData[rasiIdx]) {
+                ctx.fillStyle = "#1a237e"; ctx.font = "bold 16px 'Noto Sans Bengali', Arial";
+                let planets = chartData[rasiIdx];
+                let startY = h.cy + 20;
+                let spacing = Math.min(15, Math.floor(cell * 0.6 / Math.max(planets.length, 1)));
+                planets.forEach((p, pIdx) => { ctx.fillText(p, h.cx, startY + (pIdx * spacing)); });
+            }
+        }
+    }
+
+    // ─── South Indian Chart (4x4 grid, empty center, clockwise from 2nd top box) ───
+    function drawSouthIndianChart(ctx, chartData, S) {
+        const M = 40; // margin
+        const cell = (S - 2*M) / 4; // cell size
+        // Draw outer square
+        ctx.strokeStyle = "#2c3e50"; ctx.lineWidth = 2;
+        ctx.strokeRect(M, M, cell*4, cell*4);
+        // Vertical lines (skip center 2x2)
+        for (let x = 1; x <= 3; x++) {
+            ctx.beginPath();
+            ctx.moveTo(M + x*cell, M); ctx.lineTo(M + x*cell, M + cell);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(M + x*cell, M + 3*cell); ctx.lineTo(M + x*cell, M + 4*cell);
+            ctx.stroke();
+        }
+        // Horizontal lines (skip center 2x2)
+        for (let y = 1; y <= 3; y++) {
+            ctx.beginPath();
+            ctx.moveTo(M, M + y*cell); ctx.lineTo(M + cell, M + y*cell);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(M + 3*cell, M + y*cell); ctx.lineTo(M + 4*cell, M + y*cell);
+            ctx.stroke();
+        }
+        // Inner boundary of empty center
+        ctx.strokeRect(M + cell, M + cell, cell*2, cell*2);
+
+        // 12 houses clockwise from 2nd top box (Aries fixed at position 0)
+        // Canvas Y: 0=top. Aries at 2nd box of top row, clockwise.
+        const southHouses = [
+            {cx: M + 1.5*cell, cy: M + 0.5*cell},  // 0: Aries (top row, 2nd)
+            {cx: M + 2.5*cell, cy: M + 0.5*cell},  // 1: Taurus (top row, 3rd)
+            {cx: M + 3.5*cell, cy: M + 0.5*cell},  // 2: Gemini (top row, 4th)
+            {cx: M + 3.5*cell, cy: M + 1.5*cell},  // 3: Cancer (right col)
+            {cx: M + 3.5*cell, cy: M + 2.5*cell},  // 4: Leo (right col)
+            {cx: M + 3.5*cell, cy: M + 3.5*cell},  // 5: Virgo (right col)
+            {cx: M + 2.5*cell, cy: M + 3.5*cell},  // 6: Libra (bottom row)
+            {cx: M + 1.5*cell, cy: M + 3.5*cell},  // 7: Scorpio (bottom row)
+            {cx: M + 0.5*cell, cy: M + 3.5*cell},  // 8: Sagittarius (bottom row)
+            {cx: M + 0.5*cell, cy: M + 2.5*cell},  // 9: Capricorn (left col)
+            {cx: M + 0.5*cell, cy: M + 1.5*cell},  // 10: Aquarius (left col)
+            {cx: M + 0.5*cell, cy: M + 0.5*cell},  // 11: Pisces (left col)
+        ];
+
+        for (let i = 0; i < 12; i++) {
+            let h = southHouses[i];
+            let rasiIdx = i; // Aries fixed at position 0
+            // Rasi name
+            ctx.fillStyle = (rasiIdx === ascRasiIndex) ? "#e74c3c" : "#7f8c8d";
+            ctx.font = "bold 12px 'Noto Sans Bengali', Arial";
+            ctx.fillText(rasiNames[rasiIdx], h.cx, h.cy - 8);
+            // Highlight ascendant
+            if (rasiIdx === ascRasiIndex) {
+                ctx.strokeStyle = "#FF6600"; ctx.lineWidth = 2;
+                ctx.strokeRect(h.cx - cell/2 + 2, h.cy - cell/2 + 2, cell - 4, cell - 4);
+                ctx.strokeStyle = "#2c3e50"; ctx.lineWidth = 2;
+            }
+            // Planets
+            if (chartData[rasiIdx]) {
+                ctx.fillStyle = "#1a237e"; ctx.font = "bold 14px 'Noto Sans Bengali', Arial";
+                let planets = chartData[rasiIdx];
+                let startY = h.cy + 8;
+                let spacing = Math.min(16, Math.floor(cell * 0.7 / Math.max(planets.length, 1)));
+                planets.forEach((p, pIdx) => { ctx.fillText(p, h.cx, startY + (pIdx * spacing)); });
+            }
+        }
+    }
+
     function switchTab(tabName) {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('tab-' + tabName).classList.add('active');
-        event.target.classList.add('active');
+        // Find the button that matches this tab and activate it
+        const allBtns = document.querySelectorAll('.tab-btn');
+        allBtns.forEach(b => {
+            const onclick = b.getAttribute('onclick') || '';
+            if (onclick.includes("'" + tabName + "'") || onclick.includes('"' + tabName + '"')) {
+                b.classList.add('active');
+            }
+        });
         if (tabName === 'charts') setTimeout(changeVargaChart, 100);
+        if (tabName === 'all_charts') setTimeout(loadMplChart, 200);
     }
 
     function toggleDasha(el) {
@@ -1320,6 +1599,35 @@
 
     window.onload = function() { setTimeout(changeVargaChart, 200); };
 
+    // ─── PIL Chart Loader ───
+    function loadMplChart() {
+        const varga = document.getElementById('mplVargaSelect').value;
+        const style = document.getElementById('mplChartStyle').value;
+        const img = document.getElementById('mplChartImg');
+        const loading = document.getElementById('mplChartLoading');
+
+        // Build URL with all birth data
+        let url = `/api/chart-image?style=${style}&varga=${varga}&asc={{ asc_rasi_index }}`;
+        url += `&name={{ user_name }}&dob={{ user_dob }}&tob={{ user_tob }}&place={{ user_place }}`;
+        url += `&lat={{ lat }}&lon={{ lon }}&timezone={{ timezone }}`;
+
+        loading.style.display = 'block';
+        loading.innerHTML = '<span style="font-size:2rem;">⏳</span><p>চাৰ্ট সৃষ্টি কৰি আছে...</p>';
+        img.style.display = 'none';
+
+        img.onload = function() {
+            loading.style.display = 'none';
+            img.style.display = 'inline-block';
+        };
+        img.onerror = function() {
+            loading.innerHTML = '<span style="font-size:2rem;">❌</span><p>চাৰ্ট ল\'ড কৰাত সমস্যা হৈছে।</p>';
+            img.style.display = 'none';
+        };
+        img.src = url;
+    }
+
+    // Auto-load PIL chart when tab is opened (handled in switchTab above)
+
     // ─── Custom PDF Modal Functions ───
     function openCustomPdfModal() {
         document.getElementById('customPdfModal').classList.add('show');
@@ -1339,6 +1647,9 @@
     }
 
     function generateCustomPdf() {
+        // Populate patrika hidden fields before submitting
+        populatePatrikaHiddenFields();
+
         const btn = document.getElementById('btnGeneratePdf');
         btn.disabled = true;
         btn.textContent = '⏳ সৃষ্টি কৰি আছে...';
@@ -1435,6 +1746,119 @@
             });
         }
     });
+
+    // ─── Patrika Functions ───
+    // Populate hidden fields in download-pdf and custom-pdf forms from patrika form
+    function populatePatrikaHiddenFields() {
+        const publicName = document.getElementById('patrika_public_name').value;
+        const secretName = document.getElementById('patrika_secret_name').value;
+        const fatherName = document.getElementById('patrika_father_name').value;
+        const motherName = document.getElementById('patrika_mother_name').value;
+        const birthDistrict = document.getElementById('patrika_birth_district').value;
+        const residenceDistrict = document.getElementById('patrika_residence_district').value;
+        const residence = document.getElementById('patrika_residence').value;
+
+        // For download-pdf form
+        setVal('hidden_public_name_dl', publicName);
+        setVal('hidden_secret_name_dl', secretName);
+        setVal('hidden_father_name_dl', fatherName);
+        setVal('hidden_mother_name_dl', motherName);
+        setVal('hidden_birth_district_dl', birthDistrict);
+        setVal('hidden_residence_district_dl', residenceDistrict);
+        setVal('hidden_residence_dl', residence);
+
+        // For custom-pdf form
+        setVal('hidden_public_name_cp', publicName);
+        setVal('hidden_secret_name_cp', secretName);
+        setVal('hidden_father_name_cp', fatherName);
+        setVal('hidden_mother_name_cp', motherName);
+        setVal('hidden_birth_district_cp', birthDistrict);
+        setVal('hidden_residence_district_cp', residenceDistrict);
+        setVal('hidden_residence_cp', residence);
+    }
+
+    function setVal(id, val) {
+        const el = document.getElementById(id);
+        if (el) el.value = val;
+    }
+
+    function generatePatrika() {
+        const data = {
+            public_name: document.getElementById('patrika_public_name').value,
+            secret_name: document.getElementById('patrika_secret_name').value,
+            father_name: document.getElementById('patrika_father_name').value,
+            mother_name: document.getElementById('patrika_mother_name').value,
+            birth_district: document.getElementById('patrika_birth_district').value,
+            residence_district: document.getElementById('patrika_residence_district').value,
+            residence: document.getElementById('patrika_residence').value,
+            blessing: document.getElementById('patrika_blessing').value,
+            dob: '{{ user_dob }}',
+            tob: '{{ user_tob }}',
+            asc_rasi: '{{ asc_rasi }}',
+            asc_rasi_idx: {{ asc_rasi_index }},
+            moon_rasi: '{{ moon_rasi }}',
+            moon_rasi_idx: {{ panchanga.get('moon_rasi_idx', 0) if panchanga else 0 }},
+            nakshatra_name: '{{ panchanga.nakshatra.name if panchanga and panchanga.nakshatra else "" }}',
+            nakshatra_idx: {{ panchanga.nakshatra.index if panchanga and panchanga.nakshatra else 0 }},
+            nakshatra_pada: {{ panchanga.nakshatra.pada if panchanga and panchanga.nakshatra else 1 }},
+            gender: '{{ gender }}'
+        };
+
+        fetch('/generate-patrika', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+        .then(r => r.json())
+        .then(result => {
+            const div = document.getElementById('patrika-result');
+            div.textContent = result.patrika_text;
+            div.style.display = 'block';
+        })
+        .catch(err => {
+            alert('পত্ৰিকা বনাওতে ত্ৰুটি: ' + err);
+        });
+    }
+
+    function downloadPatrikaPDF() {
+        const data = {
+            name: '{{ user_name }}',
+            place: '{{ user_place }}',
+            public_name: document.getElementById('patrika_public_name').value,
+            secret_name: document.getElementById('patrika_secret_name').value,
+            father_name: document.getElementById('patrika_father_name').value,
+            mother_name: document.getElementById('patrika_mother_name').value,
+            birth_district: document.getElementById('patrika_birth_district').value,
+            residence_district: document.getElementById('patrika_residence_district').value,
+            residence: document.getElementById('patrika_residence').value,
+            blessing: document.getElementById('patrika_blessing').value,
+            dob: '{{ user_dob }}',
+            tob: '{{ user_tob }}',
+            asc_rasi: '{{ asc_rasi }}',
+            asc_rasi_idx: {{ asc_rasi_index }},
+            moon_rasi: '{{ moon_rasi }}',
+            moon_rasi_idx: {{ panchanga.get('moon_rasi_idx', 0) if panchanga else 0 }},
+            nakshatra_name: '{{ panchanga.nakshatra.name if panchanga and panchanga.nakshatra else "" }}',
+            nakshatra_idx: {{ panchanga.nakshatra.index if panchanga and panchanga.nakshatra else 0 }},
+            nakshatra_pada: {{ panchanga.nakshatra.pada if panchanga and panchanga.nakshatra else 1 }},
+            gender: '{{ gender }}'
+        };
+
+        // Build form and submit to download-pdf
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/download-patrika-pdf';
+        for (const [key, value] of Object.entries(data)) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value;
+            form.appendChild(input);
+        }
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+    }
 </script>
 
 <!-- ─── Upgrade Plans Modal ─── -->
