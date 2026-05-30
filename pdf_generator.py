@@ -11,7 +11,7 @@ import json
 import subprocess
 import tempfile
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 import base64
 
 # ─── Colors ─────────────────────────────────────────────────────
@@ -130,6 +130,9 @@ def get_shani_sare_sati_data(moon_rasi: str, planets_data: list, user_dob: str =
     """
     Compute Saturn Sare Sati / Dhaiya periods from birth to max_age.
     Returns a list of dicts with keys: age_start, age_end, year_start, year_end, rasi, phase
+    
+    Uses the full birth date for accurate year calculations.
+    Saturn takes approximately 2.5 years per rashi transit.
     """
     rasi_names = ["মেষ", "বৃষ", "মিথুন", "কৰ্কট", "সিংহ", "কন্যা", "তুলা", "বৃশ্চিক", "ধনু", "মকৰ", "কুম্ভ", "মীন"]
 
@@ -145,16 +148,17 @@ def get_shani_sare_sati_data(moon_rasi: str, planets_data: list, user_dob: str =
     if shani_rasi not in rasi_names:
         return []
 
-    # Parse birth year from user_dob (format: YYYY-MM-DD)
-    birth_year = None
+    # Parse full birth date from user_dob (format: YYYY-MM-DD)
+    birth_date = None
     if user_dob:
         try:
-            birth_year = int(user_dob.split('-')[0])
+            birth_date = datetime.strptime(user_dob.strip(), "%Y-%m-%d")
         except (ValueError, IndexError):
             pass
 
     sat_idx = rasi_names.index(shani_rasi)
-    step_years = 2.5
+    step_years = 2.5  # Saturn takes ~2.5 years per rashi
+    step_days = step_years * 365.25  # approximate days per step
     events = []
     total_steps = int(max_age / step_years)
 
@@ -177,15 +181,20 @@ def get_shani_sare_sati_data(moon_rasi: str, planets_data: list, user_dob: str =
         else:
             continue
 
+        # Accurate year calculation using full birth date
         year_start = None
         year_end = None
-        if birth_year is not None:
-            year_start = birth_year + int(age_start)
-            year_end = birth_year + int(age_end) - 1  # exclusive end, so -1
+        if birth_date is not None:
+            # Calculate exact start and end dates
+            start_date = birth_date + timedelta(days=int(step * step_days))
+            end_date = birth_date + timedelta(days=int((step + 1) * step_days))
+            
+            year_start = start_date.year
+            year_end = end_date.year
 
         events.append({
-            "age_start": age_start,
-            "age_end": age_end,
+            "age_start": round(age_start, 1),
+            "age_end": round(age_end, 1),
             "year_start": year_start,
             "year_end": year_end,
             "rasi": rasi_names[rasi_idx],

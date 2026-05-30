@@ -1626,6 +1626,11 @@ def api_panchanga():
     lat = float(request.args.get("lat", 26.1445))
     lon = float(request.args.get("lon", 91.7362))
     now = datetime.now()
+    # timezone offset (hours) - optional query param 'tz', default 5.5
+    try:
+        tz_offset = float(request.args.get("tz", request.args.get("timezone", 5.5)))
+    except (ValueError, TypeError):
+        tz_offset = 5.5
     panchanga = get_full_panchanga(now, lat, lon, tz_offset)
     return jsonify(panchanga)
 
