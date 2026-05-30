@@ -663,6 +663,7 @@
         {% if not user_features or user_features.get('dasha', True) %}
         <button class="tab-btn" onclick="switchTab('dasha')">⏳ দশা</button>
         {% endif %}
+        <button class="tab-btn" onclick="switchTab('antardasha_phala')">📖 অন্তৰদশা ফল</button>
         {% if not user_features or user_features.get('ai_interpretation', True) %}
         <button class="tab-btn" onclick="switchTab('ai')">🤖 AI বিশ্লেষণ</button>
         {% endif %}
@@ -958,6 +959,81 @@
         </div></div>
     </div>
 
+    <!-- ─── অন্তৰদশা ফল টেব ─── -->
+    <div id="tab-antardasha_phala" class="tab-content">
+        <div class="section"><div class="section-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <!-- Left: Dasha Tree (same as dasha tab) -->
+                <div>
+                    <h4 style="margin-bottom:10px;color:var(--deep-blue);">⏳ বিংশোত্তৰী দশা তালিকা</h4>
+                    <div class="dasha-tree" id="antardashaTree">
+                        {% for md in dasa_data %}
+                        <div class="md-node">
+                            <div class="md-header" onclick="toggleDasha(this)" data-expanded="false" data-maha="{{ md.md_lord }}">
+                                <span class="md-arrow">▶</span>
+                                <span class="md-icon">★</span>
+                                <span class="md-info">
+                                    <strong>{{ md.md_lord }}</strong>
+                                    <span class="md-dates">{{ md.start }} → {{ md.end }}</span>
+                                    <span class="md-years">({{ md.years }} বছৰ)</span>
+                                </span>
+                            </div>
+                            <div class="md-body" style="display:none;">
+                                {% for ad in md.sub_dasas %}
+                                <div class="ad-node">
+                                    <div class="ad-header" onclick="toggleDasha(this);showAntarPhala(event, '{{ md.md_lord }}', '{{ ad.ad_lord }}')" data-expanded="false" data-maha="{{ md.md_lord }}" data-antar="{{ ad.ad_lord }}">
+                                        <span class="ad-arrow">▶</span>
+                                        <span class="ad-icon">↳</span>
+                                        <span class="ad-info">
+                                            <strong>{{ ad.ad_lord }}</strong>
+                                            <span class="ad-dates">{{ ad.start }} → {{ ad.end }}</span>
+                                        </span>
+                                    </div>
+                                    <div class="ad-body" style="display:none;">
+                                        {% for pd in ad.pratyantar %}
+                                        <div class="pd-row" onclick="showPratPhala(event, '{{ md.md_lord }}', '{{ ad.ad_lord }}', '{{ pd.lord }}')" style="cursor:pointer;" data-maha="{{ md.md_lord }}" data-antar="{{ ad.ad_lord }}" data-prat="{{ pd.lord }}">
+                                            <span class="pd-icon">•</span>
+                                            <span class="pd-info">
+                                                <span>{{ pd.lord }}</span>
+                                                <span class="pd-dates">{{ pd.start }} → {{ pd.end }}</span>
+                                            </span>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <!-- Right: Antardasha Phala Panel -->
+                <div>
+                    <h4 style="margin-bottom:10px;color:var(--orange);">📖 অন্তৰদশা / প্ৰত্যান্তৰদশা ফলাফল</h4>
+                    <div id="antardashaPhalaPanel" style="background:linear-gradient(135deg,#f8f5ff,#fff8f0);border-radius:var(--radius-sm);border:1px solid #e8e0f0;line-height:1.8;font-size:0.85rem;white-space:pre-line;position:relative;">
+                        {% if user_subscription_id == 1 %}
+                        <!-- Free Plan: Show locked message -->
+                        <div style="padding:16px 20px;text-align:center;">
+                            <p style="color:var(--text-light);">অন্তৰদশা আৰু প্ৰত্যান্তৰদশাৰ ফলাফল চাবলৈ বাওঁফালৰ দশা তালিকাৰ পৰা অন্তৰদশা বা প্ৰত্যান্তৰদশা বাছনি কৰক।</p>
+                        </div>
+                        <div class="upgrade-overlay" id="antardashaUpgradeOverlay">
+                            <div class="lock-icon">🔒</div>
+                            <div class="upgrade-title">অন্তৰদশা ফলাফল চাবলৈ আপগ্ৰেড কৰক</div>
+                            <div class="upgrade-sub">বিনামূলীয়া প্লেনত অন্তৰদশা আৰু প্ৰত্যান্তৰদশাৰ ফলাফল উপলব্ধ নহয়। সম্পূৰ্ণ ফলাফল পাবলৈ প্ৰিমিয়াম প্লেনলৈ আপগ্ৰেড কৰক।</div>
+                            <button class="btn-upgrade" onclick="openUpgradePlansModal()">💳 Upgrade to Pro</button>
+                        </div>
+                        {% else %}
+                        <!-- Paid Plan: Full content -->
+                        <div style="padding:16px 20px;max-height:550px;overflow-y:auto;" id="antardashaPhalaContent">
+                            <p style="color:var(--text-light);text-align:center;">অন্তৰদশা আৰু প্ৰত্যান্তৰদশাৰ ফলাফল চাবলৈ বাওঁফালৰ দশা তালিকাৰ পৰা অন্তৰদশা বা প্ৰত্যান্তৰদশা বাছনি কৰক।</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div></div>
+    </div>
+
     <div id="tab-ai" class="tab-content">
         <div class="section"><div class="section-body"><div class="ai-content">{{ ai_interpretation }}</div></div></div>
     </div>
@@ -1239,6 +1315,24 @@
                 <div class="cb-row"><input type="checkbox" name="sections" value="dasha_summary" id="sec_dasha_summary" checked><label for="sec_dasha_summary">দশা সাৰাংশ</label></div>
                 <div class="cb-row"><input type="checkbox" name="sections" value="dasha_full" id="sec_dasha_full" checked><label for="sec_dasha_full">সম্পূৰ্ণ মহাদশা-অন্তৰ্দশা তালিকা</label></div>
                 <div class="cb-row"><input type="checkbox" name="sections" value="dasha_predictions" id="sec_dasha_predictions" checked><label for="sec_dasha_predictions">মহাদশা-অন্তৰ্দশাৰ ফলাফল</label></div>
+                <div class="cb-row"><input type="checkbox" name="sections" value="antardasha_phala" id="sec_antardasha_phala"><label for="sec_antardasha_phala">📖 অন্তৰদশা ফলাফল (small_antardasaphal)</label></div>
+                <div class="dasha-select-row" id="antardashaModeRow" style="display:none;">
+                    <label for="antardasha_mode" style="font-size:0.85rem;">অন্তৰ্দশাৰ ধৰণ:</label>
+                    <select name="antardasha_mode" id="antardasha_mode">
+                        <option value="current_onward">বৰ্তমানৰ পৰা শেষলৈকে</option>
+                        <option value="all_future">সকলো ভবিষ্যত অন্তৰ্দশা</option>
+                        <option value="selected_maha">নিৰ্বাচিত মহাদশাৰ</option>
+                    </select>
+                </div>
+                <div class="dasha-select-row" id="antardashaMahaRow" style="display:none;">
+                    <label for="antardasha_maha" style="font-size:0.85rem;">মহাদশা বাছক:</label>
+                    <select name="antardasha_maha" id="antardasha_maha">
+                        <option value="">-- মহাদশা বাছক --</option>
+                        {% for md in dasa_data %}
+                        <option value="{{ md.md_lord }}">{{ md.md_lord }} ({{ md.start }} → {{ md.end }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
                 <div class="dasha-select-row">
                     <label for="dasha_limit" style="font-size:0.85rem;">অন্তৰ্দশাৰ সীমা:</label>
                     <select name="dasha_limit" id="dasha_limit">
@@ -1597,6 +1691,95 @@
         if (adHeader) adHeader.classList.add('active');
     });
 
+    // ─── অন্তৰদশা ফলাফল Functions ───
+    // Planet name mapping (Assamese to English for API)
+    const planetNameMap = {
+        'ৰবি': 'Sun', 'চন্দ্ৰ': 'Moon', 'মংগল': 'Mars', 'বুধ': 'Mercury',
+        'বৃহস্পতি': 'Jupiter', 'শুক্ৰ': 'Venus', 'শনি': 'Saturn',
+        'ৰাহু': 'Rahu', 'কেতু': 'Ketu'
+    };
+
+    // Rashi names list
+    const rasiNamesList = ["মেষ", "বৃষ", "মিথুন", "কৰ্কট", "সিংহ", "কন্যা", "তুলা", "বৃশ্চিক", "ধনু", "মকৰ", "কুম্ভ", "মীন"];
+
+    function showAntarPhala(event, mahaLord, antarLord) {
+        event.stopPropagation();
+        if (userSubscriptionId === 1) {
+            // Free user: show locked message
+            const panel = document.getElementById('antardashaPhalaContent');
+            if (panel) {
+                panel.innerHTML = '<div style="text-align:center;padding:20px;color:var(--red);">🔒 অন্তৰদশাৰ ফলাফল চাবলৈ প্ৰ\' ভাৰ্চনলৈ আপগ্ৰেড কৰক।</div>';
+            }
+            return;
+        }
+        fetchAntardashaPhala(antarLord);
+    }
+
+    function showPratPhala(event, mahaLord, antarLord, pratLord) {
+        event.stopPropagation();
+        if (userSubscriptionId === 1) {
+            const panel = document.getElementById('antardashaPhalaContent');
+            if (panel) {
+                panel.innerHTML = '<div style="text-align:center;padding:20px;color:var(--red);">🔒 প্ৰত্যান্তৰদশাৰ ফলাফল চাবলৈ প্ৰ\' ভাৰ্চনলৈ আপগ্ৰেড কৰক।</div>';
+            }
+            return;
+        }
+        fetchAntardashaPhala(pratLord);
+    }
+
+    function fetchAntardashaPhala(grahaName) {
+        const panel = document.getElementById('antardashaPhalaContent');
+        if (!panel) return;
+        panel.innerHTML = '<div style="text-align:center;padding:20px;color:var(--orange);">⏳ ফলাফল অনুসন্ধান কৰি আছে...</div>';
+
+        // Get the graha's rashi and house from the planets data
+        // We need to find which rashi the graha is in and which house it occupies
+        // Use the planets data from the page
+        const planetsData = {{ planets | tojson }};
+        let grahaRasi = '';
+        let grahaHouse = 0;
+
+        // Find the graha in planets data
+        for (const p of planetsData) {
+            if (p.name === grahaName) {
+                grahaRasi = p.rasi;
+                // Calculate house: (rasi_index - asc_rasi_index + 12) % 12 + 1
+                const rasiIdx = rasiNamesList.indexOf(p.rasi);
+                if (rasiIdx >= 0) {
+                    grahaHouse = ((rasiIdx - {{ asc_rasi_index }} + 12) % 12) + 1;
+                }
+                break;
+            }
+        }
+
+        if (!grahaRasi || !grahaHouse) {
+            panel.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light);">গ্ৰহৰ তথ্য উপলব্ধ নহয়।</div>';
+            return;
+        }
+
+        fetch('/api/antardasha-phala', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                graha: grahaName,
+                rashi: grahaRasi,
+                house: grahaHouse
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.phala) {
+                panel.innerHTML = '<div style="padding:8px 0;"><strong style="color:var(--deep-blue);">' + grahaName + ' (' + grahaRasi + ', ' + grahaHouse + ' নং ঘৰ)</strong></div><div style="margin-top:8px;">' + data.phala + '</div>';
+            } else {
+                panel.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light);">এই গ্ৰহ/ৰাশি/ঘৰৰ বাবে অন্তৰদশাৰ ফলাফল উপলব্ধ নহয়।</div>';
+            }
+        })
+        .catch(err => {
+            panel.innerHTML = '<div style="text-align:center;padding:20px;color:var(--red);">ফলাফল আনিবলৈ সমস্যা হৈছে। পুনৰ চেষ্টা কৰক।</div>';
+            console.error(err);
+        });
+    }
+
     window.onload = function() { setTimeout(changeVargaChart, 200); };
 
     // ─── PIL Chart Loader ───
@@ -1645,6 +1828,29 @@
     function toggleGroup(groupClass, selectAll) {
         document.querySelectorAll('.' + groupClass).forEach(cb => { cb.checked = selectAll; });
     }
+
+    // ─── Antardasha Phala dropdown toggles ───
+    (function() {
+        const cb = document.getElementById('sec_antardasha_phala');
+        const modeRow = document.getElementById('antardashaModeRow');
+        const mahaRow = document.getElementById('antardashaMahaRow');
+        const modeSel = document.getElementById('antardasha_mode');
+
+        function updateVisibility() {
+            const checked = cb && cb.checked;
+            if (modeRow) modeRow.style.display = checked ? '' : 'none';
+            if (checked && modeSel && modeSel.value === 'selected_maha') {
+                if (mahaRow) mahaRow.style.display = '';
+            } else {
+                if (mahaRow) mahaRow.style.display = 'none';
+            }
+        }
+
+        if (cb) cb.addEventListener('change', updateVisibility);
+        if (modeSel) modeSel.addEventListener('change', updateVisibility);
+        // initial state
+        updateVisibility();
+    })();
 
     function generateCustomPdf() {
         // Populate patrika hidden fields before submitting

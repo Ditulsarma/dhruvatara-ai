@@ -25,7 +25,7 @@ from chat_engine import chat_with_ai, PREDEFINED_QUESTIONS
 from tripap_rista import get_tripap_rista, analyze_tripap_rista, TRIPAP_AGES
 from dasha_engine import (
     get_full_dasha_prediction, get_all_maha_antar_predictions,
-    get_eng_planet, get_asm_planet
+    get_eng_planet, get_asm_planet, get_planet_details, convert_planet_degrees_to_en
 )
 from sannari_chakra import get_sannari_data, generate_sannari_svg, generate_sannari_html_table
 from navatara_chakra import get_navatara_data, generate_navatara_html, generate_navatara_svg
@@ -35,6 +35,7 @@ from rashi_phala import get_rashi_phala, get_rashi_phala_html
 from graha_bichar import get_all_graha_bichar, get_graha_bichar_html
 from kundli_chart import draw_kundli_chart, draw_all_styles
 from patrika import generate_patrika_text
+from small_antardasaphal import get_antardasha_phala, get_all_antardasha_phala_for_pdf
 from auth_module import (
     register_user, login_user, login_admin, verify_email, verify_mobile,
     resend_otp, get_user_features, check_feature_access,
@@ -296,6 +297,67 @@ def get_current_antardasha_info(dasa_data):
             'end': dasa_data[0]['sub_dasas'][0]['end']
         }
     return None
+
+
+def build_antardasha_html(dasa_hierarchy, planet_degrees, lagna_sign_index,
+                          selected_maha=None, include_current_and_future_only=True, gender='male'):
+    """
+    Build HTML for antardasha phala filtered by mahadasha selection or current+future antardashas.
+    - dasa_hierarchy: list of mahadasha dicts (with 'sub_dasas')
+    - planet_degrees: mapping of planet Assamese names to sidereal degrees
+    - lagna_sign_index: integer lagna index (0-11)
+    - selected_maha: mahadasha lord name (Assamese) to restrict to, or None for all
+    - include_current_and_future_only: if True, include only antardashas whose end >= today
+    Returns HTML string.
+    """
+    today = datetime.now()
+    html = '<div style="font-size:0.85rem;line-height:1.8;">'
+
+    # Convert planet_degrees keys from Assamese to English for get_planet_details
+    planet_degrees_en = convert_planet_degrees_to_en(planet_degrees)
+
+    for md in dasa_hierarchy:
+        if selected_maha and md.get('md_lord') != selected_maha:
+            continue
+
+        maha_name = md.get('md_lord', '')
+        for ad in md.get('sub_dasas', []):
+            # parse dates
+            try:
+                ad_end = parse_dasha_date(ad.get('end', ''))
+                ad_start = parse_dasha_date(ad.get('start', ''))
+            except Exception:
+                ad_end = datetime(1900, 1, 1)
+                ad_start = datetime(1900, 1, 1)
+
+            if include_current_and_future_only and ad_end < today:
+                continue
+
+            antar_lord = ad.get('ad_lord', '')
+
+            # Resolve planet details to get rasi and house (use English name for lookup)
+            antar_eng = get_eng_planet(antar_lord)
+            pd = get_planet_details(antar_eng, planet_degrees_en, lagna_sign_index)
+            phala_text = ''
+            if pd:
+                graha_asm = pd.get('name_asm', antar_lord)
+                rasi = pd.get('rasi', '')
+                house = pd.get('house', '')
+                try:
+                    phala_text = get_antardasha_phala(graha_asm, rasi, house)
+                except Exception:
+                    phala_text = ''
+
+            # Format HTML block
+            html += f'<div style="margin-bottom:12px;padding:8px 12px;background:#fff8f0;border-left:3px solid #FF6600;border-radius:4px;">'
+            html += f'<strong style="color:#1a237e;">{maha_name} → {antar_lord}</strong> '
+            html += f' | {ad.get("start", "") } — {ad.get("end", "") }'
+            if phala_text:
+                html += f'<div style="margin-top:6px;color:#333;">{apply_gender(phala_text, gender)}</div>'
+            html += '</div>'
+
+    html += '</div>'
+    return html
 
 def apply_gender(text: str, gender: str) -> str:
     """Replace জাতক/জাতিকা based on gender. Male->জাতক, Female->জাতিকা"""
@@ -1007,16 +1069,11 @@ def download_pdf():
         # Graha Bichar for PDF
         graha_bichar_html = get_graha_bichar_html(planet_houses)
 
-        # Dasha Predictions for PDF
-        all_dasha_predictions = get_all_maha_antar_predictions(
-            dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx
+        # Dasha Predictions for PDF - use small_antardasaphal.py data (filtered)
+        antardasha_phala_html = build_antardasha_html(
+            dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx,
+            selected_maha=None, include_current_and_future_only=True, gender=gender
         )
-        # Apply gender to dasha predictions
-        for dp in all_dasha_predictions:
-            dp["prediction"] = apply_gender(dp["prediction"], gender)
-
-        # Filter: only include antardashas that end today or later (not past)
-        all_dasha_predictions = filter_future_dasha_predictions(all_dasha_predictions)
 
         # Apply gender to AI interpretation
         ai_interpretation = apply_gender(ai_interpretation, gender)
@@ -1047,9 +1104,10 @@ def download_pdf():
             name, dob, tob, place, planets_data, panchanga,
             dosha_results, yoga_results, dasa_hierarchy, ai_interpretation,
             all_vargas, tripap_data, tripap_ages, asc_rasi,
-            all_dasha_predictions, sannari_html, navatara_html,
+            [], sannari_html, navatara_html,
             nakshatra_phala_html, lagna_phala_html, rashi_phala_html,
             graha_bichar_html=graha_bichar_html,
+            antardasha_phala_html=antardasha_phala_html,
             lagna_lord=lagna_lord, moon_rashi_lord=moon_rashi_lord,
             moon_rasi=moon_rasi, gender=gender,
             astrologer_profile=astrologer_profile,
@@ -1278,14 +1336,21 @@ def download_patrika_pdf():
         )
         
         astrologer_profile = get_astrologer_profile(session.get('user_id', 0))
+
+        # Build antardasha phala HTML for patrika PDF (current → end)
+        antardasha_phala_html = build_antardasha_html(
+            dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx,
+            selected_maha=None, include_current_and_future_only=True, gender=gender
+        )
         
         pdf_bytes = generate_pdf_report(
             name, dob, tob, place, planets_data, panchanga,
             dosha_results, yoga_results, dasa_hierarchy, ai_interpretation,
             all_vargas, tripap_data, tripap_ages, asc_rasi,
-            all_dasha_predictions, sannari_html, navatara_html,
+            [], sannari_html, navatara_html,
             nakshatra_phala_html, lagna_phala_html, rashi_phala_html,
             graha_bichar_html=graha_bichar_html,
+            antardasha_phala_html=antardasha_phala_html,
             lagna_lord=lagna_lord, moon_rashi_lord=moon_rashi_lord,
             moon_rasi=moon_rasi, gender=gender,
             astrologer_profile=astrologer_profile,
@@ -1505,6 +1570,31 @@ def custom_pdf():
         # Get astrologer profile for PDF footer (user's profile, fallback to admin)
         astrologer_profile = get_astrologer_profile(session.get('user_id', 0))
 
+        # Build antardasha phala HTML for custom PDF (only if selected)
+        antardasha_phala_html = ""
+        if 'antardasha_phala' in selected_sections:
+            antardasha_mode = request.form.get("antardasha_mode", "current_onward")
+            antardasha_maha = request.form.get("antardasha_maha", "").strip()
+
+            if antardasha_mode == "selected_maha" and antardasha_maha:
+                # Show all antardashas of the selected mahadasha (future only)
+                antardasha_phala_html = build_antardasha_html(
+                    dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx,
+                    selected_maha=antardasha_maha, include_current_and_future_only=True, gender=gender
+                )
+            elif antardasha_mode == "all_future":
+                # Show all future antardashas across all mahadashas
+                antardasha_phala_html = build_antardasha_html(
+                    dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx,
+                    selected_maha=None, include_current_and_future_only=True, gender=gender
+                )
+            else:
+                # current_onward: current antardasha → end of current mahadasha
+                antardasha_phala_html = build_antardasha_html(
+                    dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx,
+                    selected_maha=None, include_current_and_future_only=True, gender=gender
+                )
+
         pdf_bytes = generate_pdf_report(
             name, dob, tob, place, planets_data, panchanga,
             dosha_results, yoga_results, dasa_hierarchy, ai_interpretation,
@@ -1512,6 +1602,7 @@ def custom_pdf():
             all_dasha_predictions, sannari_html, navatara_html,
             nakshatra_phala_html, lagna_phala_html, rashi_phala_html,
             graha_bichar_html=graha_bichar_html,
+            antardasha_phala_html=antardasha_phala_html,
             selected_sections=selected_sections,
             lagna_lord=lagna_lord, moon_rashi_lord=moon_rashi_lord,
             moon_rasi=moon_rasi, gender=gender,
@@ -1593,6 +1684,24 @@ def api_dasha_prediction():
     )
 
     return jsonify({"prediction": prediction})
+
+# ═══════════════════════════════════════════
+#  অন্তৰদশা ফল API (small_antardasaphal.py)
+# ═══════════════════════════════════════════
+
+@app.route("/api/antardasha-phala", methods=["POST"])
+def api_antardasha_phala():
+    """API endpoint for antardasha phala from small JSON data."""
+    data = request.get_json()
+    graha_name = data.get("graha", "")
+    rashi_name = data.get("rashi", "")
+    house_num = data.get("house", 0)
+
+    if not graha_name or not rashi_name or not house_num:
+        return jsonify({"error": "Missing graha/rashi/house"}), 400
+
+    phala_text = get_antardasha_phala(graha_name, rashi_name, int(house_num))
+    return jsonify({"phala": phala_text})
 
 # ═══════════════════════════════════════════
 #  AUTH ROUTES (Login, Register, Verify)

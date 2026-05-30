@@ -240,6 +240,7 @@ def _build_html(
     lagna_phala_html: str = "",
     rashi_phala_html: str = "",
     graha_bichar_html: str = "",
+    antardasha_phala_html: str = "",
     selected_sections: list = None,
     lagna_lord: str = "",
     moon_rashi_lord: str = "",
@@ -1121,6 +1122,9 @@ def _build_html(
     if _include('dasha_predictions'):
         html += '<h2 class="section-heading">📝 মহাদশা-অন্তৰ্দশাৰ সম্পূৰ্ণ ফলাফল</h2>' + dasha_predictions_html
 
+    if _include('antardasha_phala'):
+        html += '<h2 class="section-heading">📖 অন্তৰদশা ফলাফল (small_antardasaphal)</h2>' + antardasha_phala_html
+
     if _include('ai'):
         html += ai_html
 
@@ -1162,6 +1166,7 @@ def generate_pdf_report(
     lagna_phala_html: str = "",
     rashi_phala_html: str = "",
     graha_bichar_html: str = "",
+    antardasha_phala_html: str = "",
     selected_sections: list = None,
     lagna_lord: str = "",
     moon_rashi_lord: str = "",
@@ -1183,6 +1188,7 @@ def generate_pdf_report(
         all_dasha_predictions, sannari_html, navatara_html,
         nakshatra_phala_html, lagna_phala_html, rashi_phala_html,
         graha_bichar_html=graha_bichar_html,
+        antardasha_phala_html=antardasha_phala_html,
         selected_sections=selected_sections,
         lagna_lord=lagna_lord,
         moon_rashi_lord=moon_rashi_lord,
