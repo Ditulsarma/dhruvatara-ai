@@ -19,10 +19,6 @@
             background: linear-gradient(135deg, #FFF8F0 0%, #FFF3E0 30%, #FFECB3 60%, #FFF8F0 100%);
             min-height: 100vh; display: flex; flex-direction: column;
         }
-        .page-wrapper {
-            flex: 1; display: flex; align-items: center; justify-content: center;
-            padding: 20px;
-        }
         .bg-pattern {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 0; opacity: 0.03;
@@ -30,9 +26,27 @@
                               radial-gradient(circle at 80% 20%, var(--deep-blue) 1px, transparent 1px);
             background-size: 60px 60px, 80px 80px;
         }
-        .container {
-            position: relative; z-index: 1; width: 100%; max-width: 440px;
+
+        /* ─── Two-Column Layout ─── */
+        .page-wrapper {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            padding: 20px; gap: 30px; flex-wrap: wrap;
         }
+        .login-column {
+            position: relative; z-index: 1;
+            width: 100%; max-width: 440px;
+            flex-shrink: 0;
+        }
+        .panchanga-column {
+            position: relative; z-index: 1;
+            width: 100%; max-width: 420px;
+            flex-shrink: 0;
+            display: flex; align-items: stretch;
+        }
+        .panchanga-column > * {
+            width: 100%;
+        }
+
         .logo { text-align: center; margin-bottom: 24px; }
         .logo .icon { font-size: 48px; display: block; margin-bottom: 4px; }
         .logo h1 {
@@ -98,19 +112,44 @@
         .otp-row input { flex: 1; }
         .otp-row button { white-space: nowrap; padding: 11px 16px; font-size: 0.8rem; }
 
-        @media (max-width: 768px) {
-            .page-wrapper { padding: 12px; }
-            .container { max-width: 100%; }
-            .card { padding: 20px 16px; }
-            .card h2 { font-size: 1.1rem; }
-            .logo h1 { font-size: 1.5rem; }
-            .logo .icon { font-size: 36px; }
-            .form-group input { padding: 10px 12px; font-size: 0.85rem; }
-            .btn { padding: 10px; font-size: 0.9rem; }
-            .tab-btn { padding: 8px; font-size: 0.8rem; }
+        /* ─── Panchanga Toggle Button (Mobile) ─── */
+        .pw-toggle-btn {
+            display: none;
+            width: 100%; padding: 10px;
+            background: linear-gradient(135deg, #FF6600, #1a237e);
+            color: white; border: none; border-radius: 10px;
+            font-family: inherit; font-size: 0.9rem; font-weight: 700;
+            cursor: pointer; margin-top: 16px;
+            transition: var(--transition);
+        }
+        .pw-toggle-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255,102,0,0.3); }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 1024px) {
+            .page-wrapper { gap: 20px; }
+            .login-column { max-width: 400px; }
+            .panchanga-column { max-width: 380px; }
+        }
+
+        @media (max-width: 860px) {
+            .page-wrapper {
+                flex-direction: column;
+                align-items: center;
+                gap: 16px;
+            }
+            .login-column { max-width: 440px; }
+            .panchanga-column {
+                max-width: 440px;
+                display: none; /* Hidden by default on mobile */
+            }
+            .panchanga-column.show { display: flex; }
+            .pw-toggle-btn { display: block; }
         }
 
         @media (max-width: 480px) {
+            .page-wrapper { padding: 12px; }
+            .login-column { max-width: 100%; }
+            .panchanga-column { max-width: 100%; }
             .card { padding: 16px 12px; }
             .logo h1 { font-size: 1.3rem; }
             .form-group { margin-bottom: 12px; }
@@ -124,81 +163,92 @@
 <body>
 <div class="bg-pattern"></div>
 <div class="page-wrapper">
-<div class="container">
-    <div class="logo">
-        <span class="icon">🌟</span>
-        <h1>ধ্ৰুৱতৰা AI</h1>
+    <!-- Left Column: Login/Register Form -->
+    <div class="login-column">
+        <div class="logo">
+            <span class="icon">🌟</span>
+            <h1>ধ্ৰুৱতৰা AI</h1>
+        </div>
+        <div class="card">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('login')">🔑 লগিন</button>
+                <button class="tab-btn" onclick="switchTab('register')">📝 পঞ্জীয়ন</button>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ 'error' if category == 'error' else 'success' if category == 'success' else 'info' }}">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <!-- Login Tab -->
+            <div id="tab-login" class="tab-content active">
+                <h2>🔑 লগিন কৰক</h2>
+                <form method="POST" action="/login">
+                    <div class="form-group">
+                        <label>📧 ইমেইল</label>
+                        <input type="email" name="email" required placeholder="আপোনাৰ ইমেইল">
+                    </div>
+                    <div class="form-group">
+                        <label>🔒 পাছৱৰ্ড</label>
+                        <input type="password" name="password" required placeholder="আপোনাৰ পাছৱৰ্ড">
+                    </div>
+                    <button type="submit" class="btn btn-primary">🔓 লগিন কৰক</button>
+                </form>
+                <div class="links" style="margin-top:12px;">
+                    <a href="/forgot-password">পাছৱৰ্ড পাহৰিলে?</a>
+                </div>
+                <div class="divider-text">অথবা</div>
+                <div class="links">
+                    <a href="/admin/login">🔐 এডমিন লগিন</a>
+                </div>
+            </div>
+
+            <!-- Register Tab -->
+            <div id="tab-register" class="tab-content">
+                <h2>📝 পঞ্জীয়ন কৰক</h2>
+                <form method="POST" action="/register" id="registerForm">
+                    <div class="form-group">
+                        <label>👤 সম্পূৰ্ণ নাম</label>
+                        <input type="text" name="name" required placeholder="আপোনাৰ সম্পূৰ্ণ নাম">
+                    </div>
+                    <div class="form-group">
+                        <label>📧 ইমেইল</label>
+                        <input type="email" name="email" id="regEmail" required placeholder="আপোনাৰ ইমেইল">
+                    </div>
+                    <div class="form-group">
+                        <label>📱 মোবাইল নম্বৰ (ঐচ্ছিক)</label>
+                        <input type="tel" name="mobile" id="regMobile" placeholder="যেনে: 9876543210" pattern="[0-9]{10}" title="১০ সংখ্যাৰ মোবাইল নম্বৰ">
+                    </div>
+                    <div class="form-group">
+                        <label>🔒 পাছৱৰ্ড</label>
+                        <input type="password" name="password" id="regPassword" required placeholder="ন্যূনতম ৬ আখৰৰ পাছৱৰ্ড" minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label>🔒 পাছৱৰ্ড নিশ্চিত কৰক</label>
+                        <input type="password" name="confirm_password" required placeholder="পুনৰ পাছৱৰ্ড লিখক" minlength="6">
+                    </div>
+                    <button type="submit" class="btn btn-primary">📝 পঞ্জীয়ন কৰক</button>
+                </form>
+                <div class="links">
+                    ইতিমধ্যে একাউণ্ট আছে? <a href="#" onclick="switchTab('login')">লগিন কৰক</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panchanga Toggle Button (Mobile Only) -->
+        <button class="pw-toggle-btn" onclick="togglePanchanga()" id="pwToggleBtn">
+            🕉️ আজিৰ পঞ্চাঙ্গ চাওক
+        </button>
     </div>
-    <div class="card">
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('login')">🔑 লগিন</button>
-            <button class="tab-btn" onclick="switchTab('register')">📝 পঞ্জীয়ন</button>
-        </div>
 
-        <!-- Flash Messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        {% for category, message in messages %}
-        <div class="alert alert-{{ 'error' if category == 'error' else 'success' if category == 'success' else 'info' }}">{{ message }}</div>
-        {% endfor %}
-        {% endif %}
-        {% endwith %}
-
-        <!-- Login Tab -->
-        <div id="tab-login" class="tab-content active">
-            <h2>🔑 লগিন কৰক</h2>
-            <form method="POST" action="/login">
-                <div class="form-group">
-                    <label>📧 ইমেইল</label>
-                    <input type="email" name="email" required placeholder="আপোনাৰ ইমেইল">
-                </div>
-                <div class="form-group">
-                    <label>🔒 পাছৱৰ্ড</label>
-                    <input type="password" name="password" required placeholder="আপোনাৰ পাছৱৰ্ড">
-                </div>
-                <button type="submit" class="btn btn-primary">🔓 লগিন কৰক</button>
-            </form>
-            <div class="links" style="margin-top:12px;">
-                <a href="/forgot-password">পাছৱৰ্ড পাহৰিলে?</a>
-            </div>
-            <div class="divider-text">অথবা</div>
-            <div class="links">
-                <a href="/admin/login">🔐 এডমিন লগিন</a>
-            </div>
-        </div>
-
-        <!-- Register Tab -->
-        <div id="tab-register" class="tab-content">
-            <h2>📝 পঞ্জীয়ন কৰক</h2>
-            <form method="POST" action="/register" id="registerForm">
-                <div class="form-group">
-                    <label>👤 সম্পূৰ্ণ নাম</label>
-                    <input type="text" name="name" required placeholder="আপোনাৰ সম্পূৰ্ণ নাম">
-                </div>
-                <div class="form-group">
-                    <label>📧 ইমেইল</label>
-                    <input type="email" name="email" id="regEmail" required placeholder="আপোনাৰ ইমেইল">
-                </div>
-                <div class="form-group">
-                    <label>📱 মোবাইল নম্বৰ (ঐচ্ছিক)</label>
-                    <input type="tel" name="mobile" id="regMobile" placeholder="যেনে: 9876543210" pattern="[0-9]{10}" title="১০ সংখ্যাৰ মোবাইল নম্বৰ">
-                </div>
-                <div class="form-group">
-                    <label>🔒 পাছৱৰ্ড</label>
-                    <input type="password" name="password" id="regPassword" required placeholder="ন্যূনতম ৬ আখৰৰ পাছৱৰ্ড" minlength="6">
-                </div>
-                <div class="form-group">
-                    <label>🔒 পাছৱৰ্ড নিশ্চিত কৰক</label>
-                    <input type="password" name="confirm_password" required placeholder="পুনৰ পাছৱৰ্ড লিখক" minlength="6">
-                </div>
-                <button type="submit" class="btn btn-primary">📝 পঞ্জীয়ন কৰক</button>
-            </form>
-            <div class="links">
-                ইতিমধ্যে একাউণ্ট আছে? <a href="#" onclick="switchTab('login')">লগিন কৰক</a>
-            </div>
-        </div>
+    <!-- Right Column: Today's Panchanga -->
+    <div class="panchanga-column" id="panchangaColumn">
+        {% include 'panchanga_widget.html' %}
     </div>
-</div>
 </div>
 
 <script>
@@ -223,6 +273,18 @@
             alert('পাছৱৰ্ড মিলা নাই। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।');
         }
     });
+
+    // Toggle Panchanga on mobile
+    function togglePanchanga() {
+        const col = document.getElementById('panchangaColumn');
+        const btn = document.getElementById('pwToggleBtn');
+        col.classList.toggle('show');
+        if (col.classList.contains('show')) {
+            btn.innerHTML = '🕉️ পঞ্চাঙ্গ লুকাওক';
+        } else {
+            btn.innerHTML = '🕉️ আজিৰ পঞ্চাঙ্গ চাওক';
+        }
+    }
 </script>
 
 {% if all_footer_images %}

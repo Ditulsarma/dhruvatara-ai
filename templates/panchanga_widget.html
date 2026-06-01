@@ -1,0 +1,735 @@
+<!--
+ধ্ৰুৱতৰা AI - পঞ্চাঙ্গ ৱিজেট
+Today's Panchanga Widget - Responsive & Stylish
+Used in login page, kundli page, and as standalone widget
+-->
+<div class="panchanga-widget" id="panchangaWidget">
+    <div class="pw-header">
+        <div class="pw-title-row">
+            <span class="pw-icon">🕉️</span>
+            <h3>আজিৰ পঞ্চাঙ্গ</h3>
+        </div>
+        <div class="pw-date" id="pwDate">{{ panchanga.get('current_date', '') }}</div>
+        <div class="pw-location-row">
+            <span class="pw-loc-icon">📍</span>
+            <select id="pwLocationSelect" class="pw-loc-select" onchange="changePanchangaLocation()">
+                <option value="26.1445,91.7362,5.5" selected>Guwahati, Assam</option>
+                <option value="26.4994,91.1786,5.5">Pathsala, Bajali</option>
+                <option value="27.29,94.54,5.5">Dibrugarh, Assam</option>
+                <option value="26.59,94.38,5.5">Sivasagar, Assam</option>
+                <option value="26.6333,92.8,5.5">Tezpur, Assam</option>
+                <option value="26.45,94.13,5.5">Jorhat, Assam</option>
+                <option value="26.19,90.0,5.5">Barpeta, Assam</option>
+                <option value="26.21,92.41,5.5">Nagaon, Assam</option>
+                <option value="26.28,90.34,5.5">Bongaigaon, Assam</option>
+                <option value="27.3,95.22,5.5">Tinsukia, Assam</option>
+                <option value="26.26,91.26,5.5">Nalbari, Assam</option>
+                <option value="26.0002,92.8576,5.5">Hojai, Assam</option>
+                <option value="26.31,93.58,5.5">Golaghat, Assam</option>
+                <option value="26.15,92.2,5.5">Morigaon, Assam</option>
+                <option value="26.57,94.1,5.5">Majuli, Assam</option>
+                <option value="26.38,93.35,5.5">Bokakhat, Assam</option>
+                <option value="26.11,91.41,5.5">Amingaon, Assam</option>
+                <option value="27.22,95.18,5.5">Duliajan, Assam</option>
+                <option value="27.11,94.55,5.5">Moran, Assam</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="pw-body" id="pwBody">
+        <!-- Loading spinner -->
+        <div class="pw-loading" id="pwLoading" style="display:none;">
+            <div class="pw-spinner"></div>
+            <span>পঞ্চাঙ্গ লোড হৈ আছে...</span>
+        </div>
+
+        <!-- Panchanga Content -->
+        <div class="pw-content" id="pwContent">
+            <!-- Row 1: Tithi & Paksha -->
+            <div class="pw-row pw-highlight">
+                <div class="pw-item pw-tithi">
+                    <span class="pw-label">🌙 তিথি</span>
+                    <span class="pw-value">{{ panchanga.tithi.name }}</span>
+                    <span class="pw-sub">{{ panchanga.tithi.paksha }}</span>
+                    {% if panchanga.tithi.get('time_from') %}
+                    <span class="pw-time">
+                        🕐 {{ panchanga.tithi.time_from }}{% if panchanga.tithi.get('from_prev_day') %} <em>(আগৰ দিন)</em>{% endif %} - {{ panchanga.tithi.time_to }}{% if panchanga.tithi.get('to_next_day') %} <em>(পৰদিন)</em>{% endif %}
+                    </span>
+                    {% endif %}
+                    {% if panchanga.tithi.get('next_name') %}
+                    <span class="pw-next">→ পৰৱৰ্তী: {{ panchanga.tithi.next_name }} ({{ panchanga.tithi.next_paksha }})</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Row 2: Nakshatra & Pada -->
+            <div class="pw-row">
+                <div class="pw-item pw-nakshatra">
+                    <span class="pw-label">⭐ নক্ষত্ৰ</span>
+                    <span class="pw-value">{{ panchanga.nakshatra.name }}</span>
+                    <span class="pw-sub">পাদ: {{ panchanga.nakshatra.pada }}</span>
+                    {% if panchanga.nakshatra.get('time_from') %}
+                    <span class="pw-time">
+                        🕐 {{ panchanga.nakshatra.time_from }}{% if panchanga.nakshatra.get('from_prev_day') %} <em>(আগৰ দিন)</em>{% endif %} - {{ panchanga.nakshatra.time_to }}{% if panchanga.nakshatra.get('to_next_day') %} <em>(পৰদিন)</em>{% endif %}
+                    </span>
+                    {% endif %}
+                    {% if panchanga.nakshatra.get('next_name') %}
+                    <span class="pw-next">→ পৰৱৰ্তী: {{ panchanga.nakshatra.next_name }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Row 3: Yoga & Karana -->
+            <div class="pw-row pw-two-col">
+                <div class="pw-item pw-yoga">
+                    <span class="pw-label">🪷 যোগ</span>
+                    <span class="pw-value">{{ panchanga.yoga.name }}</span>
+                    {% if panchanga.yoga.get('time_from') %}
+                    <span class="pw-time">
+                        🕐 {{ panchanga.yoga.time_from }}{% if panchanga.yoga.get('from_prev_day') %} <em>(আগৰ দিন)</em>{% endif %} - {{ panchanga.yoga.time_to }}{% if panchanga.yoga.get('to_next_day') %} <em>(পৰদিন)</em>{% endif %}
+                    </span>
+                    {% endif %}
+                    {% if panchanga.yoga.get('next_name') %}
+                    <span class="pw-next">→ পৰৱৰ্তী: {{ panchanga.yoga.next_name }}</span>
+                    {% endif %}
+                </div>
+                <div class="pw-item pw-karana">
+                    <span class="pw-label">🔸 কৰণ</span>
+                    <span class="pw-value">{{ panchanga.karana.name }}</span>
+                    {% if panchanga.karana.get('time_from') %}
+                    <span class="pw-time">
+                        🕐 {{ panchanga.karana.time_from }}{% if panchanga.karana.get('from_prev_day') %} <em>(আগৰ দিন)</em>{% endif %} - {{ panchanga.karana.time_to }}{% if panchanga.karana.get('to_next_day') %} <em>(পৰদিন)</em>{% endif %}
+                    </span>
+                    {% endif %}
+                    {% if panchanga.karana.get('next_name') %}
+                    <span class="pw-next">→ পৰৱৰ্তী: {{ panchanga.karana.next_name }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Row 4: Vaar & Ritu -->
+            <div class="pw-row pw-two-col">
+                <div class="pw-item pw-vaar">
+                    <span class="pw-label">📅 বাৰ</span>
+                    <span class="pw-value">{{ panchanga.vaar.name }}</span>
+                </div>
+                <div class="pw-item pw-ritu">
+                    <span class="pw-label">🌿 ঋতু</span>
+                    <span class="pw-value">{{ panchanga.ritu.name }}</span>
+                </div>
+            </div>
+
+            <!-- Row 5: Assamese Month & Ayanamsa -->
+            <div class="pw-row pw-two-col">
+                <div class="pw-item pw-masa">
+                    <span class="pw-label">📆 অসমীয়া মাহ <small>(দৃক সিদ্ধান্ত)</small></span>
+                    <span class="pw-value">{{ panchanga.masa.name }}</span>
+                </div>
+                <div class="pw-item pw-ayanamsa">
+                    <span class="pw-label">🌐 অয়নাংশ (লাহিড়ী)</span>
+                    <span class="pw-value">{{ panchanga.ayanamsa }}°</span>
+                </div>
+            </div>
+
+            <!-- Row 6: Sunrise & Sunset -->
+            <div class="pw-row pw-two-col pw-sun-row">
+                <div class="pw-item pw-sunrise">
+                    <span class="pw-label">🌅 সূৰ্য্যোদয়</span>
+                    <span class="pw-value">{{ panchanga.sunrise }}</span>
+                </div>
+                <div class="pw-item pw-sunset">
+                    <span class="pw-label">🌇 সূৰ্য্যাস্ত</span>
+                    <span class="pw-value">{{ panchanga.sunset }}</span>
+                </div>
+            </div>
+
+            <!-- Row 7: Inauspicious Timings -->
+            <div class="pw-section-title">⚠️ অশুভ সময়</div>
+            <div class="pw-row pw-two-col">
+                <div class="pw-item pw-inauspicious">
+                    <span class="pw-label">🐉 ৰাহুকাল</span>
+                    <span class="pw-value pw-time-val">{{ panchanga.rahu_kalam }}</span>
+                </div>
+                <div class="pw-item pw-inauspicious">
+                    <span class="pw-label">💀 যমগণ্ড</span>
+                    <span class="pw-value pw-time-val">{{ panchanga.yama_gandam }}</span>
+                </div>
+            </div>
+            <div class="pw-row pw-two-col">
+                <div class="pw-item pw-inauspicious">
+                    <span class="pw-label">🕳️ গুলিক কাল</span>
+                    <span class="pw-value pw-time-val">{{ panchanga.gulika_kalam }}</span>
+                </div>
+                <div class="pw-item pw-inauspicious">
+                    <span class="pw-label">⚫ যমকাল</span>
+                    <span class="pw-value pw-time-val">{{ panchanga.yama_kaal }}</span>
+                </div>
+            </div>
+            <div class="pw-row pw-two-col">
+                <div class="pw-item pw-inauspicious">
+                    <span class="pw-label">🌑 কালবেলা</span>
+                    <span class="pw-value pw-time-val">{{ panchanga.kaal_bela }}</span>
+                </div>
+                <div class="pw-item pw-inauspicious">
+                    <span class="pw-label">🌒 ৰাৰবেলা</span>
+                    <span class="pw-value pw-time-val">{{ panchanga.rar_bela }}</span>
+                </div>
+            </div>
+
+            <!-- Row 8: Abhijit Muhurta (Auspicious) -->
+            <div class="pw-section-title">✨ শুভ সময়</div>
+            <div class="pw-row">
+                <div class="pw-item pw-auspicious">
+                    <span class="pw-label">🕉️ অভিজিৎ মুহূৰ্ত</span>
+                    <span class="pw-value pw-time-val">{{ panchanga.abhijit_muhurta }}</span>
+                </div>
+            </div>
+
+            <!-- Row 9: Day/Night Duration -->
+            <div class="pw-row pw-two-col">
+                <div class="pw-item pw-duration">
+                    <span class="pw-label">☀️ দিবামান</span>
+                    <span class="pw-value">{{ panchanga.divaman }}</span>
+                </div>
+                <div class="pw-item pw-duration">
+                    <span class="pw-label">🌙 ৰাত্ৰিমান</span>
+                    <span class="pw-value">{{ panchanga.ratriman }}</span>
+                </div>
+            </div>
+
+            <!-- Row 10: Nakshatra Attributes -->
+            <div class="pw-section-title">🔮 নক্ষত্ৰৰ গুণ</div>
+            <div class="pw-row pw-two-col">
+                <div class="pw-item pw-attribute">
+                    <span class="pw-label">🕉️ বৰ্ণ</span>
+                    <span class="pw-value">{{ panchanga.varna }}</span>
+                    {% if panchanga.get('varna_time_from') %}
+                    <span class="pw-time">🕐 {{ panchanga.varna_time_from }} - {{ panchanga.varna_time_to }}</span>
+                    {% endif %}
+                </div>
+                <div class="pw-item pw-attribute">
+                    <span class="pw-label">👥 গণ</span>
+                    <span class="pw-value">{{ panchanga.gana }}</span>
+                    {% if panchanga.get('gana_time_from') %}
+                    <span class="pw-time">🕐 {{ panchanga.gana_time_from }} - {{ panchanga.gana_time_to }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="pw-row pw-two-col">
+                <div class="pw-item pw-attribute">
+                    <span class="pw-label">🐾 যোনি</span>
+                    <span class="pw-value">{{ panchanga.yoni }}</span>
+                    {% if panchanga.get('yoni_time_from') %}
+                    <span class="pw-time">🕐 {{ panchanga.yoni_time_from }} - {{ panchanga.yoni_time_to }}</span>
+                    {% endif %}
+                </div>
+                <div class="pw-item pw-attribute">
+                    <span class="pw-label">🌀 নাড়ী</span>
+                    <span class="pw-value">{{ panchanga.nadi }}</span>
+                    {% if panchanga.get('nadi_time_from') %}
+                    <span class="pw-time">🕐 {{ panchanga.nadi_time_from }} - {{ panchanga.nadi_time_to }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Row 11: Janma Rashi & Lord -->
+            <div class="pw-section-title">🌙 চন্দ্ৰৰ ৰাশি</div>
+            <div class="pw-row pw-two-col">
+                <div class="pw-item pw-rashi">
+                    <span class="pw-label">⭐ জন্ম ৰাশি</span>
+                    <span class="pw-value">
+                        {% set moon_rashi_idx = (panchanga.moon_longitude // 30) | int %}
+                        {% set rashi_names = ["মেষ", "বৃষ", "মিথুন", "কৰ্কট", "সিংহ", "কন্যা", "তুলা", "বৃশ্চিক", "ধনু", "মকৰ", "কুম্ভ", "মীন"] %}
+                        {% set rashi_icons = ["♈", "♉", "♊", "♋", "♌", "♍", "♎", "♏", "♐", "♑", "♒", "♓"] %}
+                        {{ rashi_icons[moon_rashi_idx] }} {{ rashi_names[moon_rashi_idx] }}
+                    </span>
+                    {% if panchanga.nakshatra.get('time_from') %}
+                    <span class="pw-time">🕐 {{ panchanga.nakshatra.time_from }} - {{ panchanga.nakshatra.time_to }}</span>
+                    {% endif %}
+                </div>
+                <div class="pw-item pw-rashi-lord">
+                    <span class="pw-label">🕉️ জন্ম ৰাশিৰ অধিপতি</span>
+                    <span class="pw-value">
+                        {% set rashi_lords = ["মংগল", "শুক্ৰ", "বুধ", "চন্দ্ৰ", "ৰবি", "বুধ", "শুক্ৰ", "মংগল", "বৃহস্পতি", "শনি", "শনি", "বৃহস্পতি"] %}
+                        {{ rashi_lords[moon_rashi_idx] }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Planetary Positions -->
+            {% if panchanga.planets %}
+            <div class="pw-section-title">🪐 গ্ৰহৰ অৱস্থান</div>
+            <div class="pw-planets-grid">
+                {% for planet in panchanga.planets %}
+                <div class="pw-planet-card {% if planet.retrograde %}pw-retro{% endif %}">
+                    <div class="pw-planet-header">
+                        <span class="pw-planet-icon">{{ planet.icon }}</span>
+                        <span class="pw-planet-name">{{ planet.name_asm }}</span>
+                        {% if planet.retrograde %}<span class="pw-retro-badge">ৰি</span>{% endif %}
+                    </div>
+                    <div class="pw-planet-rashi">
+                        <span class="pw-rashi-icon">{{ planet.rashi_icon }}</span>
+                        <span>{{ planet.rashi_name }}</span>
+                    </div>
+                    <div class="pw-planet-degree">{{ planet.degree_str }}</div>
+                    <div class="pw-planet-lord">অধিপতি: {{ planet.rashi_lord }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="pw-footer">
+        <small>🕉️ ধ্ৰুৱতৰা AI • পঞ্চাঙ্গ</small>
+    </div>
+</div>
+
+<style>
+    /* ─── Panchanga Widget Styles ─── */
+    .panchanga-widget {
+        background: linear-gradient(145deg, #FFFFFF 0%, #FFF8F0 50%, #FFF3E0 100%);
+        border-radius: 20px;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.05);
+        border: 1px solid #e8e0d5;
+        overflow: hidden;
+        font-family: 'Noto Sans Bengali', 'Arial', sans-serif;
+        max-width: 420px;
+        width: 100%;
+        transition: all 0.3s ease;
+    }
+    .panchanga-widget:hover {
+        box-shadow: 0 16px 48px rgba(0,0,0,0.14), 0 4px 12px rgba(0,0,0,0.06);
+        transform: translateY(-2px);
+    }
+
+    .pw-header {
+        background: linear-gradient(135deg, #FF6600 0%, #E55D00 50%, #1a237e 100%);
+        padding: 18px 20px;
+        color: white;
+        text-align: center;
+    }
+    .pw-title-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 4px;
+    }
+    .pw-title-row h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+    .pw-icon {
+        font-size: 1.4rem;
+    }
+    .pw-date {
+        font-size: 0.85rem;
+        opacity: 0.9;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+    .pw-location-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+    .pw-loc-icon {
+        font-size: 0.9rem;
+    }
+    .pw-loc-select {
+        background: rgba(255,255,255,0.2);
+        border: 1px solid rgba(255,255,255,0.3);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.78rem;
+        font-family: inherit;
+        cursor: pointer;
+        outline: none;
+        max-width: 200px;
+        backdrop-filter: blur(4px);
+    }
+    .pw-loc-select option {
+        color: #2c3e50;
+        background: white;
+    }
+
+    .pw-body {
+        padding: 16px;
+        max-height: 600px;
+        overflow-y: auto;
+    }
+    .pw-body::-webkit-scrollbar {
+        width: 5px;
+    }
+    .pw-body::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .pw-body::-webkit-scrollbar-thumb {
+        background: #e8e0d5;
+        border-radius: 10px;
+    }
+
+    .pw-loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+        gap: 12px;
+        color: #5a6c7d;
+        font-size: 0.9rem;
+    }
+    .pw-spinner {
+        width: 36px;
+        height: 36px;
+        border: 3px solid #e8e0d5;
+        border-top-color: #FF6600;
+        border-radius: 50%;
+        animation: pwSpin 0.8s linear infinite;
+    }
+    @keyframes pwSpin {
+        to { transform: rotate(360deg); }
+    }
+
+    .pw-row {
+        margin-bottom: 10px;
+    }
+    .pw-two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    .pw-highlight .pw-item {
+        background: linear-gradient(135deg, #FFF3E0, #FFECB3);
+        border: 1px solid #FFCC80;
+    }
+
+    .pw-item {
+        background: #FAFAFA;
+        border: 1px solid #e8e0d5;
+        border-radius: 12px;
+        padding: 10px 14px;
+        transition: all 0.2s ease;
+    }
+    .pw-item:hover {
+        background: #FFF;
+        border-color: #FFCC80;
+        box-shadow: 0 2px 8px rgba(255,102,0,0.08);
+    }
+    .pw-label {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #5a6c7d;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        margin-bottom: 2px;
+    }
+    .pw-value {
+        display: block;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #2c3e50;
+    }
+    .pw-sub {
+        display: block;
+        font-size: 0.72rem;
+        color: #5a6c7d;
+        font-weight: 500;
+    }
+    .pw-time {
+        display: block;
+        font-size: 0.68rem;
+        color: #888;
+        margin-top: 2px;
+        font-weight: 500;
+    }
+    .pw-time em {
+        font-style: normal;
+        color: #FF6600;
+        font-weight: 600;
+        font-size: 0.62rem;
+    }
+    .pw-next {
+        display: block;
+        font-size: 0.65rem;
+        color: #1a237e;
+        margin-top: 3px;
+        font-weight: 600;
+        background: #E8EAF6;
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+    .pw-time-val {
+        font-size: 0.82rem !important;
+        color: #C62828 !important;
+    }
+
+    .pw-sun-row .pw-sunrise {
+        background: linear-gradient(135deg, #FFF8E1, #FFECB3);
+        border-color: #FFE082;
+    }
+    .pw-sun-row .pw-sunset {
+        background: linear-gradient(135deg, #E8EAF6, #C5CAE9);
+        border-color: #9FA8DA;
+    }
+
+    .pw-inauspicious {
+        background: #FFF5F5 !important;
+        border-color: #FFCDD2 !important;
+    }
+    .pw-inauspicious .pw-label {
+        color: #C62828;
+    }
+
+    .pw-auspicious {
+        background: linear-gradient(135deg, #E8F5E9, #C8E6C9) !important;
+        border-color: #A5D6A7 !important;
+    }
+    .pw-auspicious .pw-label {
+        color: #2E7D32;
+    }
+    .pw-auspicious .pw-value {
+        color: #1B5E20;
+    }
+
+    .pw-duration {
+        background: #F3E5F5;
+        border-color: #E1BEE7;
+    }
+
+    .pw-attribute {
+        background: #E8EAF6;
+        border-color: #C5CAE9;
+    }
+
+    .pw-rashi {
+        background: linear-gradient(135deg, #FFF8E1, #FFE082);
+        border-color: #FFD54F;
+    }
+    .pw-rashi-lord {
+        background: linear-gradient(135deg, #E8EAF6, #9FA8DA);
+        border-color: #7986CB;
+    }
+    .pw-rashi-lord .pw-value {
+        color: #1a237e;
+    }
+
+    .pw-section-title {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #FF6600;
+        margin: 14px 0 8px;
+        padding-bottom: 4px;
+        border-bottom: 2px solid #FFECB3;
+        letter-spacing: 0.5px;
+    }
+
+    /* Planetary Positions Grid */
+    .pw-planets-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    .pw-planet-card {
+        background: linear-gradient(135deg, #FAFAFA, #F5F5F5);
+        border: 1px solid #e8e0d5;
+        border-radius: 10px;
+        padding: 8px 10px;
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+    .pw-planet-card:hover {
+        background: #FFF;
+        border-color: #FFCC80;
+        box-shadow: 0 2px 8px rgba(255,102,0,0.1);
+        transform: translateY(-1px);
+    }
+    .pw-planet-card.pw-retro {
+        border-color: #EF9A9A;
+        background: linear-gradient(135deg, #FFF5F5, #FFEBEE);
+    }
+    .pw-planet-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        margin-bottom: 3px;
+    }
+    .pw-planet-icon {
+        font-size: 1rem;
+    }
+    .pw-planet-name {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #2c3e50;
+    }
+    .pw-retro-badge {
+        background: #C62828;
+        color: white;
+        font-size: 0.55rem;
+        padding: 1px 5px;
+        border-radius: 8px;
+        font-weight: 700;
+    }
+    .pw-planet-rashi {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #FF6600;
+    }
+    .pw-rashi-icon {
+        font-size: 0.85rem;
+    }
+    .pw-planet-degree {
+        font-size: 0.68rem;
+        color: #5a6c7d;
+        font-weight: 500;
+    }
+    .pw-planet-lord {
+        font-size: 0.6rem;
+        color: #999;
+        margin-top: 1px;
+    }
+
+    .pw-footer {
+        text-align: center;
+        padding: 10px;
+        background: #FAFAFA;
+        border-top: 1px solid #e8e0d5;
+    }
+    .pw-footer small {
+        color: #999;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 768px) {
+        .panchanga-widget {
+            max-width: 100%;
+            border-radius: 16px;
+        }
+        .pw-header {
+            padding: 14px 16px;
+        }
+        .pw-title-row h3 {
+            font-size: 1.05rem;
+        }
+        .pw-body {
+            padding: 12px;
+            max-height: 500px;
+        }
+        .pw-two-col {
+            gap: 8px;
+        }
+        .pw-item {
+            padding: 8px 10px;
+        }
+        .pw-value {
+            font-size: 0.85rem;
+        }
+        .pw-planets-grid {
+            gap: 6px;
+        }
+        .pw-planet-card {
+            padding: 6px 8px;
+        }
+        .pw-planet-name {
+            font-size: 0.65rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .panchanga-widget {
+            border-radius: 12px;
+        }
+        .pw-header {
+            padding: 12px 14px;
+        }
+        .pw-title-row h3 {
+            font-size: 0.95rem;
+        }
+        .pw-body {
+            padding: 10px;
+            max-height: 420px;
+        }
+        .pw-two-col {
+            gap: 6px;
+        }
+        .pw-item {
+            padding: 7px 8px;
+            border-radius: 8px;
+        }
+        .pw-value {
+            font-size: 0.78rem;
+        }
+        .pw-label {
+            font-size: 0.65rem;
+        }
+        .pw-time {
+            font-size: 0.62rem;
+        }
+        .pw-planets-grid {
+            gap: 4px;
+        }
+        .pw-planet-card {
+            padding: 5px 6px;
+            border-radius: 8px;
+        }
+        .pw-planet-name {
+            font-size: 0.6rem;
+        }
+        .pw-planet-rashi {
+            font-size: 0.62rem;
+        }
+        .pw-planet-degree {
+            font-size: 0.6rem;
+        }
+        .pw-loc-select {
+            font-size: 0.7rem;
+            max-width: 160px;
+        }
+    }
+</style>
+
+<script>
+    async function changePanchangaLocation() {
+        const select = document.getElementById('pwLocationSelect');
+        const [lat, lon, tz] = select.value.split(',').map(Number);
+        const loading = document.getElementById('pwLoading');
+        const content = document.getElementById('pwContent');
+
+        if (loading) loading.style.display = 'flex';
+        if (content) content.style.display = 'none';
+
+        try {
+            const resp = await fetch(`/api/panchanga-widget?lat=${lat}&lon=${lon}&tz=${tz}`);
+            const html = await resp.text();
+
+            // Parse the HTML and extract the content
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newContent = doc.getElementById('pwContent');
+            const newDate = doc.getElementById('pwDate');
+
+            if (newContent && content) {
+                content.innerHTML = newContent.innerHTML;
+                content.style.display = 'block';
+            }
+            if (newDate) {
+                const dateEl = document.getElementById('pwDate');
+                if (dateEl) dateEl.textContent = newDate.textContent;
+            }
+        } catch (err) {
+            console.error('Panchanga load error:', err);
+        } finally {
+            if (loading) loading.style.display = 'none';
+            if (content) content.style.display = 'block';
+        }
+    }
+</script>

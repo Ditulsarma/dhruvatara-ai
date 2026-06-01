@@ -18,6 +18,7 @@ from werkzeug.utils import secure_filename
 from config import DB_PATH
 
 from panchanga import get_full_panchanga, get_rashi_lord
+from panchanga_data import get_panchanga_with_times, get_all_planet_positions
 from dosha_engine import get_complete_dosha_analysis
 from yoga_engine import get_complete_yoga_analysis
 from ai_engine import generate_ai_interpretation
@@ -702,17 +703,11 @@ def should_show_filter(image, page_name):
 
 @app.route("/")
 def home():
-    try:
-        places = get_locations()
-    except Exception as e:
-        logger.error(f"get_locations failed: {e}")
-        places = []
-    return render_template("index.html",
-        places=places,
-        timezones=get_all_timezones(),
-        user_features=None,
-        feature_defs=[]
-    )
+    """Default landing page - redirects to login."""
+    if 'user_id' in session:
+        return redirect(url_for('user_dashboard'))
+    return redirect(url_for('login_page'))
+
 
 @app.route("/api/search-places")
 def api_search_places():
@@ -1694,6 +1689,40 @@ def api_panchanga():
     return jsonify(panchanga)
 
 
+@app.route("/api/panchanga-full", methods=["GET"])
+def api_panchanga_full():
+    """API endpoint for full Panchanga with time ranges and planetary positions."""
+    try:
+        lat = float(request.args.get("lat", 26.1445))
+        lon = float(request.args.get("lon", 91.7362))
+    except (ValueError, TypeError):
+        lat, lon = 26.1445, 91.7362
+    now = datetime.now()
+    try:
+        tz_offset = float(request.args.get("tz", request.args.get("timezone", 5.5)))
+    except (ValueError, TypeError):
+        tz_offset = 5.5
+    panchanga = get_panchanga_with_times(now, lat, lon, tz_offset)
+    return jsonify(panchanga)
+
+
+@app.route("/api/panchanga-widget", methods=["GET"])
+def api_panchanga_widget():
+    """Return HTML widget for Today's Panchanga."""
+    try:
+        lat = float(request.args.get("lat", 26.1445))
+        lon = float(request.args.get("lon", 91.7362))
+    except (ValueError, TypeError):
+        lat, lon = 26.1445, 91.7362
+    now = datetime.now()
+    try:
+        tz_offset = float(request.args.get("tz", request.args.get("timezone", 5.5)))
+    except (ValueError, TypeError):
+        tz_offset = 5.5
+    panchanga = get_panchanga_with_times(now, lat, lon, tz_offset)
+    return render_template("panchanga_widget.html", panchanga=panchanga, lat=lat, lon=lon, tz=tz_offset)
+
+
 @app.route("/api/dasha-prediction", methods=["POST"])
 def api_dasha_prediction():
     """API endpoint for dynamic dasha predictions."""
@@ -1793,7 +1822,10 @@ def login_page():
     """User login/register page."""
     if 'user_id' in session:
         return redirect(url_for('user_dashboard'))
-    return render_template("login.html")
+    # Compute today's panchanga for Guwahati (default)
+    from panchanga_data import get_panchanga_with_times
+    panchanga = get_panchanga_with_times(datetime.now(), 26.1445, 91.7362, 5.5)
+    return render_template("login.html", panchanga=panchanga)
 
 
 @app.route("/login", methods=["POST"])
@@ -1973,8 +2005,13 @@ def kundli_page():
     user_features = get_user_features(session['user_id'])
     feature_defs = get_all_feature_definitions()
 
+    # Compute today's panchanga for Guwahati (default)
+    from panchanga_data import get_panchanga_with_times
+    panchanga = get_panchanga_with_times(datetime.now(), 26.1445, 91.7362, 5.5)
+
     return render_template("index.html", places=places, timezones=timezones,
-                           user_features=user_features, feature_defs=feature_defs)
+                           user_features=user_features, feature_defs=feature_defs,
+                           panchanga=panchanga)
 
 
 # ═══════════════════════════════════════════

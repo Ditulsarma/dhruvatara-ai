@@ -102,7 +102,9 @@ YAMA_KAAL_PART = [3, 2, 1, 0, 6, 5, 4]
 KAAL_BELA_PART = [6, 5, 4, 3, 2, 1, 0]
 
 # Rar Bela (ৰাৰবেলা) part index by weekday
-RAR_BELA_PART = [0, 1, 2, 3, 4, 5, 6]
+# Sunday=6, Monday=0, Tuesday=1, Wednesday=2, Thursday=3, Friday=4, Saturday=5
+# Monday = part 1, Tuesday = part 2, ... Sunday = part 0
+RAR_BELA_PART = [1, 2, 3, 4, 5, 6, 0]
 
 
 def get_julian_day(dt: datetime, offset_hours: float = -5.5) -> float:
@@ -161,19 +163,42 @@ def calculate_yoga(sun_lon: float, moon_lon: float) -> dict:
     }
 
 
-def calculate_karana(tithi_idx: int) -> dict:
-    """Calculate Karana from Tithi index"""
-    if tithi_idx == 28:  # First half of Amavasya
-        karana_idx = 7  # Shakuni
-    elif tithi_idx == 29:  # Second half of Amavasya
-        karana_idx = 8  # Chatushpad
-    elif tithi_idx == 14:  # First half of Purnima
-        karana_idx = 9  # Naga
-    elif tithi_idx == 15:  # Second half of Purnima
+def calculate_karana(tithi_idx: int, remaining_pct: float = 50.0) -> dict:
+    """
+    Calculate Karana from Tithi index and remaining percentage.
+    Each tithi has 2 halves with different karanas.
+    remaining_pct > 50 means first half, <= 50 means second half.
+    
+    Fixed Karanas:
+    - Kimstughna (10): Purnima 1st half (tithi 14, 1st half)
+    - Shakuni (7): Krishna Chaturdashi 2nd half (tithi 28, 2nd half)
+    - Chatushpad (8): Amavasya 1st half (tithi 29, 1st half)
+    - Naga (9): Amavasya 2nd half (tithi 29, 2nd half)
+    
+    Movable Karanas (7): Bava(0), Balava(1), Kaulava(2), Taitila(3), Gara(4), Vanija(5), Vishti(6)
+    """
+    half = 0 if remaining_pct > 50 else 1  # 0=first half, 1=second half
+    
+    # Fixed karanas
+    if tithi_idx == 14 and half == 0:   # Purnima 1st half
         karana_idx = 10  # Kimstughna
+    elif tithi_idx == 28 and half == 1:  # Krishna Chaturdashi 2nd half
+        karana_idx = 7   # Shakuni
+    elif tithi_idx == 29 and half == 0:  # Amavasya 1st half
+        karana_idx = 8   # Chatushpad
+    elif tithi_idx == 29 and half == 1:  # Amavasya 2nd half
+        karana_idx = 9   # Naga
     else:
-        karana_idx = (tithi_idx % 7) if tithi_idx < 14 else ((tithi_idx - 1) % 7)
-    return {"name": KARANA_NAMES[karana_idx], "index": karana_idx}
+        # Movable karanas: count how many movable halves before this one
+        # Before tithi 14: movable_count = tithi_idx * 2 + half
+        # After tithi 14: subtract 1 for the fixed Kimstughna at tithi 14 half 0
+        if tithi_idx < 14:
+            movable_count = tithi_idx * 2 + half
+        else:
+            movable_count = tithi_idx * 2 + half - 1  # skip Kimstughna
+        karana_idx = movable_count % 7
+    
+    return {"name": KARANA_NAMES[karana_idx], "index": karana_idx, "half": half}
 
 
 def calculate_vaar(jd: float) -> dict:
@@ -399,7 +424,7 @@ def get_full_panchanga(dt: datetime, lat: float, lon: float, tz_offset: float = 
     tithi = calculate_tithi(sun_lon, moon_lon)
     nakshatra = calculate_nakshatra(moon_lon)
     yoga = calculate_yoga(sun_lon, moon_lon)
-    karana = calculate_karana(tithi["index"])
+    karana = calculate_karana(tithi["index"], tithi["remaining_pct"])
     vaar = calculate_vaar(jd)
     ritu = calculate_ritu(sun_lon)
     masa = calculate_masa(sun_lon)
