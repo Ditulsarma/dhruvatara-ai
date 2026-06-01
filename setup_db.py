@@ -346,45 +346,7 @@ def setup_database():
         "Kaliabor, Nagaon, Assam": (26.5100, 92.9800),
         "Gauripur, Dhubri, Assam": (26.0800, 89.9700),
         "Lakhipur, Goalpara, Assam": (26.0000, 90.3000),
-                    
-            "Dibrugarh, Assam": { lat: 27.4722, lon: 94.9122 },
-            "Guwahati, Assam": { lat: 26.1445, lon: 91.7362 },
-          
-            "Sivasagar, Assam": { lat: 26.9833, lon: 94.6333 },
-            "Tezpur, Assam": { lat: 26.6333, lon: 92.8000 },
-            "Hojai, Assam": { lat: 26.0002, lon: 92.8576 },
-            "Bokakhat, Assam": { lat: 26.3800, lon: 93.3500 },
-            "Nalbari, Assam": { lat: 26.26, lon: 91.26 },
-            
-            "Barpeta, Assam": { lat: 26.19, lon: 90.00 },
-            "Guwahati, Assam": { lat: 26.11, lon: 91.44 },
-            "Amingaon, Assam": { lat: 26.11, lon: 91.41 },
-            "Nagaon, Assam": { lat: 26.21, lon: 92.41 },
-            "Morigaon, Assam": { lat: 26.15, lon: 92.20 },
-            "Golaghat, Assam": { lat: 26.31, lon: 93.58 },
-            "Bokakhat, Assam": { lat: 26.38, lon: 93.35 },
-            "Jorhat, Assam": { lat: 26.45, lon: 94.13 },
-            "Majuli, Assam": { lat: 26.57, lon: 94.10 },
-            "Sivasagar, Assam": { lat: 26.59, lon: 94.38 },
-            "Dibrugarh, Assam": { lat: 27.29, lon: 94.54 },
-            "Duliajan, Assam": { lat: 27.22, lon: 95.18 },
-            "Moran, Assam": { lat: 27.11, lon: 94.55 },
-            "Tinsukia, Assam": { lat: 27.30, lon: 95.22 },
-            "Bongaigaon, Assam": { lat: 26.28, lon: 90.34 },
-            "Kokrajhar, Assam": { lat: 26.24, lon: 90.16 },
-            "Gossaigaon, Assam": { lat: 26.25, lon: 89.59 },
-            "Dhubri, Assam": { lat: 26.01, lon: 89.59 },
-            "Goalpara, Assam": { lat: 26.10, lon: 90.37 },
-
-            "Itanagar, Arunachal Pradesh": { lat: 27.06, lon: 93.37 },
-            "Shillong, Meghalaya": { lat: 25.34, lon: 91.53 },
-            "Silchar, Assam": { lat: 24.49, lon: 92.48 },
-            "Sarthebari, Assam": { lat: 26.23, lon: 91.10 },
-            "Tamulpur, Assam": { lat: 26.38, lon: 91.34 },
-            "Barpeta Road, Assam": { lat: 26.30, lon: 90.58 },
-            "Pathsala, Assam": { lat: 26.4994, lon: 91.1786 },
-           
-
+        "Pathsala, Assam": (26.4994, 91.1786),
     }
 
     for place_name, (lat, lon) in geo_data.items():
