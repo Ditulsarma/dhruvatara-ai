@@ -48,6 +48,146 @@ RASHI_NAMES_ASM = [
 
 RASHI_ICONS = ["♈", "♉", "♊", "♋", "♌", "♍", "♎", "♏", "♐", "♑", "♒", "♓"]
 
+# ─── Yogini Direction by Tithi Number (1-30) ───────────────────
+# Pattern: 8-direction cycle with specific mapping
+YOGINI_DIRECTIONS = {
+    1: "পূব", 2: "উত্তৰ", 3: "অগ্নিকোণ", 4: "নৈঋৎকোণ",
+    5: "দক্ষিণ", 6: "পশ্চিম", 7: "বায়ুকোণ", 8: "ইশানকোণ",
+    9: "পূব", 10: "উত্তৰ", 11: "অগ্নিকোণ", 12: "নৈঋৎকোণ",
+    13: "দক্ষিণ", 14: "পশ্চিম", 15: "বায়ুকোণ",
+    16: "পূব", 17: "উত্তৰ", 18: "অগ্নিকোণ", 19: "নৈঋৎকোণ",
+    20: "দক্ষিণ", 21: "পশ্চিম", 22: "বায়ুকোণ", 23: "ইশানকোণ",
+    24: "পূব", 25: "উত্তৰ", 26: "অগ্নিকোণ", 27: "নৈঋৎকোণ",
+    28: "দক্ষিণ", 29: "পশ্চিম", 30: "ইশানকোণ",
+}
+
+# Direction icons for visual display
+YOGINI_DIRECTION_ICONS = {
+    "পূব": "➡️", "উত্তৰ": "⬆️", "অগ্নিকোণ": "↗️", "নৈঋৎকোণ": "↙️",
+    "দক্ষিণ": "⬇️", "পশ্চিম": "⬅️", "বায়ুকোণ": "↖️", "ইশানকোণ": "↗️",
+}
+
+# ─── Nishedh Khadya (Forbidden Food) by Tithi Number (1-30) ────
+NISHEDH_KHADYA = {
+    1: "কোমোৰা", 2: "তিতা", 3: "পটল", 4: "মূলা",
+    5: "বেল", 6: "নিমতিতা", 7: "তাল", 8: "নাৰিকল",
+    9: "লাউ", 10: "কলম শাক", 11: "উৰহী", 12: "পুইশাক",
+    13: "বেঙেনা", 14: "মাহ, মাছ-মাংস", 15: "মাছ-মাংস, তেল, সদ্ভোগ",
+    16: "কোমোৰা", 17: "তিতা", 18: "পটল", 19: "মূলা",
+    20: "বেল", 21: "নিমতিতা", 22: "তাল", 23: "নাৰিকল",
+    24: "লাউ", 25: "কলম শাক", 26: "উৰহী", 27: "পুইশাক",
+    28: "বেঙেনা", 29: "মাহ, মাছ-মাংস", 30: "মাছ-মাংস, তেল, সদ্ভোগ",
+}
+
+
+def get_yogini_direction(tithi_number: int) -> str:
+    """Get Yogini direction for a given tithi number (1-30)."""
+    return YOGINI_DIRECTIONS.get(tithi_number, "")
+
+
+def get_yogini_direction_icon(direction: str) -> str:
+    """Get icon for Yogini direction."""
+    return YOGINI_DIRECTION_ICONS.get(direction, "🧭")
+
+
+def get_nishedh_khadya(tithi_number: int) -> str:
+    """Get forbidden food for a given tithi number (1-30)."""
+    return NISHEDH_KHADYA.get(tithi_number, "")
+
+
+# ─── Maran Dosh (মৰণ দোষ) ─────────────────────────────────────
+# Baar Dosh: Sunday(6), Tuesday(1), Saturday(5) → 1 pad
+MARAN_BAAR_DOSH_VAAR_INDICES = {6, 1, 5}  # 0=Mon...6=Sun
+
+# Tithi Dosh: tithi numbers 2,7,12,17,22,27,29 → 1 pad (1-indexed)
+MARAN_TITHI_DOSH_NUMBERS = {2, 7, 12, 17, 22, 27, 29}
+
+# Nakshatra Dosh: nakshatra numbers 3,7,12,16,21,25 → 2 pad (1-indexed)
+MARAN_NAKSHATRA_DOSH_NUMBERS = {3, 7, 12, 16, 21, 25}
+
+# Vaar names in Assamese for display
+VAAR_NAMES_MARAN = ["সোমবাৰ", "মংগলবাৰ", "বুধবাৰ", "বৃহস্পতিবাৰ", "শুক্ৰবাৰ", "শনিবাৰ", "ৰবিবাৰ"]
+
+
+def get_maran_dosh(vaar_index: int, tithi_num_full: int, nak_num_full: int) -> dict:
+    """
+    Calculate Maran Dosh based on Vaar, Tithi, and Nakshatra.
+    vaar_index: 0=Mon...6=Sun
+    tithi_num_full: 1-30
+    nak_num_full: 1-27 (1-indexed nakshatra number)
+    
+    Returns dict with:
+    - baar_dosh: bool, baar_dosh_pad: int, baar_dosh_text: str
+    - tithi_dosh: bool, tithi_dosh_pad: int, tithi_dosh_text: str
+    - nakshatra_dosh: bool, nakshatra_dosh_pad: int, nakshatra_dosh_text: str
+    - total_pad: int, combined_name: str, combined_result: str
+    """
+    result = {
+        "baar_dosh": False, "baar_dosh_pad": 0, "baar_dosh_text": "",
+        "tithi_dosh": False, "tithi_dosh_pad": 0, "tithi_dosh_text": "",
+        "nakshatra_dosh": False, "nakshatra_dosh_pad": 0, "nakshatra_dosh_text": "",
+        "total_pad": 0, "combined_name": "", "combined_result": "",
+        "has_any_dosh": False,
+    }
+
+    vaar_name = VAAR_NAMES_MARAN[vaar_index] if 0 <= vaar_index <= 6 else ""
+
+    # ─── Baar Dosh ───
+    if vaar_index in MARAN_BAAR_DOSH_VAAR_INDICES:
+        result["baar_dosh"] = True
+        result["baar_dosh_pad"] = 1
+        result["baar_dosh_text"] = f"{vaar_name}ৰ মৰণত বাৰ দোষ পায় | এপদ | বাৰদোষ ফল- উপাৰ্জন হ্ৰাস |"
+    else:
+        result["baar_dosh_text"] = f"{vaar_name}ৰ মৰণত বাৰ দোষ নহয় |"
+
+    # ─── Tithi Dosh ───
+    if tithi_num_full in MARAN_TITHI_DOSH_NUMBERS:
+        result["tithi_dosh"] = True
+        result["tithi_dosh_pad"] = 1
+        result["tithi_dosh_text"] = f"তিথি {tithi_num_full} ত মৰণত তিথি দোষ পায় | এপদ | তিথিদোষ ফল- উপাৰ্জন হ্ৰাস |"
+    else:
+        result["tithi_dosh_text"] = f"তিথি {tithi_num_full} ত মৰণত তিথি দোষ নাই |"
+
+    # ─── Nakshatra Dosh ───
+    if nak_num_full in MARAN_NAKSHATRA_DOSH_NUMBERS:
+        result["nakshatra_dosh"] = True
+        result["nakshatra_dosh_pad"] = 2
+        result["nakshatra_dosh_text"] = f"নক্ষত্ৰ {nak_num_full} ত মৰণত নক্ষত্ৰ দোষ হয় | দ্বিপদ | নক্ষত্ৰদোষ ফল – জীৱ হানি, আত্মীয় বিৰোধ |"
+    else:
+        result["nakshatra_dosh_text"] = f"নক্ষত্ৰ {nak_num_full} ত মৰণত নক্ষত্ৰ দোষ নাই |"
+
+    # ─── Combined ───
+    total = result["baar_dosh_pad"] + result["tithi_dosh_pad"] + result["nakshatra_dosh_pad"]
+    result["total_pad"] = total
+    result["has_any_dosh"] = result["baar_dosh"] or result["tithi_dosh"] or result["nakshatra_dosh"]
+
+    if result["baar_dosh"] and result["tithi_dosh"] and result["nakshatra_dosh"]:
+        result["combined_name"] = "চতুস্পাদ (পুষ্কৰ)"
+        result["combined_result"] = "বাৰদোষ ১ + তিথিদোষ ১ + নক্ষত্ৰদোষ ২ = ৪ চতুস্পাদ (পুষ্কৰ) | ফল- গোত্ৰহানি, সৰ্বক্ষতি |"
+    elif result["baar_dosh"] and result["tithi_dosh"]:
+        result["combined_name"] = "দ্বিপাদ"
+        result["combined_result"] = "বাৰদোষ ১ + তিথিদোষ ১ = দ্বিপাদ |"
+    elif result["baar_dosh"] and result["nakshatra_dosh"]:
+        result["combined_name"] = "ত্ৰিপাদ"
+        result["combined_result"] = "বাৰদোষ ১ + নক্ষত্ৰদোষ ২ = ত্ৰিপাদ |"
+    elif result["tithi_dosh"] and result["nakshatra_dosh"]:
+        result["combined_name"] = "ত্ৰিপাদ"
+        result["combined_result"] = "তিথিদোষ ১ + নক্ষত্ৰদোষ ২ = ত্ৰিপাদ |"
+    elif result["baar_dosh"]:
+        result["combined_name"] = "এপদ"
+        result["combined_result"] = "কেৱল বাৰ দোষ (এপদ) | ফল- উপাৰ্জন হ্ৰাস |"
+    elif result["tithi_dosh"]:
+        result["combined_name"] = "এপদ"
+        result["combined_result"] = "কেৱল তিথি দোষ (এপদ) | ফল- উপাৰ্জন হ্ৰাস |"
+    elif result["nakshatra_dosh"]:
+        result["combined_name"] = "দ্বিপদ"
+        result["combined_result"] = "কেৱল নক্ষত্ৰ দোষ (দ্বিপদ) | ফল- জীৱ হানি, আত্মীয় বিৰোধ |"
+    else:
+        result["combined_name"] = "দোষমুক্ত"
+        result["combined_result"] = "মৰণত কোনো দোষ নাই |"
+
+    return result
+
 
 def _find_element_boundary(dt, lat, lon, tz_offset, calc_func, current_idx, direction='forward'):
     """
@@ -366,5 +506,37 @@ def get_panchanga_with_times(dt: datetime, lat: float, lon: float, tz_offset: fl
     panchanga["current_date"] = dt.strftime("%d/%m/%Y")
     panchanga["current_time"] = dt.strftime("%H:%M")
     panchanga["location_name"] = f"Lat: {lat:.4f}, Lon: {lon:.4f}"
+
+    # ─── Yogini Direction & Nishedh Khadya ───
+    # Tithi number 1-30 (full cycle) for yogini/khadya mapping
+    tithi_num_full = tithi_idx + 1  # 1-30
+    panchanga["yogini_direction"] = get_yogini_direction(tithi_num_full)
+    panchanga["yogini_direction_icon"] = get_yogini_direction_icon(panchanga["yogini_direction"])
+    panchanga["nishedh_khadya"] = get_nishedh_khadya(tithi_num_full)
+
+    # Next tithi info (for days with 2 tithis)
+    next_tithi_idx = (tithi_idx + 1) % 30
+    next_tithi_num_full = next_tithi_idx + 1
+    panchanga["next_yogini_direction"] = get_yogini_direction(next_tithi_num_full)
+    panchanga["next_yogini_direction_icon"] = get_yogini_direction_icon(panchanga["next_yogini_direction"])
+    panchanga["next_nishedh_khadya"] = get_nishedh_khadya(next_tithi_num_full)
+
+    # ─── Maran Dosh (মৰণ দোষ) ───
+    vaar_idx = panchanga["vaar"]["index"]  # 0=Mon...6=Sun
+    nak_num_full = nak_idx + 1  # 1-27 (1-indexed)
+    next_nak_idx = (nak_idx + 1) % 27
+    next_nak_num_full = next_nak_idx + 1
+
+    # Current tithi + current nakshatra maran dosh
+    panchanga["maran_dosh"] = get_maran_dosh(vaar_idx, tithi_num_full, nak_num_full)
+
+    # Next tithi + next nakshatra maran dosh (for days with 2 tithis/nakshatras)
+    panchanga["maran_dosh_next_tithi"] = get_maran_dosh(vaar_idx, next_tithi_num_full, nak_num_full)
+    panchanga["maran_dosh_next_nak"] = get_maran_dosh(vaar_idx, tithi_num_full, next_nak_num_full)
+    panchanga["maran_dosh_next_both"] = get_maran_dosh(vaar_idx, next_tithi_num_full, next_nak_num_full)
+
+    # Flags for whether next tithi/nakshatra exist in this day
+    panchanga["has_next_tithi_today"] = panchanga["tithi"].get("to_next_day", False)
+    panchanga["has_next_nak_today"] = panchanga["nakshatra"].get("to_next_day", False)
 
     return panchanga

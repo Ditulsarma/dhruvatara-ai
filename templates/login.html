@@ -140,9 +140,9 @@
             .login-column { max-width: 440px; }
             .panchanga-column {
                 max-width: 440px;
-                display: none; /* Hidden by default on mobile */
+                display: flex; /* Visible by default on mobile */
             }
-            .panchanga-column.show { display: flex; }
+            .panchanga-column.hide { display: none; }
             .pw-toggle-btn { display: block; }
         }
 
@@ -278,11 +278,11 @@
     function togglePanchanga() {
         const col = document.getElementById('panchangaColumn');
         const btn = document.getElementById('pwToggleBtn');
-        col.classList.toggle('show');
-        if (col.classList.contains('show')) {
-            btn.innerHTML = '🕉️ পঞ্চাঙ্গ লুকাওক';
-        } else {
+        col.classList.toggle('hide');
+        if (col.classList.contains('hide')) {
             btn.innerHTML = '🕉️ আজিৰ পঞ্চাঙ্গ চাওক';
+        } else {
+            btn.innerHTML = '🕉️ পঞ্চাঙ্গ লুকাওক';
         }
     }
 </script>

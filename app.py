@@ -1708,19 +1708,45 @@ def api_panchanga_full():
 
 @app.route("/api/panchanga-widget", methods=["GET"])
 def api_panchanga_widget():
-    """Return HTML widget for Today's Panchanga."""
+    """Return HTML widget for Today's Panchanga. Supports optional date param."""
     try:
         lat = float(request.args.get("lat", 26.1445))
         lon = float(request.args.get("lon", 91.7362))
     except (ValueError, TypeError):
         lat, lon = 26.1445, 91.7362
-    now = datetime.now()
     try:
         tz_offset = float(request.args.get("tz", request.args.get("timezone", 5.5)))
     except (ValueError, TypeError):
         tz_offset = 5.5
+
+    # Support custom date via ?date=YYYY-MM-DD
+    date_str = request.args.get("date", "").strip()
+    if date_str:
+        try:
+            now = datetime.strptime(date_str, "%Y-%m-%d")
+            # Set time to noon for panchanga calculation
+            now = now.replace(hour=12, minute=0, second=0)
+        except ValueError:
+            now = datetime.now()
+    else:
+        now = datetime.now()
+
     panchanga = get_panchanga_with_times(now, lat, lon, tz_offset)
     return render_template("panchanga_widget.html", panchanga=panchanga, lat=lat, lon=lon, tz=tz_offset)
+
+
+@app.route("/api/locations", methods=["GET"])
+def api_locations():
+    """Return all locations from locations.json for panchanga widget."""
+    try:
+        loc_path = os.path.join(os.path.dirname(__file__), "locations.json")
+        with open(loc_path, "r", encoding="utf-8") as f:
+            locations = json.load(f)
+        # Return simplified list with name, lat, lon
+        result = [{"name": loc["name"], "lat": loc["lat"], "lon": loc["lon"]} for loc in locations]
+        return jsonify(result)
+    except Exception as e:
+        return jsonify([])
 
 
 @app.route("/api/dasha-prediction", methods=["POST"])

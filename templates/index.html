@@ -303,9 +303,9 @@
             .kundli-panchanga-col {
                 flex: 1 1 auto; max-width: 560px; width: 100%;
                 position: static;
-                display: none; /* Hidden by default on mobile */
+                display: block; /* Visible by default on mobile */
             }
-            .kundli-panchanga-col.show { display: block; }
+            .kundli-panchanga-col.hide { display: none; }
             .pw-toggle-btn-k { display: block; }
             .main-container { display: none; } /* Hide old single-col container */
         }
@@ -465,11 +465,11 @@
     function toggleKundliPanchanga() {
         const col = document.getElementById('kundliPanchangaCol');
         const btn = document.getElementById('pwToggleBtnK');
-        col.classList.toggle('show');
-        if (col.classList.contains('show')) {
-            btn.innerHTML = '🕉️ পঞ্চাঙ্গ লুকাওক';
-        } else {
+        col.classList.toggle('hide');
+        if (col.classList.contains('hide')) {
             btn.innerHTML = '🕉️ আজিৰ পঞ্চাঙ্গ চাওক';
+        } else {
+            btn.innerHTML = '🕉️ পঞ্চাঙ্গ লুকাওক';
         }
     }
 
