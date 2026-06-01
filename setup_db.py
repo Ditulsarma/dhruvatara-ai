@@ -281,108 +281,21 @@ def setup_database():
                 VALUES (?, ?, 0)
             ''', (sub_id, feat_key))
 
-    # ─── Insert geo data ───
-    geo_data = {
-        "Dibrugarh, Assam": (27.4722, 94.9122), "Guwahati, Assam": (26.1445, 91.7362),
-         "Sivasagar, Assam": (26.9833, 94.6333),
-        "Tezpur, Assam": (26.6333, 92.8000), "Hojai, Assam": (26.0002, 92.8576),
-        "Bokakhat, Assam": (26.3800, 93.3500), "Nalbari, Assam": (26.26, 91.26),
-        "Barpeta, Assam": (26.19, 90.00), "Amingaon, Assam": (26.11, 91.41),
-        "Nagaon, Assam": (26.21, 92.41), "Morigaon, Assam": (26.15, 92.20),
-        "Golaghat, Assam": (26.31, 93.58), "Jorhat, Assam": (26.45, 94.13),
-        "Majuli, Assam": (26.57, 94.10), "Duliajan, Assam": (27.22, 95.18),
-        "Moran, Assam": (27.11, 94.55), "Tinsukia, Assam": (27.30, 95.22),
-        "Bongaigaon, Assam": (26.28, 90.34), "Kokrajhar, Assam": (26.24, 90.16),
-        "Gossaigaon, Assam": (26.25, 89.59), "Dhubri, Assam": (26.01, 89.59),
-        "Goalpara, Assam": (26.10, 90.37), "Itanagar, Arunachal Pradesh": (27.06, 93.37),
-        "Shillong, Meghalaya": (25.34, 91.53), "Silchar, Assam": (24.49, 92.48),
-        "Sarthebari, Assam": (26.23, 91.10), "Tamulpur, Assam": (26.38, 91.34),
-        "Barpeta Road, Assam": (26.30, 90.58),
-        "Bihpuria, Lakhimpur, Assam": (27.0200, 93.8800),
-        "Narayanpur, Lakhimpur, Assam": (26.9800, 93.8600),
-        "Laluk, Lakhimpur, Assam": (27.0900, 93.9900),
-        "Nowboicha, Lakhimpur, Assam": (27.1500, 93.9700),
-        "Dhakuakhana, Lakhimpur, Assam": (27.2000, 94.4500),
-        "Boginadi, Lakhimpur, Assam": (27.3400, 94.1300),
-        "Panigaon, Lakhimpur, Assam": (27.1800, 94.1300),
-        "Azad, Lakhimpur, Assam": (27.1600, 94.0300),
-        "Kadam, Lakhimpur, Assam": (27.2200, 94.1800),
-        "Harmoti, Lakhimpur, Assam": (27.0600, 93.8500),
-        "Bandardewa, Lakhimpur, Assam": (27.0800, 93.8300),
-        "Joyhing, Lakhimpur, Assam": (27.2400, 94.0200),
-        "Phulbari, Lakhimpur, Assam": (27.0500, 93.9100),
-        "Ghilamara, Lakhimpur, Assam": (27.2000, 94.3400),
-        "Batowmari, Lakhimpur, Assam": (27.1400, 94.3900),
-        "Dhunaguri, Lakhimpur, Assam": (26.9600, 93.8900),
-        "Badati, Lakhimpur, Assam": (26.9100, 93.9200),
-        "Bongalmora, Lakhimpur, Assam": (27.0100, 93.9500),
-        "Islampur, Lakhimpur, Assam": (27.1100, 93.9200),
-        "Silapathar, Dhemaji, Assam": (27.5900, 94.7300),
-        "Jonai, Dhemaji, Assam": (27.8300, 95.1600),
-        "Gogamukh, Dhemaji, Assam": (27.4200, 94.3400),
-        "Sissiborgaon, Dhemaji, Assam": (27.4900, 94.6100),
-        "Simen Chapori, Dhemaji, Assam": (27.6700, 94.8800),
-        "Machkhowa, Dhemaji, Assam": (27.2800, 94.4600),
-        "Dergaon, Golaghat, Assam": (26.7000, 93.9700),
-        "Sarupathar, Golaghat, Assam": (26.1800, 93.8700),
-        "Numaligarh, Golaghat, Assam": (26.6000, 93.7300),
-        "Kaziranga, Golaghat, Assam": (26.5700, 93.3100),
-        "Teok, Jorhat, Assam": (26.8300, 94.4100),
-        "Nimati Ghat, Jorhat, Assam": (26.8500, 94.2500),
-        "Amguri, Sivasagar, Assam": (26.8000, 94.5300),
-        "Sonari, Charaideo, Assam": (27.0200, 95.0300),
-        "Nazira, Sivasagar, Assam": (26.9200, 94.7300),
-        "Namrup, Dibrugarh, Assam": (27.1800, 95.3300),
-        "Chabua, Dibrugarh, Assam": (27.4800, 95.1700),
-        "Naharkatia, Dibrugarh, Assam": (27.2800, 95.3300),
-        "Margherita, Tinsukia, Assam": (27.2800, 95.6700),
-        "Digboi Oil Town, Tinsukia, Assam": (27.3800, 95.6300),
-        "Doom Dooma, Tinsukia, Assam": (27.5700, 95.5700),
-        "Ledo, Tinsukia, Assam": (27.2900, 95.7400),
-        "Jagiroad, Morigaon, Assam": (26.1100, 92.2100),
-        "Lanka, Hojai, Assam": (25.9200, 92.9500),
-        "Lumding, Hojai, Assam": (25.7500, 93.1700),
-        "Raha, Nagaon, Assam": (26.2300, 92.5100),
-        "Kaliabor, Nagaon, Assam": (26.5100, 92.9800),
-        "Gauripur, Dhubri, Assam": (26.0800, 89.9700),
-        "Lakhipur, Goalpara, Assam": (26.0000, 90.3000),
-        "Dibrugarh, Assam": (27.4722, 94.9122),
-        "Guwahati, Assam": (26.1445, 91.7362),
-        "Sivasagar, Assam": (26.9833, 94.6333),
-        "Tezpur, Assam": (26.6333, 92.8000),
-        "Hojai, Assam": (26.0002, 92.8576),
-        "Bokakhat, Assam": (26.3800, 93.3500),
-        "Nalbari, Assam": (26.26, 91.26),
-        "Barpeta, Assam": (26.19, 90.00),
-        "Amingaon, Assam": (26.11, 91.41),
-        "Nagaon, Assam": (26.21, 92.41),
-        "Morigaon, Assam": (26.15, 92.20),
-        "Golaghat, Assam": (26.31, 93.58),
-        "Jorhat, Assam": (26.45, 94.13),
-        "Majuli, Assam": (26.57, 94.10),
-        "Duliajan, Assam": (27.22, 95.18),
-        "Moran, Assam": (27.11, 94.55),
-        "Tinsukia, Assam": (27.30, 95.22),
-        "Bongaigaon, Assam": (26.28, 90.34),
-        "Kokrajhar, Assam": (26.24, 90.16),
-        "Gossaigaon, Assam": (26.25, 89.59),
-        "Dhubri, Assam": (26.01, 89.59),
-        "Goalpara, Assam": (26.10, 90.37),
-        "Itanagar, Arunachal Pradesh": (27.06, 93.37),
-        "Shillong, Meghalaya": (25.34, 91.53),
-        "Silchar, Assam": (24.49, 92.48),
-        "Sarthebari, Assam": (26.23, 91.10),
-        "Tamulpur, Assam": (26.38, 91.34),
-        "Barpeta Road, Assam": (26.30, 90.58),
-        "Pathsala, Assam": (26.4994, 91.1786),
-
-    }
-
-    for place_name, (lat, lon) in geo_data.items():
-        cursor.execute('''
-            INSERT OR IGNORE INTO locations (place_name, latitude, longitude)
-            VALUES (?, ?, ?)
-        ''', (place_name, lat, lon))
+    # ─── Insert geo data from locations.json ───
+    import json, os
+    json_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'locations.json')
+    try:
+        with open(json_path, 'r', encoding='utf-8') as f:
+            locations = json.load(f)
+        for loc in locations:
+            cursor.execute('''
+                INSERT OR IGNORE INTO locations (place_name, latitude, longitude)
+                VALUES (?, ?, ?)
+            ''', (loc['name'], loc['lat'], loc['lon']))
+        location_count = len(locations)
+    except FileNotFoundError:
+        print("⚠️  locations.json পোৱা নগ'ল। কোনো স্থান যোগ কৰা নহ'ল।")
+        location_count = 0
 
     conn.commit()
     conn.close()
@@ -390,7 +303,7 @@ def setup_database():
     print(f"   Admin: DitulSarma")
     print(f"   4 Subscription plans created")
     print(f"   15 Feature definitions created")
-    print(f"   {len(geo_data)} Locations added")
+    print(f"   {location_count} Locations added")
 
 if __name__ == "__main__":
     setup_database()
