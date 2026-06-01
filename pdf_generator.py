@@ -446,10 +446,10 @@ def _build_html(
             buf = draw_kundli_chart(style=style, ascendant_index=asc_index, planet_data=chart_dict, width=w, height=h)
             img_bytes = buf.getvalue() if hasattr(buf, 'getvalue') else buf.read()
             b64 = base64.b64encode(img_bytes).decode('ascii')
-            return f'<img src="data:image/png;base64,{b64}" alt="kundli" style="max-width:100%;height:auto;border:1px solid #e0e0e0;border-radius:6px;"/>'
+            return f'<img src="data:image/png;base64,{b64}" alt="kundli" style="width:100%;height:auto;border-radius:8px;"/>'
         # embed D1 using the PIL renderer if available
         if all_vargas and "D1" in all_vargas:
-            d1_svg = _embed_chart_png(all_vargas["D1"], w=600, h=600, style='bengali')
+            d1_svg = _embed_chart_png(all_vargas["D1"], w=420, h=420, style='bengali')
     except Exception:
         # Fallback to SVG generator if PIL/kundli_chart isn't available
         if all_vargas and "D1" in all_vargas:
@@ -696,6 +696,17 @@ def _build_html(
     .chart-large {{
         text-align: center; margin: 12px 0; padding: 10px;
         background: #fafafa; border: 1px solid #e0e0e0; border-radius: 6px;
+    }}
+    .chart-large-page3 {{
+        text-align: center; margin: 16px auto; padding: 20px;
+        background: linear-gradient(135deg, #FFF8E1 0%, #FFF3E0 30%, #FCE4EC 70%, #F3E5F5 100%);
+        border: 2px solid {ORANGE}; border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(255,102,0,0.12);
+        max-width: 480px;
+    }}
+    .chart-large-page3 img {{
+        max-width: 100%; height: auto;
+        border-radius: 8px;
     }}
     .chart-large svg {{ max-width: 100%; height: auto; }}
     .charts-grid {{
@@ -1081,14 +1092,19 @@ def _build_html(
     if _include('planets_table'):
         html += '<h2 class="section-heading">🪐 গ্ৰহৰ অৱস্থান</h2><table><thead><tr><th>গ্ৰহ</th><th>ৰাশি</th><th>ডিগ্ৰী</th><th>নক্ষত্ৰ</th><th>নক্ষত্ৰ পতি</th></tr></thead><tbody>' + planet_rows + '</tbody></table>'
 
+    # ═══════════════ PAGE BREAK → ৩য় পৃষ্ঠা (জন্ম কুণ্ডলী) ═══════════════
     if _include('kundli_chart'):
-        html += '<h2 class="section-heading">📊 জন্ম কুণ্ডলী (D1 - ৰাশি চক্ৰ)</h2><div class="chart-large">' + d1_svg + '</div>'
+        html += '<div style="page-break-before: always;"></div>'
+        html += '<h2 class="section-heading">📊 জন্ম কুণ্ডলী (D1 - ৰাশি চক্ৰ)</h2>'
+        html += '<div class="chart-large-page3">' + d1_svg + '</div>'
         # Patrika text below D1 chart
         if patrika_text:
             patrika_html = patrika_text.replace('\n', '<br>')
             html += '<div style="margin:12px 0;padding:14px 18px;background:linear-gradient(135deg,#FFF8E1,#FFF3E0);border:2px solid #FFCC80;border-radius:8px;font-size:9pt;line-height:2.2;text-align:justify;font-family:\'Noto Sans Bengali\',\'Nirmala UI\',sans-serif;">' + patrika_html + '</div>'
 
+    # ═══════════════ PAGE BREAK → ৪ৰ্থ পৃষ্ঠা (বিভাগীয় কুণ্ডলী) ═══════════════
     if _include('varga_charts'):
+        html += '<div style="page-break-before: always;"></div>'
         html += '<h2 class="section-heading">📊 ষোড়শবৰ্গ বিভাগীয় কুণ্ডলী (D2 - D60)</h2><div class="charts-grid">' + small_charts_html + '</div>'
 
     shani_sare_sati_html = _render_shani_sare_sati_html(moon_rasi, planets_data, user_dob)
@@ -1132,7 +1148,7 @@ def _build_html(
         html += '<h2 class="section-heading">📝 মহাদশা-অন্তৰ্দশাৰ সম্পূৰ্ণ ফলাফল</h2>' + dasha_predictions_html
 
     if _include('antardasha_phala'):
-        html += '<h2 class="section-heading">📖 অন্তৰদশা ফলাফল (small_antardasaphal)</h2>' + antardasha_phala_html
+        html += '<h2 class="section-heading">📖 অন্তৰদশা ফলাফল (বিস্তৃত)</h2>' + antardasha_phala_html
 
     if _include('ai'):
         html += ai_html

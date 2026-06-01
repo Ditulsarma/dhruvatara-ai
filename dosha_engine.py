@@ -88,7 +88,7 @@ DOSHA_INFO = {
         "name": "গুৰু-চাণ্ডাল দোষ",
         "icon": "⚡",
         "severity_levels": ["অনুপস্থিত", "উপস্থিত"],
-        "description": "বৃহস্পতি আৰু ৰাহুৰ যুতি হ'লে গুৰু-চাণ্ডাল দোষ হয়। ই জ্ঞান আৰু নীতিৰ বিৰোধ, ধৰ্মীয় অনাস্থা, আৰু শিক্ষাত বাধাৰ সৃষ্টি কৰে।",
+        "description": "বৃহস্পতি আৰু ৰাহুৰ নাইবা কেতু গ্ৰহৰ সৈতে যুতি হ'লে গুৰু-চাণ্ডাল দোষ হয়। ই জ্ঞান আৰু নীতিৰ বিৰোধ, ধৰ্মীয় অনাস্থা, আৰু শিক্ষাত বাধাৰ সৃষ্টি কৰে, সৰু কালছোৱাত গুৰুৰ সমস্যা আহিব পাৰে ।",
         "remedies": [
             "বৃহস্পতিবাৰে ব্ৰত ৰাখক",
             "হালধীয়া ৰঙৰ বস্ত্ৰ পৰিধান কৰক",
@@ -140,7 +140,9 @@ def analyze_mangal_dosha(planet_house_map: dict) -> dict:
 
 def analyze_kaal_sarp_dosha(planet_house_map: dict, planet_longitudes: dict) -> dict:
     """
-    Check Kaal Sarp Dosha: All planets between Rahu and Ketu.
+    Check Kaal Sarp Dosha: All planets must be on ONE side of the Rahu-Ketu axis.
+    i.e., all planets fall in the arc from Rahu to Ketu (or Ketu to Rahu),
+    and NO planet is on the other side.
     """
     rahu_lon = planet_longitudes.get("ৰাহু", 0)
     ketu_lon = planet_longitudes.get("কেতু", 0)
@@ -148,25 +150,38 @@ def analyze_kaal_sarp_dosha(planet_house_map: dict, planet_longitudes: dict) -> 
     if rahu_lon is None or ketu_lon is None:
         return {"present": False, "severity": 0, "info": DOSHA_INFO["kaal_sarp_dosha"]}
 
-    # Determine the arc from Rahu to Ketu
-    start = rahu_lon
-    end = ketu_lon
-    if end < start:
-        end += 360
-
-    planets_between = []
     all_planets = ["ৰবি", "চন্দ্ৰ", "মংগল", "বুধ", "বৃহস্পতি", "শুক্ৰ", "শনি"]
-    for p_name in all_planets:
-        p_lon = planet_longitudes.get(p_name, 0)
-        if p_lon is None:
-            continue
-        if start < p_lon < end or start < p_lon + 360 < end:
-            planets_between.append(p_name)
 
-    all_trapped = len(planets_between) == len(all_planets)
-    partial = len(planets_between) >= 5
+    def count_planets_in_arc(start, end):
+        """Count how many of the 7 planets fall in the arc from start to end (going forward)."""
+        if end < start:
+            end += 360
+        count = 0
+        planets = []
+        for p_name in all_planets:
+            p_lon = planet_longitudes.get(p_name)
+            if p_lon is None:
+                continue
+            # Normalize planet longitude relative to start
+            normalized = p_lon
+            if normalized < start:
+                normalized += 360
+            if start < normalized < end:
+                count += 1
+                planets.append(p_name)
+        return count, planets
 
-    if all_trapped:
+    # Check arc Rahu → Ketu
+    count_rk, planets_rk = count_planets_in_arc(rahu_lon, ketu_lon)
+    # Check arc Ketu → Rahu (the other side)
+    count_kr, planets_kr = count_planets_in_arc(ketu_lon, rahu_lon)
+
+    total_planets = len(all_planets)  # 7
+
+    # All 7 planets on one side = full Kaal Sarp Dosha
+    # 5-6 planets on one side = partial
+    if count_rk == total_planets or count_kr == total_planets:
+        planets_between = planets_rk if count_rk == total_planets else planets_kr
         return {
             "present": True,
             "severity": 2,
@@ -174,7 +189,8 @@ def analyze_kaal_sarp_dosha(planet_house_map: dict, planet_longitudes: dict) -> 
             "planets_between": planets_between,
             "info": DOSHA_INFO["kaal_sarp_dosha"]
         }
-    elif partial:
+    elif count_rk >= 5 or count_kr >= 5:
+        planets_between = planets_rk if count_rk >= 5 else planets_kr
         return {
             "present": True,
             "severity": 1,
@@ -309,11 +325,15 @@ def analyze_shani_dosha(planet_house_map: dict, moon_house: int) -> dict:
 
 
 def analyze_guru_chandal_dosha(planet_house_map: dict) -> dict:
-    """Check Guru-Chandal Dosha: Jupiter conjunct Rahu."""
+    """Check Guru-Chandal Dosha: Jupiter conjunct Rahu OR Ketu."""
     guru_house = planet_house_map.get("বৃহস্পতি")
     rahu_house = planet_house_map.get("ৰাহু")
+    ketu_house = planet_house_map.get("কেতু")
 
-    present = (guru_house is not None and rahu_house is not None and guru_house == rahu_house)
+    present = (
+        (guru_house is not None and rahu_house is not None and guru_house == rahu_house) or
+        (guru_house is not None and ketu_house is not None and guru_house == ketu_house)
+    )
 
     return {
         "present": present,
@@ -325,7 +345,9 @@ def analyze_guru_chandal_dosha(planet_house_map: dict) -> dict:
 
 def analyze_kemadruma_dosha(planet_house_map: dict) -> dict:
     """
-    Check Kemadruma Dosha: No planets in 2nd and 12th from Moon.
+    Check Kemadruma Dosha: No planets (except Moon) in the 2nd AND 12th house from Moon.
+    Both sides of the Moon must be empty of other planets.
+    Also, if any planet is conjunct with the Moon (same house), Kemadruma Dosha is cancelled (ভংগ).
     """
     moon_house = planet_house_map.get("চন্দ্ৰ")
     if moon_house is None:
@@ -334,12 +356,17 @@ def analyze_kemadruma_dosha(planet_house_map: dict) -> dict:
     house_2nd = (moon_house + 1) % 12
     house_12th = (moon_house - 1) % 12
 
+    # All planets except Moon (include Rahu & Ketu as they are shadow planets)
     planets_excluding_moon = ["ৰবি", "মংগল", "বুধ", "বৃহস্পতি", "শুক্ৰ", "শনি", "ৰাহু", "কেতু"]
 
     has_2nd = any(planet_house_map.get(p) == house_2nd for p in planets_excluding_moon)
     has_12th = any(planet_house_map.get(p) == house_12th for p in planets_excluding_moon)
 
-    present = not has_2nd and not has_12th
+    # Check if any planet is conjunct with Moon (same house) → cancels Kemadruma
+    has_conjunct = any(planet_house_map.get(p) == moon_house for p in planets_excluding_moon)
+
+    # Kemadruma occurs when BOTH sides (2nd & 12th) are empty AND no planet conjunct with Moon
+    present = (not has_2nd and not has_12th) and not has_conjunct
 
     return {
         "present": present,

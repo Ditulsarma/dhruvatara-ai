@@ -48,13 +48,51 @@
         .info-card {
             background: var(--card-bg); border-radius: var(--radius);
             box-shadow: var(--shadow); padding: 20px 24px; margin-bottom: 20px;
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 12px; border: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px; border: 1px solid var(--border);
         }
-        .info-item { display: flex; align-items: center; gap: 8px; }
-        .info-item .i-icon { font-size: 1.3rem; }
-        .info-item .i-label { font-size: 0.75rem; color: var(--text-light); }
-        .info-item .i-value { font-weight: 700; font-size: 0.9rem; }
+        .info-item {
+            display: flex; align-items: center; gap: 10px;
+            background: linear-gradient(135deg, #FFF8F0 0%, #FFF3E0 100%);
+            border: 1px solid #f0e0c8; border-radius: 10px;
+            padding: 12px 14px; transition: var(--transition);
+        }
+        .info-item:hover {
+            background: linear-gradient(135deg, #FFF3E0 0%, #FFECB3 100%);
+            border-color: var(--orange); transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(255,102,0,0.10);
+        }
+        .info-item .i-icon {
+            font-size: 1.5rem; flex-shrink: 0;
+            width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+            background: white; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .info-item .i-label { font-size: 0.7rem; color: var(--text-light); line-height: 1.2; }
+        .info-item .i-value { font-weight: 700; font-size: 0.85rem; color: var(--deep-blue); line-height: 1.3; }
+
+        @media (max-width: 900px) {
+            .info-card { grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 14px 16px; }
+            .info-item { padding: 10px 12px; gap: 8px; }
+            .info-item .i-icon { font-size: 1.3rem; width: 30px; height: 30px; }
+            .info-item .i-value { font-size: 0.78rem; }
+        }
+
+        @media (max-width: 600px) {
+            .info-card { grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 10px 12px; }
+            .info-item { padding: 8px 10px; gap: 6px; border-radius: 8px; }
+            .info-item .i-icon { font-size: 1.1rem; width: 26px; height: 26px; }
+            .info-item .i-label { font-size: 0.65rem; }
+            .info-item .i-value { font-size: 0.72rem; }
+        }
+
+        @media (max-width: 380px) {
+            .info-card { grid-template-columns: 1fr 1fr; gap: 5px; padding: 8px 10px; }
+            .info-item { padding: 6px 8px; gap: 5px; border-radius: 6px; }
+            .info-item .i-icon { font-size: 1rem; width: 22px; height: 22px; }
+            .info-item .i-label { font-size: 0.6rem; }
+            .info-item .i-value { font-size: 0.68rem; }
+        }
 
         .section {
             background: var(--card-bg); border-radius: var(--radius);
@@ -298,8 +336,6 @@
 
         @media (max-width: 768px) {
             .container { padding: 8px; }
-            .info-card { grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 14px; }
-            .info-item .i-value { font-size: 0.78rem; }
             .panchanga-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
             .chart-controls { flex-direction: column; }
             .chart-controls select { width: 100%; }
@@ -518,6 +554,7 @@
         {% if user_features and user_features.get('custom_pdf', False) %}
         <button class="btn-sm btn-fill" onclick="openCustomPdfModal()" style="background:var(--deep-blue);">⚙️ নিজৰ মতে PDF</button>
         {% endif %}
+        <button class="btn-sm btn-fill" onclick="openKartariModal()" style="background:#5B3E96;">🔮 কৰ্তৰী যোগ</button>
         <button class="btn-sm btn-fill" onclick="openChatFromResult()" style="background:var(--purple);">💬 AI চেট</button>
     </div>
 </nav>
@@ -1244,6 +1281,23 @@
 
 </div>
 
+<!-- ─── Kartari Yoga Modal ─── -->
+<div class="modal-overlay" id="kartariModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3>🔮 কৰ্তৰী যোগ বিশ্লেষণ</h3>
+            <button class="modal-close" onclick="closeKartariModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="kartariReportContainer" style="min-height:240px; max-height:420px; overflow:auto; white-space:pre-wrap; font-size:0.95rem; line-height:1.75; color:var(--text);"></div>
+            <div id="kartariReportError" style="display:none; color:#c62828; margin-top:12px;"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-modal-cancel" onclick="closeKartariModal()">বন্ধ কৰক</button>
+        </div>
+    </div>
+</div>
+
 <!-- ─── Custom PDF Modal ─── -->
 <div class="modal-overlay" id="customPdfModal">
     <div class="modal-box">
@@ -1607,9 +1661,10 @@
     }
 
     // Show pratyantardasha prediction when clicking on pratyantar row
+    // Uses small_antardasaphal.py (old logic) for pratyantardasha
     function showPratPrediction(event, mahaLord, antarLord, pratLord) {
         event.stopPropagation();
-        fetchDashaPrediction(mahaLord, antarLord, pratLord);
+        fetchPratyantarPhala(pratLord);
     }
 
     // Update dasha panel content while preserving Free plan overlay
@@ -1712,7 +1767,7 @@
             }
             return;
         }
-        fetchAntardashaPhala(antarLord);
+        fetchImportantAntardashaPhala(mahaLord, antarLord);
     }
 
     function showPratPhala(event, mahaLord, antarLord, pratLord) {
@@ -1724,26 +1779,66 @@
             }
             return;
         }
-        fetchAntardashaPhala(pratLord);
+        // Pratyantardasha always uses small_antardasaphal.py (old logic)
+        fetchPratyantarPhala(pratLord);
     }
 
-    function fetchAntardashaPhala(grahaName) {
+    function fetchImportantAntardashaPhala(mahaLord, antarLord) {
         const panel = document.getElementById('antardashaPhalaContent');
         if (!panel) return;
         panel.innerHTML = '<div style="text-align:center;padding:20px;color:var(--orange);">⏳ ফলাফল অনুসন্ধান কৰি আছে...</div>';
 
+        fetch('/api/important-antardasha-phala', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                maha: mahaLord,
+                antar: antarLord
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.phala) {
+                panel.innerHTML = '<div style="padding:8px 0;"><strong style="color:var(--deep-blue);">' + mahaLord + ' → ' + antarLord + '</strong></div><div style="margin-top:8px;">' + data.phala + '</div>';
+            } else {
+                panel.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light);">এই দশাৰ বাবে ফলাফল উপলব্ধ নহয়।</div>';
+            }
+        })
+        .catch(err => {
+            panel.innerHTML = '<div style="text-align:center;padding:20px;color:var(--red);">ফলাফল আনিবলৈ সমস্যা হৈছে। পুনৰ চেষ্টা কৰক।</div>';
+            console.error(err);
+        });
+    }
+
+    // Shared function: fetch pratyantardasha phala from small_antardasaphal.py (old logic)
+    // Used by both Dasha tab and Antardasha tab for pratyantardasha clicks
+    function fetchPratyantarPhala(grahaName) {
+        // Determine which panel to update based on active tab
+        const isAntardashaTab = document.getElementById('tab-antardasha_phala').classList.contains('active');
+        let panel;
+        if (isAntardashaTab) {
+            panel = document.getElementById('antardashaPhalaContent');
+        } else {
+            // Dasha tab
+            if (userSubscriptionId === 1) {
+                panel = document.querySelector('.dasha-free-content');
+            } else {
+                panel = document.getElementById('dashaPredictionPanel');
+                const scrollDiv = panel ? panel.querySelector('div[style]') : null;
+                if (scrollDiv) panel = scrollDiv;
+            }
+        }
+        if (!panel) return;
+        panel.innerHTML = '<div style="text-align:center;padding:20px;color:var(--orange);">⏳ প্ৰত্যান্তৰদশাৰ ফলাফল অনুসন্ধান কৰি আছে...</div>';
+
         // Get the graha's rashi and house from the planets data
-        // We need to find which rashi the graha is in and which house it occupies
-        // Use the planets data from the page
         const planetsData = {{ planets | tojson }};
         let grahaRasi = '';
         let grahaHouse = 0;
 
-        // Find the graha in planets data
         for (const p of planetsData) {
             if (p.name === grahaName) {
                 grahaRasi = p.rasi;
-                // Calculate house: (rasi_index - asc_rasi_index + 12) % 12 + 1
                 const rasiIdx = rasiNamesList.indexOf(p.rasi);
                 if (rasiIdx >= 0) {
                     grahaHouse = ((rasiIdx - {{ asc_rasi_index }} + 12) % 12) + 1;
@@ -1769,9 +1864,9 @@
         .then(response => response.json())
         .then(data => {
             if (data.phala) {
-                panel.innerHTML = '<div style="padding:8px 0;"><strong style="color:var(--deep-blue);">' + grahaName + ' (' + grahaRasi + ', ' + grahaHouse + ' নং ঘৰ)</strong></div><div style="margin-top:8px;">' + data.phala + '</div>';
+                panel.innerHTML = '<div style="padding:8px 0;"><strong style="color:var(--deep-blue);">' + grahaName + ' (' + grahaRasi + ', ' + grahaHouse + ' নং ঘৰ)</strong> <span style="font-size:0.75rem;color:var(--orange);">[প্ৰত্যান্তৰদশা]</span></div><div style="margin-top:8px;">' + data.phala + '</div>';
             } else {
-                panel.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light);">এই গ্ৰহ/ৰাশি/ঘৰৰ বাবে অন্তৰদশাৰ ফলাফল উপলব্ধ নহয়।</div>';
+                panel.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light);">এই গ্ৰহ/ৰাশি/ঘৰৰ বাবে প্ৰত্যান্তৰদশাৰ ফলাফল উপলব্ধ নহয়।</div>';
             }
         })
         .catch(err => {
@@ -1933,6 +2028,46 @@
         };
         sessionStorage.setItem('chatKundliData', JSON.stringify(kundliData));
         window.location.href = '/chat';
+    }
+
+    const planetHouses = {{ planet_houses | tojson }};
+
+    function openKartariModal() {
+        const reportContainer = document.getElementById('kartariReportContainer');
+        const errorContainer = document.getElementById('kartariReportError');
+        reportContainer.textContent = 'লোড হৈছে... অনুগ্ৰহ কৰি অপেক্ষা কৰক।';
+        errorContainer.style.display = 'none';
+        document.getElementById('kartariModal').classList.add('show');
+        document.body.style.overflow = 'hidden';
+
+        fetch('/api/kartari-report', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ planet_houses: planetHouses })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                reportContainer.textContent = data.report;
+            } else {
+                reportContainer.textContent = '';
+                errorContainer.textContent = data.message || 'কৰ্তৰী বিশ্লেষণ লোড কৰিব পৰা নগল।';
+                errorContainer.style.display = 'block';
+            }
+        })
+        .catch(err => {
+            reportContainer.textContent = '';
+            errorContainer.textContent = 'কৰ্তৰী বিশ্লেষণ লোড কৰাত ত্ৰুটি ঘটিল।';
+            errorContainer.style.display = 'block';
+            console.error(err);
+        });
+    }
+
+    function closeKartariModal() {
+        document.getElementById('kartariModal').classList.remove('show');
+        document.body.style.overflow = '';
     }
 
     // ─── Upgrade Plans Modal ───

@@ -11,6 +11,7 @@ import swisseph as swe
 from datetime import datetime, timedelta
 import io
 import os
+import json
 import base64
 from functools import wraps
 from werkzeug.utils import secure_filename
@@ -35,7 +36,9 @@ from rashi_phala import get_rashi_phala, get_rashi_phala_html
 from graha_bichar import get_all_graha_bichar, get_graha_bichar_html
 from kundli_chart import draw_kundli_chart, draw_all_styles
 from patrika import generate_patrika_text
+from kartari_dosha import generate_kartari_report
 from small_antardasaphal import get_antardasha_phala, get_all_antardasha_phala_for_pdf
+from importantantardasa import get_important_antardasha_phala
 from auth_module import (
     register_user, login_user, login_admin, verify_email, verify_mobile,
     resend_otp, get_user_features, check_feature_access,
@@ -352,6 +355,49 @@ def build_antardasha_html(dasa_hierarchy, planet_degrees, lagna_sign_index,
             html += f'<div style="margin-bottom:12px;padding:8px 12px;background:#fff8f0;border-left:3px solid #FF6600;border-radius:4px;">'
             html += f'<strong style="color:#1a237e;">{maha_name} → {antar_lord}</strong> '
             html += f' | {ad.get("start", "") } — {ad.get("end", "") }'
+            if phala_text:
+                html += f'<div style="margin-top:6px;color:#333;">{apply_gender(phala_text, gender)}</div>'
+            html += '</div>'
+
+    html += '</div>'
+    return html
+
+def build_important_antardasha_html(dasa_hierarchy, gender='male'):
+    """
+    Build HTML for antardasha phala using the new importantantardasa.py module
+    (which reads from antardasha_data.json with detailed Mahadasha-Antardasha predictions).
+    Includes only current and future antardashas.
+    Returns HTML string.
+    """
+    today = datetime.now()
+    html = '<div style="font-size:0.85rem;line-height:1.8;">'
+
+    for md in dasa_hierarchy:
+        maha_name = md.get('md_lord', '')
+        for ad in md.get('sub_dasas', []):
+            # parse dates
+            try:
+                ad_end = parse_dasha_date(ad.get('end', ''))
+                ad_start = parse_dasha_date(ad.get('start', ''))
+            except Exception:
+                ad_end = datetime(1900, 1, 1)
+                ad_start = datetime(1900, 1, 1)
+
+            if ad_end < today:
+                continue
+
+            antar_lord = ad.get('ad_lord', '')
+
+            # Get phala from importantantardasa.py using Assamese planet names
+            try:
+                phala_text = get_important_antardasha_phala(maha_name, antar_lord)
+            except Exception:
+                phala_text = ''
+
+            # Format HTML block
+            html += f'<div style="margin-bottom:12px;padding:8px 12px;background:#fff8f0;border-left:3px solid #FF6600;border-radius:4px;">'
+            html += f'<strong style="color:#1a237e;">{maha_name} → {antar_lord}</strong> '
+            html += f' | {ad.get("start", "")} — {ad.get("end", "")}'
             if phala_text:
                 html += f'<div style="margin-top:6px;color:#333;">{apply_gender(phala_text, gender)}</div>'
             html += '</div>'
@@ -908,6 +954,7 @@ def calculate():
                            graha_bichar_data=graha_bichar_data,
                            graha_bichar_html=graha_bichar_html,
                            shani_sare_sati_data=shani_sare_sati_data,
+                           planet_houses=planet_houses,
                            user_features=get_user_features(session.get('user_id', 0)),
                            user_subscription_name=user_subscription_name,
                            user_subscription_id=user_subscription_id,
@@ -1069,10 +1116,9 @@ def download_pdf():
         # Graha Bichar for PDF
         graha_bichar_html = get_graha_bichar_html(planet_houses)
 
-        # Dasha Predictions for PDF - use small_antardasaphal.py data (filtered)
-        antardasha_phala_html = build_antardasha_html(
-            dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx,
-            selected_maha=None, include_current_and_future_only=True, gender=gender
+        # Dasha Predictions for PDF - use importantantardasa.py (new detailed JSON data)
+        antardasha_phala_html = build_important_antardasha_html(
+            dasa_hierarchy, gender=gender
         )
 
         # Apply gender to AI interpretation
@@ -1123,6 +1169,20 @@ def download_pdf():
 
     except Exception as e:
         return f"<div style='padding:40px;font-family:Arial;text-align:center;'><h2 style='color:#c62828;'>PDF নিৰ্মাণ ত্ৰুটি</h2><p>{str(e)}</p><a href='/'>আকৌ চেষ্টা কৰক</a></div>"
+
+@app.route("/api/kartari-report", methods=["POST"])
+def api_kartari_report():
+    try:
+        data = request.get_json(silent=True) or request.form
+        planet_houses = data.get('planet_houses')
+        if isinstance(planet_houses, str):
+            planet_houses = json.loads(planet_houses)
+        if not planet_houses:
+            return jsonify({'success': False, 'message': 'Planet house data missing.'}), 400
+        report = generate_kartari_report(planet_houses)
+        return jsonify({'success': True, 'report': report})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route("/generate-patrika", methods=["POST"])
 def generate_patrika():
@@ -1337,10 +1397,9 @@ def download_patrika_pdf():
         
         astrologer_profile = get_astrologer_profile(session.get('user_id', 0))
 
-        # Build antardasha phala HTML for patrika PDF (current → end)
-        antardasha_phala_html = build_antardasha_html(
-            dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx,
-            selected_maha=None, include_current_and_future_only=True, gender=gender
+        # Build antardasha phala HTML for patrika PDF (current → end) using importantantardasa.py
+        antardasha_phala_html = build_important_antardasha_html(
+            dasa_hierarchy, gender=gender
         )
         
         pdf_bytes = generate_pdf_report(
@@ -1706,6 +1765,23 @@ def api_antardasha_phala():
         return jsonify({"error": "Missing graha/rashi/house"}), 400
 
     phala_text = get_antardasha_phala(graha_name, rashi_name, int(house_num))
+    return jsonify({"phala": phala_text})
+
+# ═══════════════════════════════════════════
+#  অন্তৰদশা ফল API (importantantardasa.py - new detailed JSON)
+# ═══════════════════════════════════════════
+
+@app.route("/api/important-antardasha-phala", methods=["POST"])
+def api_important_antardasha_phala():
+    """API endpoint for antardasha phala from the new detailed JSON (antardasha_data.json)."""
+    data = request.get_json()
+    maha_lord = data.get("maha", "")
+    antar_lord = data.get("antar", "")
+
+    if not maha_lord or not antar_lord:
+        return jsonify({"error": "Missing maha/antar lords"}), 400
+
+    phala_text = get_important_antardasha_phala(maha_lord, antar_lord)
     return jsonify({"phala": phala_text})
 
 # ═══════════════════════════════════════════
