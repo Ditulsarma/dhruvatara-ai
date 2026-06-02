@@ -158,6 +158,166 @@
             .btn { padding: 10px; font-size: 0.85rem; }
             .tab-btn { padding: 7px; font-size: 0.75rem; }
         }
+
+        /* ─── Welcome Info Section ─── */
+        .welcome-section {
+            position: relative; z-index: 1;
+            max-width: 960px; margin: 0 auto 0 auto;
+            padding: 0 20px;
+        }
+        .welcome-card {
+            background: linear-gradient(135deg, #FFFFFF 0%, #FFF8F0 50%, #FFF3E0 100%);
+            border-radius: var(--radius);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            transition: var(--transition);
+        }
+        .welcome-header {
+            background: linear-gradient(135deg, var(--deep-blue), #283593);
+            color: white; padding: 14px 20px;
+            display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer; user-select: none;
+        }
+        .welcome-header h3 {
+            font-size: 0.95rem; font-weight: 700;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .welcome-header .toggle-icon {
+            font-size: 1.2rem; transition: transform 0.3s ease;
+        }
+        .welcome-card.expanded .welcome-header .toggle-icon {
+            transform: rotate(180deg);
+        }
+        .welcome-body {
+            max-height: 0; overflow: hidden;
+            transition: max-height 0.5s ease, padding 0.3s ease;
+        }
+        .welcome-card.expanded .welcome-body {
+            max-height: 2000px;
+        }
+        .welcome-inner {
+            padding: 16px 20px;
+        }
+        .welcome-intro {
+            display: flex; align-items: flex-start; gap: 14px;
+            margin-bottom: 14px; flex-wrap: wrap;
+        }
+        .welcome-avatar {
+            width: 52px; height: 52px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--orange), var(--gold));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.6rem; flex-shrink: 0;
+            box-shadow: 0 3px 12px rgba(255,102,0,0.25);
+        }
+        .welcome-intro-text { flex: 1; min-width: 200px; }
+        .welcome-intro-text .greeting {
+            font-size: 0.85rem; color: var(--text-light); margin-bottom: 2px;
+        }
+        .welcome-intro-text .name {
+            font-weight: 800; font-size: 1rem;
+            background: linear-gradient(135deg, var(--orange), var(--deep-blue));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .welcome-intro-text .desc {
+            font-size: 0.75rem; color: var(--text-light); line-height: 1.5; margin-top: 4px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px; margin-bottom: 14px;
+        }
+        .feature-chip {
+            background: white; border: 1px solid var(--border);
+            border-radius: 10px; padding: 10px 12px;
+            display: flex; align-items: center; gap: 8px;
+            transition: var(--transition);
+        }
+        .feature-chip:hover {
+            border-color: var(--orange);
+            box-shadow: 0 2px 8px rgba(255,102,0,0.08);
+            transform: translateY(-1px);
+        }
+        .feature-chip .fc-icon {
+            font-size: 1.3rem; flex-shrink: 0;
+        }
+        .feature-chip .fc-text {
+            font-size: 0.72rem; font-weight: 600; color: var(--text);
+            line-height: 1.3;
+        }
+
+        .plan-strip {
+            display: flex; gap: 8px; flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+        .plan-badge {
+            flex: 1; min-width: 100px;
+            background: linear-gradient(135deg, #FFF8F0, #FFF3E0);
+            border: 1px solid #f0e0c8; border-radius: 10px;
+            padding: 10px 12px; text-align: center;
+            transition: var(--transition);
+        }
+        .plan-badge:hover {
+            border-color: var(--orange);
+            box-shadow: 0 2px 8px rgba(255,102,0,0.1);
+            transform: translateY(-1px);
+        }
+        .plan-badge .pb-icon { font-size: 1.2rem; }
+        .plan-badge .pb-name {
+            font-weight: 700; font-size: 0.75rem; color: var(--deep-blue);
+            margin-top: 2px;
+        }
+        .plan-badge .pb-desc {
+            font-size: 0.65rem; color: var(--text-light);
+        }
+        .plan-badge.free { background: linear-gradient(135deg, #E8F5E9, #C8E6C9); border-color: #A5D6A7; }
+        .plan-badge.free .pb-name { color: var(--green); }
+
+        .welcome-note {
+            background: #FFF3E0; border-left: 3px solid var(--orange);
+            border-radius: 0 8px 8px 0; padding: 8px 12px;
+            font-size: 0.7rem; color: #E65100; line-height: 1.5;
+            margin-bottom: 12px;
+        }
+        .welcome-contact {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 0.78rem; color: var(--text);
+            flex-wrap: wrap;
+        }
+        .welcome-contact .wc-phone {
+            font-weight: 700; color: var(--deep-blue);
+            background: #E8EAF6; padding: 5px 12px; border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 700px) {
+            .feature-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+            .feature-chip { padding: 8px 10px; gap: 6px; }
+            .feature-chip .fc-icon { font-size: 1.1rem; }
+            .feature-chip .fc-text { font-size: 0.68rem; }
+            .plan-strip { gap: 6px; }
+            .plan-badge { padding: 8px 10px; min-width: 70px; }
+            .plan-badge .pb-name { font-size: 0.7rem; }
+            .plan-badge .pb-desc { font-size: 0.6rem; }
+            .welcome-header h3 { font-size: 0.82rem; }
+            .welcome-inner { padding: 12px 14px; }
+            .welcome-intro-text .name { font-size: 0.9rem; }
+            .welcome-intro-text .desc { font-size: 0.7rem; }
+        }
+        @media (max-width: 400px) {
+            .feature-grid { grid-template-columns: 1fr 1fr; gap: 5px; }
+            .feature-chip { padding: 6px 8px; gap: 4px; border-radius: 8px; }
+            .feature-chip .fc-icon { font-size: 1rem; }
+            .feature-chip .fc-text { font-size: 0.62rem; }
+            .plan-badge { min-width: 60px; padding: 6px 8px; }
+            .plan-badge .pb-name { font-size: 0.65rem; }
+            .welcome-section { padding: 0 8px; }
+            .welcome-header { padding: 10px 14px; }
+            .welcome-header h3 { font-size: 0.75rem; }
+            .welcome-inner { padding: 10px 10px; }
+        }
     </style>
 </head>
 <body>
@@ -287,6 +447,85 @@
     }
 </script>
 
+<!-- ─── Welcome Info Section ─── -->
+<div class="welcome-section" style="margin-top:24px;margin-bottom:16px;">
+    <div class="welcome-card expanded" id="welcomeCard">
+        <div class="welcome-header" onclick="document.getElementById('welcomeCard').classList.toggle('expanded')">
+            <h3>🌟 আপোনাক dhrubataraai.com লৈ স্বাগতম!</h3>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="welcome-body">
+            <div class="welcome-inner">
+                <!-- Intro -->
+                <div class="welcome-intro">
+                    <div class="welcome-avatar">🧑‍💻</div>
+                    <div class="welcome-intro-text">
+                        <div class="greeting">নমস্কাৰ, মোৰ নাম</div>
+                        <div class="name">দিতুল শৰ্মা (Ditul Sarma)</div>
+                        <div class="desc">
+                            মই অসমৰ একমাত্ৰ ব্যৱসায়িক অসমীয়া জ্যোতিষ ছফট’ৱেৰ <strong>'ধ্ৰুৱতৰা Ai'</strong>-ৰ নিৰ্মাতা। ২০০৯ চনৰ পৰা নিৰন্তৰ গৱেষণা আৰু বিকাশৰ জৰিয়তে এই ছফট’ৱেৰটো প্ৰস্তুত কৰি থকা হৈছে। অসমীয়া, হিন্দী আৰু বঙালী ভাষাত উপলব্ধ আমাৰ Desktop Version-টো বৰ্তমান সমগ্ৰ অসমজুৰি সফলতাৰে ব্যৱহাৰ হৈ আছে।
+                        </div>
+                        <div class="desc" style="margin-top:4px;">
+                            এতিয়া, আমাৰ ৱেবছাইট <strong>dhrubataraai.com</strong>-ৰ জৰিয়তে আপুনি Desktop Version-ৰ দৰেই অতি উন্নত মানদণ্ডৰ জন্মকুণ্ডলী অনলাইনেই প্ৰস্তুত কৰিব পাৰিব।
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Features -->
+                <div class="feature-grid">
+                    <div class="feature-chip">
+                        <span class="fc-icon">⚡</span>
+                        <span class="fc-text">দ্ৰুত আৰু নিৰ্ভুল — মাত্ৰ আধা ঘণ্টাত কুণ্ডলী প্ৰস্তুত</span>
+                    </div>
+                    <div class="feature-chip">
+                        <span class="fc-icon">📖</span>
+                        <span class="fc-text">সম্পূৰ্ণ বিচাৰ — গ্ৰহ, নক্ষত্ৰ, দশাফলৰ বিতং বিৱৰণ</span>
+                    </div>
+                    <div class="feature-chip">
+                        <span class="fc-icon">📐</span>
+                        <span class="fc-text">ফৰ্মেটৰ বিকল্প — কিতাপ আকাৰ বা পৰম্পৰাগত কোষ্ঠী</span>
+                    </div>
+                </div>
+
+                <!-- Subscription Plans -->
+                <div class="plan-strip">
+                    <div class="plan-badge free">
+                        <div class="pb-icon">🆓</div>
+                        <div class="pb-name">Free</div>
+                        <div class="pb-desc">বিনা মূল্যৰ</div>
+                    </div>
+                    <div class="plan-badge">
+                        <div class="pb-icon">📅</div>
+                        <div class="pb-name">1-Day Plan</div>
+                        <div class="pb-desc">এদিনৰ বাবে</div>
+                    </div>
+                    <div class="plan-badge">
+                        <div class="pb-icon">📆</div>
+                        <div class="pb-name">Monthly</div>
+                        <div class="pb-desc">মাহেকীয়া</div>
+                    </div>
+                    <div class="plan-badge">
+                        <div class="pb-icon">📋</div>
+                        <div class="pb-name">Yearly</div>
+                        <div class="pb-desc">এবছৰৰ বাবে</div>
+                    </div>
+                </div>
+
+                <!-- Note -->
+                <div class="welcome-note">
+                    ⚠️ <strong>বিঃদ্ৰঃ (Free Version-ৰ সীমাবদ্ধতা):</strong> Free Version-ত আপুনি অন্যান্য সাধাৰণ কামসমূহ কৰিব পাৰিব, কিন্তু উন্নত মানদণ্ডৰ দশাফল চোৱা আৰু কুণ্ডলী প্ৰস্তুত কৰাৰ সুবিধা নাথাকিব। ইয়াৰ বাবে প্ৰিমিয়াম প্লেন বাছনি কৰিব লাগিব।
+                </div>
+
+                <!-- Contact -->
+                <div class="welcome-contact">
+                    <span>📞 <strong>যোগাযোগ:</strong></span>
+                    <span class="wc-phone">📱 ৯১০১২০৬১০২ (9101206102)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% if all_footer_images %}
 <div style="text-align:center;padding:10px 12px;background:rgba(255,255,255,0.85);border-top:1px solid var(--border);">
     {% for img in all_footer_images %}
@@ -294,5 +533,6 @@
     {% endfor %}
 </div>
 {% endif %}
+
 </body>
 </html>

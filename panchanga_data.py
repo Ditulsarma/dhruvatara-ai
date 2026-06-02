@@ -496,6 +496,24 @@ def get_panchanga_with_times(dt: datetime, lat: float, lon: float, tz_offset: fl
     panchanga["nadi_time_from"] = panchanga["nakshatra"].get("time_from", "--:--")
     panchanga["nadi_time_to"] = panchanga["nakshatra"].get("time_to", "--:--")
 
+    # ─── Next Nakshatra Attributes (for days with 2 nakshatras) ───
+    if panchanga["nakshatra"].get("to_next_day") and panchanga["nakshatra"].get("next_name"):
+        next_nak_idx = (panchanga["nakshatra"]["index"] + 1) % 27
+        next_attrs = get_nakshatra_attributes(next_nak_idx)
+        panchanga["next_varna"] = next_attrs["varna"]
+        panchanga["next_gana"] = next_attrs["gana"]
+        panchanga["next_yoni"] = next_attrs["yoni"]
+        panchanga["next_nadi"] = next_attrs["nadi"]
+        # Next nakshatra attributes start after current nakshatra ends
+        panchanga["next_varna_time_from"] = panchanga["nakshatra"].get("time_to", "--:--")
+        panchanga["next_varna_time_to"] = "--:-- (পৰদিন)"
+        panchanga["next_gana_time_from"] = panchanga["nakshatra"].get("time_to", "--:--")
+        panchanga["next_gana_time_to"] = "--:-- (পৰদিন)"
+        panchanga["next_yoni_time_from"] = panchanga["nakshatra"].get("time_to", "--:--")
+        panchanga["next_yoni_time_to"] = "--:-- (পৰদিন)"
+        panchanga["next_nadi_time_from"] = panchanga["nakshatra"].get("time_to", "--:--")
+        panchanga["next_nadi_time_to"] = "--:-- (পৰদিন)"
+
     # Add planetary positions
     try:
         panchanga["planets"] = get_all_planet_positions(dt)

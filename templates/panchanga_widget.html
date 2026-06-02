@@ -391,6 +391,46 @@ Used in login page, kundli page, and as standalone widget
                 </div>
             </div>
 
+            <!-- Next Nakshatra Attributes (when nakshatra changes today) -->
+            {% if panchanga.get('has_next_nak_today') and panchanga.nakshatra.get('next_name') and panchanga.get('next_varna') %}
+            <div class="pw-section-title" style="background: linear-gradient(135deg, #E8EAF6, #C5CAE9); color: #1a237e; border-left: 3px solid #FF6600;">
+                🔮 পৰৱৰ্তী নক্ষত্ৰৰ গুণ <small>({{ panchanga.nakshatra.next_name }})</small>
+                <span style="font-size:0.62rem;font-weight:500;display:block;margin-top:2px;">🕐 {{ panchanga.nakshatra.time_to }} ৰ পিছত</span>
+            </div>
+            <div class="pw-row pw-two-col">
+                <div class="pw-item pw-attribute" style="background: linear-gradient(135deg, #E8EAF6, #C5CAE9); border-color: #9FA8DA;">
+                    <span class="pw-label">🕉️ বৰ্ণ</span>
+                    <span class="pw-value">{{ panchanga.next_varna }}</span>
+                    {% if panchanga.get('next_varna_time_from') %}
+                    <span class="pw-time">🕐 {{ panchanga.next_varna_time_from }} ৰ পিছত</span>
+                    {% endif %}
+                </div>
+                <div class="pw-item pw-attribute" style="background: linear-gradient(135deg, #E8EAF6, #C5CAE9); border-color: #9FA8DA;">
+                    <span class="pw-label">👥 গণ</span>
+                    <span class="pw-value">{{ panchanga.next_gana }}</span>
+                    {% if panchanga.get('next_gana_time_from') %}
+                    <span class="pw-time">🕐 {{ panchanga.next_gana_time_from }} ৰ পিছত</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="pw-row pw-two-col">
+                <div class="pw-item pw-attribute" style="background: linear-gradient(135deg, #E8EAF6, #C5CAE9); border-color: #9FA8DA;">
+                    <span class="pw-label">🐾 যোনি</span>
+                    <span class="pw-value">{{ panchanga.next_yoni }}</span>
+                    {% if panchanga.get('next_yoni_time_from') %}
+                    <span class="pw-time">🕐 {{ panchanga.next_yoni_time_from }} ৰ পিছত</span>
+                    {% endif %}
+                </div>
+                <div class="pw-item pw-attribute" style="background: linear-gradient(135deg, #E8EAF6, #C5CAE9); border-color: #9FA8DA;">
+                    <span class="pw-label">🌀 নাড়ী</span>
+                    <span class="pw-value">{{ panchanga.next_nadi }}</span>
+                    {% if panchanga.get('next_nadi_time_from') %}
+                    <span class="pw-time">🕐 {{ panchanga.next_nadi_time_from }} ৰ পিছত</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Row 11: Janma Rashi & Lord -->
             <div class="pw-section-title">🌙 চন্দ্ৰৰ ৰাশি</div>
             <div class="pw-row pw-two-col">
@@ -477,15 +517,15 @@ Used in login page, kundli page, and as standalone widget
     }
     .pw-title-row h3 {
         margin: 0;
-        font-size: 1.1rem;
+        font-size: 1.2rem;
         font-weight: 700;
         letter-spacing: 0.5px;
     }
     .pw-icon {
-        font-size: 1.3rem;
+        font-size: 1.4rem;
     }
     .pw-date {
-        font-size: 0.8rem;
+        font-size: 0.85rem;
         opacity: 0.9;
         margin-bottom: 6px;
         font-weight: 500;
@@ -505,7 +545,7 @@ Used in login page, kundli page, and as standalone widget
         color: white;
         padding: 4px 8px;
         border-radius: 16px;
-        font-size: 0.72rem;
+        font-size: 0.78rem;
         font-family: inherit;
         cursor: pointer;
         outline: none;
@@ -522,7 +562,7 @@ Used in login page, kundli page, and as standalone widget
         color: white;
         padding: 4px 10px;
         border-radius: 16px;
-        font-size: 0.7rem;
+        font-size: 0.76rem;
         font-family: inherit;
         cursor: pointer;
         font-weight: 600;
@@ -542,7 +582,7 @@ Used in login page, kundli page, and as standalone widget
         flex-wrap: wrap;
     }
     .pw-loc-icon {
-        font-size: 0.9rem;
+        font-size: 0.95rem;
     }
     .pw-loc-search-wrap {
         position: relative;
@@ -557,7 +597,7 @@ Used in login page, kundli page, and as standalone widget
         color: white;
         padding: 5px 10px;
         border-radius: 20px;
-        font-size: 0.72rem;
+        font-size: 0.78rem;
         font-family: inherit;
         outline: none;
         backdrop-filter: blur(4px);
@@ -582,7 +622,7 @@ Used in login page, kundli page, and as standalone widget
     .pw-loc-dropdown .pw-loc-item {
         padding: 6px 10px;
         cursor: pointer;
-        font-size: 0.72rem;
+        font-size: 0.78rem;
         color: #2c3e50;
         border-bottom: 1px solid #f0f0f0;
         white-space: nowrap;
@@ -598,7 +638,7 @@ Used in login page, kundli page, and as standalone widget
     }
     .pw-loc-dropdown .pw-loc-no-result {
         padding: 8px 10px;
-        font-size: 0.7rem;
+        font-size: 0.76rem;
         color: #999;
         text-align: center;
     }
@@ -608,7 +648,7 @@ Used in login page, kundli page, and as standalone widget
         color: white;
         padding: 5px 8px;
         border-radius: 20px;
-        font-size: 0.72rem;
+        font-size: 0.78rem;
         font-family: inherit;
         cursor: pointer;
         outline: none;
@@ -635,7 +675,7 @@ Used in login page, kundli page, and as standalone widget
         padding: 30px 20px;
         gap: 10px;
         color: #5a6c7d;
-        font-size: 0.85rem;
+        font-size: 0.9rem;
     }
     .pw-spinner {
         width: 32px;
@@ -676,7 +716,7 @@ Used in login page, kundli page, and as standalone widget
     }
     .pw-label {
         display: block;
-        font-size: 0.65rem;
+        font-size: 0.72rem;
         font-weight: 600;
         color: #5a6c7d;
         text-transform: uppercase;
@@ -685,19 +725,19 @@ Used in login page, kundli page, and as standalone widget
     }
     .pw-value {
         display: block;
-        font-size: 0.85rem;
+        font-size: 0.9rem;
         font-weight: 700;
         color: #2c3e50;
     }
     .pw-sub {
         display: block;
-        font-size: 0.68rem;
+        font-size: 0.74rem;
         color: #5a6c7d;
         font-weight: 500;
     }
     .pw-time {
         display: block;
-        font-size: 0.64rem;
+        font-size: 0.7rem;
         color: #888;
         margin-top: 1px;
         font-weight: 500;
@@ -706,11 +746,11 @@ Used in login page, kundli page, and as standalone widget
         font-style: normal;
         color: #FF6600;
         font-weight: 600;
-        font-size: 0.6rem;
+        font-size: 0.66rem;
     }
     .pw-next {
         display: block;
-        font-size: 0.62rem;
+        font-size: 0.68rem;
         color: #1a237e;
         margin-top: 2px;
         font-weight: 600;
@@ -719,7 +759,7 @@ Used in login page, kundli page, and as standalone widget
         border-radius: 4px;
     }
     .pw-time-val {
-        font-size: 0.78rem !important;
+        font-size: 0.84rem !important;
         color: #C62828 !important;
     }
 
@@ -783,7 +823,7 @@ Used in login page, kundli page, and as standalone widget
     }
     .pw-yogini .pw-value {
         color: #1B5E20;
-        font-size: 0.82rem;
+        font-size: 0.88rem;
     }
     .pw-khadya {
         background: linear-gradient(135deg, #FFF3E0, #FFE0B2) !important;
@@ -794,7 +834,7 @@ Used in login page, kundli page, and as standalone widget
     }
     .pw-khadya .pw-value {
         color: #BF360C;
-        font-size: 0.82rem;
+        font-size: 0.88rem;
     }
     .pw-yogini-next {
         background: linear-gradient(135deg, #E8EAF6, #C5CAE9) !important;
@@ -805,7 +845,7 @@ Used in login page, kundli page, and as standalone widget
     }
     .pw-yogini-next .pw-value {
         color: #1a237e;
-        font-size: 0.78rem;
+        font-size: 0.84rem;
     }
     .pw-khadya-next {
         background: linear-gradient(135deg, #FCE4EC, #F8BBD0) !important;
@@ -816,7 +856,7 @@ Used in login page, kundli page, and as standalone widget
     }
     .pw-khadya-next .pw-value {
         color: #AD1457;
-        font-size: 0.78rem;
+        font-size: 0.84rem;
     }
 
     /* ─── Maran Dosh Styles ─── */
@@ -844,16 +884,16 @@ Used in login page, kundli page, and as standalone widget
         flex-wrap: wrap;
     }
     .pw-maran-icon {
-        font-size: 0.9rem;
+        font-size: 0.95rem;
     }
     .pw-maran-title {
-        font-size: 0.72rem;
+        font-size: 0.78rem;
         font-weight: 700;
         color: #2c3e50;
         flex: 1;
     }
     .pw-maran-time {
-        font-size: 0.62rem;
+        font-size: 0.68rem;
         color: #FF6600;
         font-weight: 600;
         background: #FFF3E0;
@@ -871,7 +911,7 @@ Used in login page, kundli page, and as standalone widget
         gap: 6px;
         padding: 3px 6px;
         border-radius: 6px;
-        font-size: 0.65rem;
+        font-size: 0.72rem;
     }
     .pw-maran-row.pw-dosh-yes {
         background: #FFEBEE;
@@ -908,12 +948,12 @@ Used in login page, kundli page, and as standalone widget
         gap: 2px;
     }
     .pw-maran-total {
-        font-size: 0.72rem;
+        font-size: 0.78rem;
         font-weight: 800;
         color: #E65100;
     }
     .pw-maran-result {
-        font-size: 0.65rem;
+        font-size: 0.72rem;
         font-weight: 600;
         color: #BF360C;
         line-height: 1.3;
@@ -964,33 +1004,33 @@ Used in login page, kundli page, and as standalone widget
         font-size: 0.9rem;
     }
     .pw-planet-name {
-        font-size: 0.65rem;
+        font-size: 0.72rem;
         font-weight: 700;
         color: #2c3e50;
     }
     .pw-retro-badge {
         background: #C62828;
         color: white;
-        font-size: 0.5rem;
+        font-size: 0.55rem;
         padding: 1px 4px;
         border-radius: 6px;
         font-weight: 700;
     }
     .pw-planet-rashi {
-        font-size: 0.65rem;
+        font-size: 0.72rem;
         font-weight: 600;
         color: #FF6600;
     }
     .pw-rashi-icon {
-        font-size: 0.8rem;
+        font-size: 0.85rem;
     }
     .pw-planet-degree {
-        font-size: 0.62rem;
+        font-size: 0.68rem;
         color: #5a6c7d;
         font-weight: 500;
     }
     .pw-planet-lord {
-        font-size: 0.58rem;
+        font-size: 0.64rem;
         color: #999;
         margin-top: 1px;
     }
@@ -1003,7 +1043,7 @@ Used in login page, kundli page, and as standalone widget
     }
     .pw-footer small {
         color: #999;
-        font-size: 0.65rem;
+        font-size: 0.72rem;
         font-weight: 500;
     }
 
@@ -1017,7 +1057,7 @@ Used in login page, kundli page, and as standalone widget
             padding: 10px 12px;
         }
         .pw-title-row h3 {
-            font-size: 0.95rem;
+            font-size: 1rem;
         }
         .pw-body {
             padding: 10px;
@@ -1029,7 +1069,7 @@ Used in login page, kundli page, and as standalone widget
             padding: 6px 8px;
         }
         .pw-value {
-            font-size: 0.78rem;
+            font-size: 0.84rem;
         }
         .pw-planets-grid {
             gap: 4px;
@@ -1038,14 +1078,14 @@ Used in login page, kundli page, and as standalone widget
             padding: 5px 6px;
         }
         .pw-planet-name {
-            font-size: 0.6rem;
+            font-size: 0.66rem;
         }
         .pw-loc-search-wrap {
             max-width: 140px;
         }
         .pw-loc-select {
             max-width: 130px;
-            font-size: 0.68rem;
+            font-size: 0.74rem;
         }
     }
 
@@ -1057,7 +1097,7 @@ Used in login page, kundli page, and as standalone widget
             padding: 8px 10px;
         }
         .pw-title-row h3 {
-            font-size: 0.85rem;
+            font-size: 0.9rem;
         }
         .pw-body {
             padding: 8px;
@@ -1070,13 +1110,13 @@ Used in login page, kundli page, and as standalone widget
             border-radius: 6px;
         }
         .pw-value {
-            font-size: 0.72rem;
+            font-size: 0.78rem;
         }
         .pw-label {
-            font-size: 0.6rem;
+            font-size: 0.66rem;
         }
         .pw-time {
-            font-size: 0.58rem;
+            font-size: 0.64rem;
         }
         .pw-planets-grid {
             gap: 3px;
@@ -1086,32 +1126,32 @@ Used in login page, kundli page, and as standalone widget
             border-radius: 6px;
         }
         .pw-planet-name {
-            font-size: 0.55rem;
+            font-size: 0.62rem;
         }
         .pw-planet-rashi {
-            font-size: 0.58rem;
+            font-size: 0.64rem;
         }
         .pw-planet-degree {
-            font-size: 0.55rem;
+            font-size: 0.62rem;
         }
         .pw-loc-search-wrap {
             max-width: 110px;
         }
         .pw-loc-search {
-            font-size: 0.65rem;
+            font-size: 0.72rem;
             padding: 4px 8px;
         }
         .pw-loc-select {
-            font-size: 0.62rem;
+            font-size: 0.68rem;
             max-width: 110px;
             padding: 4px 6px;
         }
         .pw-date-picker {
-            font-size: 0.65rem;
+            font-size: 0.72rem;
             max-width: 120px;
         }
         .pw-date-reset-btn {
-            font-size: 0.62rem;
+            font-size: 0.68rem;
             padding: 3px 8px;
         }
     }
