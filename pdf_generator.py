@@ -323,6 +323,7 @@ def _build_html(
         ('যমকাল', panchanga.get('yama_kaal', '—'), ''),
         ('কালবেলা', panchanga.get('kaal_bela', '—'), ''),
         ('ৰাৰবেলা', panchanga.get('rar_bela', '—'), ''),
+        ('বাৰবেলা', panchanga.get('bara_bela', '—'), ''),
         ('দিবামান', panchanga.get('divaman', '—'), ''),
         ('ৰাত্ৰিমান', panchanga.get('ratriman', '—'), ''),
         ('জাতদণ্ড', panchanga.get('jata_danda', '—'), ''),

@@ -99,12 +99,18 @@ GULIKA_KAAL_PART = [5, 4, 3, 2, 1, 0, 6]
 YAMA_KAAL_PART = [3, 2, 1, 0, 6, 5, 4]
 
 # Kaal Bela (কালবেলা) part index by weekday
-KAAL_BELA_PART = [6, 5, 4, 3, 2, 1, 0]
+# Saturday uses -1 as sentinel for dual parts (0 and 7)
+KAAL_BELA_PART = [6, 5, 4, 7, 3, -1, 4]
 
 # Rar Bela (ৰাৰবেলা) part index by weekday
 # Sunday=6, Monday=0, Tuesday=1, Wednesday=2, Thursday=3, Friday=4, Saturday=5
 # Monday = part 1, Tuesday = part 2, ... Sunday = part 0
-RAR_BELA_PART = [1, 2, 3, 4, 5, 6, 0]
+RAR_BELA_PART = [1, 1, 2, 6, 2, 5, 3]
+
+# Bara Bela (বাৰবেলা) part index by weekday
+# দিনমানক ৮ ভাগ কৰিলে বাৰবেলা: সোম=১, মঙ্গল=২, বুধ=৩, বৃহস্পতি=৪, শুক্ৰ=৫, শনি=০+৭, ৰবি=০
+# Saturday uses -1 as sentinel for dual parts (0 and 7)
+BARA_BELA_PART = [1, 1, 2, 6, 2, 5, 3]
 
 
 def get_julian_day(dt: datetime, offset_hours: float = -5.5) -> float:
@@ -323,14 +329,32 @@ def get_yama_kaal(sunrise_str: str, sunset_str: str, weekday: int) -> str:
 
 
 def get_kaal_bela(sunrise_str: str, sunset_str: str, weekday: int) -> str:
-    """Calculate Kaal Bela (কালবেলা) based on actual sunrise/sunset"""
+    """Calculate Kaal Bela (কালবেলা) based on actual sunrise/sunset.
+    শনিবাৰে দুটা ভাগ: ০ আৰু ৭"""
     part_idx = KAAL_BELA_PART[weekday]
+    if part_idx == -1:
+        # Saturday: two parts - 0 and 7
+        part1 = _get_kala_from_part(sunrise_str, sunset_str, 0)
+        part2 = _get_kala_from_part(sunrise_str, sunset_str, 7)
+        return f"{part1} আৰু {part2}"
     return _get_kala_from_part(sunrise_str, sunset_str, part_idx)
 
 
 def get_rar_bela(sunrise_str: str, sunset_str: str, weekday: int) -> str:
     """Calculate Rar Bela (ৰাৰবেলা) based on actual sunrise/sunset"""
     part_idx = RAR_BELA_PART[weekday]
+    return _get_kala_from_part(sunrise_str, sunset_str, part_idx)
+
+
+def get_bara_bela(sunrise_str: str, sunset_str: str, weekday: int) -> str:
+    """Calculate Bara Bela (বাৰবেলা) based on actual sunrise/sunset.
+    দিনমানক ৮ ভাগ কৰিলে বাৰবেলা: সোম=১, মঙ্গল=২, বুধ=৩, বৃহস্পতি=৪, শুক্ৰ=৫, শনি=০+৭, ৰবি=০"""
+    part_idx = BARA_BELA_PART[weekday]
+    if part_idx == -1:
+        # Saturday: two parts - 0 and 7
+        part1 = _get_kala_from_part(sunrise_str, sunset_str, 0)
+        part2 = _get_kala_from_part(sunrise_str, sunset_str, 7)
+        return f"{part1} আৰু {part2}"
     return _get_kala_from_part(sunrise_str, sunset_str, part_idx)
 
 
@@ -462,6 +486,7 @@ def get_full_panchanga(dt: datetime, lat: float, lon: float, tz_offset: float = 
         "yama_kaal": get_yama_kaal(sunrise, sunset, vaar["index"]),
         "kaal_bela": get_kaal_bela(sunrise, sunset, vaar["index"]),
         "rar_bela": get_rar_bela(sunrise, sunset, vaar["index"]),
+        "bara_bela": get_bara_bela(sunrise, sunset, vaar["index"]),
         "divaman": divaman,
         "ratriman": ratriman,
         "jata_danda": jata_danda,

@@ -13,7 +13,7 @@ from panchanga import (
     calculate_yoga, calculate_karana, calculate_vaar, calculate_ritu, calculate_masa,
     calculate_ayanamsa, calculate_sunrise, calculate_sunset,
     get_rahu_kalam, get_yama_gandam, get_gulika_kalam,
-    get_abhijit_muhurta, get_yama_kaal, get_kaal_bela, get_rar_bela,
+    get_abhijit_muhurta, get_yama_kaal, get_kaal_bela, get_rar_bela, get_bara_bela,
     get_divaman, get_ratriman, get_nakshatra_attributes, get_rashi_lord,
     get_julian_day, TITHI_NAMES, NAKSHATRA_NAMES, YOGA_NAMES, KARANA_NAMES,
     VAAR_NAMES, RITU_NAMES, MASA_NAMES, PAKSHA_NAMES,
