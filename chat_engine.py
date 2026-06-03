@@ -15,7 +15,8 @@ from datetime import datetime
 # ─── Ollama API Configuration ───────────────────────────────────
 OLLAMA_API_KEY = "7c80477b1eed432db28cc89ff8c7b802.tFh71EvzfaFxZ6Lye2nMK4vp"
 OLLAMA_MODEL = "deepseek-v4-pro:cloud"
-OLLAMA_URL = "https://api.ollama.com/v1/chat/completions"
+# Use the canonical URL (api.ollama.com redirects to ollama.com, which strips auth)
+OLLAMA_URL = "https://ollama.com/v1/chat/completions"
 
 # ─── Tīkṣṇa Nakshatras (তীক্ষ্ণ নক্ষত্ৰ) ─────────────────────────
 TIKSHNA_NAKSHATRAS = ["আৰ্দ্ৰা", "অশ্লেষা", "জ্যেষ্ঠা", "মূল"]

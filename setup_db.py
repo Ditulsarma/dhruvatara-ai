@@ -201,11 +201,66 @@ def setup_database():
         )
     ''')
 
+    # ─── Admin Feature Toggles (for Numerology & other modules) ───
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS admin_feature_toggles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            feature_key TEXT UNIQUE NOT NULL,
+            feature_label TEXT NOT NULL,
+            feature_label_asm TEXT NOT NULL,
+            category TEXT DEFAULT 'general',
+            is_enabled INTEGER DEFAULT 1,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    # ─── Numerology Saved Reports ───
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS numerology_reports (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            name TEXT NOT NULL,
+            dob TEXT NOT NULL,
+            report_data TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+
     # ─── Insert default admin astrologer profile (user_id=0 for admin fallback) ───
     cursor.execute('''
         INSERT OR IGNORE INTO astrologer_profiles (user_id, institution_name, astrologer_name, astrologer_bio, address, mobile)
         VALUES (0, '', '', '', '', '')
     ''')
+
+    # ─── Insert default admin feature toggles for Numerology ───
+    numer_toggles = [
+        ("numerology_lo_shu", "Lo Shu Grid", "ল' চু গ্ৰীড", "numerology", 1),
+        ("numerology_missing", "Missing Numbers", "অনুপস্থিত সংখ্যা", "numerology", 1),
+        ("numerology_present", "Present Numbers", "উপস্থিত সংখ্যা", "numerology", 1),
+        ("numerology_mulyanka", "Mulyanka", "মূল্যাংক", "numerology", 1),
+        ("numerology_bhagyanka", "Bhagyanka", "ভাগ্যাংক", "numerology", 1),
+        ("numerology_namanka", "Namanka", "নামাংক", "numerology", 1),
+        ("numerology_name_compat", "Name Compatibility", "নাম সামঞ্জস্য", "numerology", 1),
+        ("numerology_angel", "Angel Number", "এঞ্জেল সংখ্যা", "numerology", 1),
+        ("numerology_varsha_phal", "Varsha Phal", "বৰ্ষফল", "numerology", 1),
+        ("numerology_pratikar", "Pratikar (Remedies)", "প্ৰতিকাৰ", "numerology", 1),
+        ("numerology_final", "Final Prediction", "চূড়ান্ত ভৱিষ্যদ্বাণী", "numerology", 1),
+        ("numerology_chat", "AI Chat", "AI চেট", "numerology", 1),
+        ("numerology_kua", "Kua Number", "কোৱা নম্বৰ", "numerology", 1),
+        ("numerology_subha", "Subha Details", "শুভ ৰং-সংখ্যা-তাৰিখ", "numerology", 1),
+        ("numerology_num_compat", "Number Compatibility", "সংখ্যা মিত্ৰতা-শত্ৰুতা", "numerology", 1),
+        ("numerology_gem_advice", "Gem & Rudraksha", "ৰত্ন আৰু ৰুদ্ৰাক্ষ", "numerology", 1),
+        ("numerology_lal_kitab", "Lal Kitab Remedies", "লাল কিতাপ প্ৰতিকাৰ", "numerology", 1),
+        ("numerology_name_breakdown", "Name Breakdown", "নামৰ আখৰ বিশ্লেষণ", "numerology", 1),
+        ("numerology_chaldean", "Chaldean Chart", "Chaldean তালিকা", "numerology", 1),
+        ("numerology_planes", "Lo Shu Planes", "ল' চু গ্ৰীডৰ ৮ যোগ", "numerology", 1),
+    ]
+    for f_key, f_label, f_label_asm, f_cat, f_enabled in numer_toggles:
+        cursor.execute('''
+            INSERT OR IGNORE INTO admin_feature_toggles (feature_key, feature_label, feature_label_asm, category, is_enabled)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (f_key, f_label, f_label_asm, f_cat, f_enabled))
 
     # ─── Insert default admin ───
     admin_username = "DitulSarma"
@@ -234,6 +289,10 @@ def setup_database():
         ("tripap_rista", "Tripap Rista", "ত্ৰিপাপ ৰিষ্ট", "ত্ৰিপাপ ৰিষ্ট বিশ্লেষণ", "analysis", 14),
         ("custom_pdf", "Custom PDF", "কাষ্টম PDF", "নিৰ্বাচিত অংশৰ PDF", "export", 15),
         ("patrika_pdf", "Patrika PDF", "পত্ৰিকা PDF", "পত্ৰিকা PDF ডাউনলোড", "export", 16),
+        ("numerology", "Numerology", "অংক জ্যোতিষ", "অংক জ্যোতিষ গণনা আৰু বিশ্লেষণ", "numerology", 17),
+        ("numerology_pdf", "Numerology PDF", "অংক জ্যোতিষ PDF", "অংক জ্যোতিষ PDF ৰিপৰ্ট ডাউনলোড", "numerology", 18),
+        ("numerology_varsha", "Numerology Varsha Phal", "অংক জ্যোতিষ বৰ্ষফল", "১০ বছৰৰ বৰ্ষফল", "numerology", 19),
+        ("numerology_chat", "Numerology AI Chat", "অংক জ্যোতিষ AI চেট", "অংক জ্যোতিষ AI চেট", "numerology", 20),
     ]
 
     for f_key, f_name, f_name_asm, f_desc, f_cat, f_order in features:
@@ -280,6 +339,26 @@ def setup_database():
                 INSERT OR IGNORE INTO subscription_features (subscription_id, feature_key, enabled)
                 VALUES (?, ?, 0)
             ''', (sub_id, feat_key))
+
+    # ─── Numerology features: all plans get basic access ───
+    numer_features = ["numerology", "numerology_chat"]
+    for sub_id in [1, 2, 3, 4]:
+        for feat_key in numer_features:
+            cursor.execute('''
+                INSERT OR IGNORE INTO subscription_features (subscription_id, feature_key, enabled)
+                VALUES (?, ?, 1)
+            ''', (sub_id, feat_key))
+
+    # ─── Pro-only numerology features (varsha phal + pdf) ───
+    numer_pro_features = ["numerology_pdf", "numerology_varsha"]
+    for sub_id in [1, 2, 3, 4]:
+        for feat_key in numer_pro_features:
+            # Only Pro (id=4) gets these by default; others disabled
+            enabled = 1 if sub_id == 4 else 0
+            cursor.execute('''
+                INSERT OR IGNORE INTO subscription_features (subscription_id, feature_key, enabled)
+                VALUES (?, ?, ?)
+            ''', (sub_id, feat_key, enabled))
 
     # ─── Insert geo data from locations.json ───
     import json, os

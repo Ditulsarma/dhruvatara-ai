@@ -52,6 +52,11 @@ from auth_module import (
     get_subscription_by_id
 )
 
+# ─── Numerology imports ───
+from numerology_engine import get_full_numerology_report
+from numerology_pdf import generate_numerology_pdf
+from numerology_chat import chat_numerology, NUMEROLOGY_QUESTIONS
+
 app = Flask(__name__)
 app.secret_key = 'DhruvataraAI_2026_Secure_Secret_Key_8x7k9m2p'
 
@@ -2004,7 +2009,9 @@ def user_dashboard():
         "dosha_analysis": "⚠️", "yoga_analysis": "✨", "dasha": "⏳",
         "ai_interpretation": "🤖", "pdf_report": "📄", "nakshatra_phala": "⭐",
         "lagna_phala": "🌅", "rashi_phala": "♈", "sannari_chakra": "🔄",
-        "navatara_chakra": "🌐", "tripap_rista": "⚡", "custom_pdf": "📑"
+        "navatara_chakra": "🌐", "tripap_rista": "⚡", "custom_pdf": "📑",
+        "numerology": "🔢", "numerology_chat": "💬", "numerology_pdf": "📋",
+        "numerology_varsha": "📅"
     }
 
     return render_template("user_dashboard.html",
@@ -2669,6 +2676,223 @@ def api_chat():
     except Exception as e:
         logger.error(f"Chat error: {e}")
         return jsonify({"success": False, "message": f"ত্ৰুটি: {str(e)}"}), 500
+
+
+# ═══════════════════════════════════════════
+#  NUMEROLOGY (অংক জ্যোতিষ) ROUTES
+# ═══════════════════════════════════════════
+
+def get_admin_feature_toggles(category: str = None) -> dict:
+    """Get admin feature toggles from DB. Returns {feature_key: is_enabled}."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    try:
+        if category:
+            rows = conn.execute(
+                "SELECT feature_key, is_enabled FROM admin_feature_toggles WHERE category = ?",
+                (category,)
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT feature_key, is_enabled FROM admin_feature_toggles"
+            ).fetchall()
+        return {r['feature_key']: bool(r['is_enabled']) for r in rows}
+    except Exception:
+        return {}
+    finally:
+        conn.close()
+
+
+def set_admin_feature_toggle(feature_key: str, is_enabled: bool) -> bool:
+    """Set an admin feature toggle."""
+    conn = sqlite3.connect(DB_PATH)
+    try:
+        conn.execute(
+            "UPDATE admin_feature_toggles SET is_enabled = ?, updated_at = CURRENT_TIMESTAMP WHERE feature_key = ?",
+            (1 if is_enabled else 0, feature_key)
+        )
+        conn.commit()
+        return True
+    except Exception:
+        return False
+    finally:
+        conn.close()
+
+
+@app.route("/numerology")
+@login_required
+def numerology_page():
+    """Numerology input form page."""
+    if not check_feature_access(session['user_id'], 'numerology'):
+        return render_template('feature_locked.html', feature='numerology'), 403
+
+    user_features = get_user_features(session['user_id'])
+    feature_defs = get_all_feature_definitions()
+    admin_toggles = get_admin_feature_toggles('numerology')
+
+    return render_template("numerology.html",
+                           user_features=user_features,
+                           feature_defs=feature_defs,
+                           admin_toggles=admin_toggles,
+                           user_name=session.get('user_name', ''))
+
+
+@app.route("/numerology/calculate", methods=["POST"])
+@login_required
+def numerology_calculate():
+    """Calculate numerology report."""
+    if not check_feature_access(session['user_id'], 'numerology'):
+        return jsonify({"success": False, "message": "অংক জ্যোতিষ ফিচাৰ আপোনাৰ বাবে উপলব্ধ নহয়।"}), 403
+
+    name = request.form.get("name", "").strip()
+    dob = request.form.get("dob", "").strip()
+    gender = request.form.get("gender", "male").strip()
+
+    if not name or not dob:
+        return jsonify({"success": False, "message": "নাম আৰু জন্ম তাৰিখ আৱশ্যক।"}), 400
+
+    try:
+        report = get_full_numerology_report(name, dob, gender)
+
+        # Save report to DB
+        if session.get('user_id'):
+            conn = sqlite3.connect(DB_PATH)
+            try:
+                conn.execute(
+                    "INSERT INTO numerology_reports (user_id, name, dob, report_data) VALUES (?, ?, ?, ?)",
+                    (session['user_id'], name, dob, json.dumps(report, ensure_ascii=False))
+                )
+                conn.commit()
+            except Exception:
+                pass
+            finally:
+                conn.close()
+
+        # Get admin toggles
+        admin_toggles = get_admin_feature_toggles('numerology')
+
+        # Check pro features
+        is_pro = check_feature_access(session['user_id'], 'numerology_varsha')
+        has_pdf = check_feature_access(session['user_id'], 'numerology_pdf')
+
+        return jsonify({
+            "success": True,
+            "report": report,
+            "admin_toggles": admin_toggles,
+            "is_pro": is_pro,
+            "has_pdf": has_pdf
+        })
+    except Exception as e:
+        logger.error(f"Numerology calc error: {e}")
+        return jsonify({"success": False, "message": f"গণনা ত্ৰুটি: {str(e)}"}), 500
+
+
+@app.route("/numerology/download-pdf", methods=["POST"])
+@login_required
+def numerology_download_pdf():
+    """Generate and download numerology PDF report."""
+    if not check_feature_access(session['user_id'], 'numerology_pdf'):
+        return "<div style='padding:40px;font-family:Arial;text-align:center;'><h2 style='color:#c62828;'>🔒 প্ৰৱেশ নিষেধ</h2><p>PDF ডাউনলোড কৰিবলৈ প্ৰ' ভাৰ্চনলৈ আপগ্ৰেড কৰক।</p><a href='/numerology'>আকৌ চেষ্টা কৰক</a></div>"
+
+    name = request.form.get("name", "").strip()
+    dob = request.form.get("dob", "").strip()
+    selected_sections = request.form.getlist("sections")
+
+    if not name or not dob:
+        return "<div style='padding:40px;font-family:Arial;text-align:center;'><h2 style='color:#c62828;'>ত্ৰুটি</h2><p>নাম আৰু জন্ম তাৰিখ আৱশ্যক।</p></div>"
+
+    try:
+        report = get_full_numerology_report(name, dob)
+        astrologer_profile = get_astrologer_profile(session.get('user_id', 0))
+
+        pdf_bytes = generate_numerology_pdf(report, selected_sections, astrologer_profile)
+
+        return send_file(
+            io.BytesIO(pdf_bytes),
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f'Dhruvatara_AI_Numerology_{name.replace(" ", "_")}.pdf'
+        )
+    except Exception as e:
+        logger.error(f"Numerology PDF error: {e}")
+        return f"<div style='padding:40px;font-family:Arial;text-align:center;'><h2 style='color:#c62828;'>PDF নিৰ্মাণ ত্ৰুটি</h2><p>{str(e)}</p><a href='/numerology'>আকৌ চেষ্টা কৰক</a></div>"
+
+
+@app.route("/numerology/chat")
+@login_required
+def numerology_chat_page():
+    """Numerology AI Chat page."""
+    if not check_feature_access(session['user_id'], 'numerology_chat'):
+        return render_template('feature_locked.html', feature='numerology_chat'), 403
+
+    return render_template("numerology_chat.html",
+                           questions=NUMEROLOGY_QUESTIONS,
+                           user_features=get_user_features(session.get('user_id', 0)))
+
+
+@app.route("/api/numerology/chat", methods=["POST"])
+@login_required
+def api_numerology_chat():
+    """Handle numerology AI chat requests."""
+    if not check_feature_access(session['user_id'], 'numerology_chat'):
+        return jsonify({"success": False, "message": "AI চেট ফিচাৰ আপোনাৰ বাবে উপলব্ধ নহয়।"}), 403
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"success": False, "message": "Invalid request"}), 400
+
+    question = data.get("question", "")
+    name = data.get("name", "")
+    dob = data.get("dob", "")
+
+    if not question:
+        return jsonify({"success": False, "message": "প্ৰশ্ন খালী"}), 400
+
+    if not name or not dob:
+        return jsonify({"success": False, "message": "নাম আৰু জন্ম তাৰিখ আৱশ্যক।"}), 400
+
+    try:
+        report = get_full_numerology_report(name, dob)
+        response = chat_numerology(name, question, report)
+        return jsonify({"success": True, "response": response})
+    except Exception as e:
+        logger.error(f"Numerology chat error: {e}")
+        return jsonify({"success": False, "message": f"ত্ৰুটি: {str(e)}"}), 500
+
+
+# ─── Admin API: Numerology Feature Toggles ───
+
+@app.route("/admin/api/numerology-toggles", methods=["GET"])
+@admin_required
+def admin_api_get_numerology_toggles():
+    """API: Get all numerology admin feature toggles."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    try:
+        rows = conn.execute(
+            "SELECT * FROM admin_feature_toggles WHERE category = 'numerology' ORDER BY id"
+        ).fetchall()
+        return jsonify([dict(r) for r in rows])
+    finally:
+        conn.close()
+
+
+@app.route("/admin/api/numerology-toggles", methods=["POST"])
+@admin_required
+def admin_api_set_numerology_toggle():
+    """API: Set a numerology admin feature toggle."""
+    data = request.get_json()
+    feature_key = data.get("feature_key", "")
+    is_enabled = data.get("is_enabled", True)
+
+    if not feature_key:
+        return jsonify({"success": False, "message": "Feature key required."}), 400
+
+    success = set_admin_feature_toggle(feature_key, is_enabled)
+    return jsonify({
+        "success": success,
+        "message": "ফিচাৰ টগল আপডেট কৰা হৈছে।" if success else "আপডেট বিফল।"
+    })
 
 
 # ═══════════════════════════════════════════

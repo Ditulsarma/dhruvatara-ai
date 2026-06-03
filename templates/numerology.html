@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="as">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>অংক জ্যোতিষ | ধ্ৰুৱতৰা AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --orange: #FF6600; --orange-dark: #E55D00; --deep-blue: #1a237e;
+            --gold: #D4A017; --bg: #FFF8F0; --card-bg: #FFFFFF;
+            --text: #2c3e50; --text-light: #5a6c7d; --border: #e8e0d5;
+            --shadow: 0 4px 20px rgba(0,0,0,0.06); --radius: 14px; --radius-sm: 8px;
+            --green: #2E7D32; --red: #C62828; --purple: #6A1B9A;
+            --transition: 0.25s ease;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans Bengali', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #FFF8F0 0%, #FFF3E0 30%, #FFECB3 60%, #FFF8F0 100%);
+            background-attachment: fixed; min-height: 100vh; color: var(--text);
+        }
+
+        .top-nav {
+            background: white; border-bottom: 1px solid var(--border);
+            padding: 12px 24px; display: flex; align-items: center;
+            justify-content: space-between; position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .top-nav .brand { font-weight: 800; font-size: 1.2rem; color: var(--orange); }
+        .top-nav .brand span { color: var(--deep-blue); }
+        .nav-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .btn {
+            padding: 8px 18px; border-radius: 20px; font-size: 0.82rem;
+            font-weight: 600; font-family: inherit; cursor: pointer;
+            border: none; transition: var(--transition); text-decoration: none;
+            display: inline-flex; align-items: center; gap: 5px;
+        }
+        .btn-outline { background: white; color: var(--orange); border: 2px solid var(--orange); }
+        .btn-outline:hover { background: var(--orange); color: white; }
+        .btn-fill { background: var(--orange); color: white; }
+        .btn-fill:hover { background: var(--orange-dark); transform: translateY(-1px); }
+        .btn-purple { background: var(--purple); color: white; }
+        .btn-purple:hover { background: #4A148C; transform: translateY(-1px); }
+        .btn-green { background: var(--green); color: white; }
+        .btn-green:hover { background: #1B5E20; transform: translateY(-1px); }
+        .btn-gold { background: linear-gradient(135deg, #D4A017, #B8860B); color: white; }
+        .btn-gold:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(212,160,23,0.4); }
+        .btn:disabled, .btn.locked { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+
+        /* Hero */
+        .hero {
+            background: linear-gradient(135deg, var(--deep-blue), #4A148C);
+            color: white; border-radius: var(--radius); padding: 32px 36px;
+            margin-bottom: 24px; box-shadow: 0 8px 32px rgba(26,35,126,0.25);
+            text-align: center;
+        }
+        .hero h1 { font-size: 1.8rem; margin-bottom: 4px; }
+        .hero .sub { opacity: 0.85; font-size: 0.95rem; }
+
+        /* Form Card */
+        .form-card {
+            background: var(--card-bg); border-radius: var(--radius);
+            box-shadow: var(--shadow); padding: 28px 32px; margin-bottom: 24px;
+            border: 1px solid var(--border);
+        }
+        .form-card h2 {
+            font-size: 1.2rem; color: var(--deep-blue); margin-bottom: 20px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .form-row {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+            margin-bottom: 16px;
+        }
+        @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group label { font-weight: 600; font-size: 0.85rem; color: var(--deep-blue); }
+        .form-group input {
+            padding: 10px 14px; border: 2px solid var(--border);
+            border-radius: var(--radius-sm); font-family: inherit;
+            font-size: 0.9rem; outline: none; transition: var(--transition);
+        }
+        .form-group input:focus { border-color: var(--orange); }
+        .btn-calculate {
+            width: 100%; padding: 14px; border-radius: 25px;
+            font-size: 1.05rem; font-weight: 700; font-family: inherit;
+            cursor: pointer; border: none; transition: var(--transition);
+            background: linear-gradient(135deg, var(--purple), #7B1FA2);
+            color: white; box-shadow: 0 4px 20px rgba(106,27,154,0.3);
+            margin-top: 8px;
+        }
+        .btn-calculate:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(106,27,154,0.4); }
+        .btn-calculate:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        /* Loading */
+        .loading-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 200; justify-content: center;
+            align-items: center; flex-direction: column; gap: 16px;
+        }
+        .loading-overlay.show { display: flex; }
+        .spinner {
+            width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { color: white; font-weight: 600; font-size: 1rem; }
+
+        /* Results */
+        .results-container { display: none; }
+        .results-container.show { display: block; }
+
+        .section-card {
+            background: var(--card-bg); border-radius: var(--radius);
+            box-shadow: var(--shadow); padding: 22px 26px; margin-bottom: 18px;
+            border: 1px solid var(--border);
+        }
+        .section-card h3 {
+            font-size: 1.05rem; color: var(--deep-blue); margin-bottom: 14px;
+            display: flex; align-items: center; gap: 8px;
+            border-bottom: 2px solid var(--orange); padding-bottom: 8px;
+        }
+        .section-card h3 .icon { font-size: 1.3rem; }
+
+        /* Lo Shu Grid */
+        .grid-wrap { display: flex; justify-content: center; margin: 16px 0; }
+        .grid-table { border-collapse: collapse; }
+        .grid-table td {
+            border: 2px solid var(--deep-blue); width: 70px; height: 70px;
+            text-align: center; vertical-align: middle; font-size: 24px;
+            font-weight: 800; color: var(--deep-blue); border-radius: 4px;
+            background: white;
+        }
+        .grid-table td.empty { color: #ccc; font-size: 16px; }
+        .grid-table td.filled { background: #FFF3E0; }
+
+        /* Number Cards */
+        .number-cards { display: flex; flex-wrap: wrap; gap: 10px; }
+        .num-card {
+            background: var(--bg); border-radius: 10px; padding: 12px 16px;
+            border-left: 4px solid var(--orange); flex: 1; min-width: 200px;
+            font-size: 0.85rem; line-height: 1.7;
+        }
+        .num-card .num-big { font-size: 1.5rem; font-weight: 800; color: var(--orange); }
+        .num-card.missing { border-left-color: var(--red); background: #FFF5F5; }
+        .num-card.present { border-left-color: var(--green); background: #F1F8E9; }
+
+        /* Core Numbers */
+        .core-numbers {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 14px;
+        }
+        .core-card {
+            background: linear-gradient(135deg, #f8f5ff, #ede7f6);
+            border-radius: var(--radius); padding: 18px 20px;
+            border: 1px solid #d1c4e9; text-align: center;
+        }
+        .core-card .cn-value {
+            font-size: 2.5rem; font-weight: 800; color: var(--purple);
+        }
+        .core-card .cn-planet { font-size: 0.9rem; color: var(--text-light); margin-bottom: 6px; }
+        .core-card .cn-desc { font-size: 0.82rem; line-height: 1.7; text-align: left; }
+
+        /* Angel Number */
+        .angel-box {
+            background: linear-gradient(135deg, #fff8e1, #fff3e0);
+            border-radius: var(--radius); padding: 20px 24px;
+            text-align: center; border: 2px solid var(--gold);
+        }
+        .angel-box .angel-num {
+            font-size: 3rem; font-weight: 800;
+            background: linear-gradient(135deg, #D4A017, #FF8F00);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Name Compatibility */
+        .compat-score {
+            display: inline-block; font-size: 2rem; font-weight: 800;
+            padding: 8px 20px; border-radius: 30px; margin: 8px 0;
+        }
+        .compat-score.good { background: #C8E6C9; color: var(--green); }
+        .compat-score.bad { background: #FFCDD2; color: var(--red); }
+
+        /* Varsha Phal */
+        .year-list { max-height: 400px; overflow-y: auto; }
+        .year-item {
+            display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+            border-bottom: 1px solid #eee; font-size: 0.85rem;
+        }
+        .year-item:nth-child(odd) { background: #fafafa; }
+        .year-badge {
+            background: var(--purple); color: white; padding: 4px 10px;
+            border-radius: 15px; font-weight: 700; font-size: 0.8rem;
+            white-space: nowrap; min-width: 55px; text-align: center;
+        }
+
+        /* Remedies */
+        .remedy-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 12px;
+        }
+        .remedy-box {
+            background: #E8F5E9; border-radius: 10px; padding: 14px 18px;
+            border-left: 3px solid var(--green);
+        }
+        .remedy-box h4 { color: var(--green); font-size: 0.9rem; margin-bottom: 6px; }
+        .remedy-box p { font-size: 0.8rem; line-height: 1.6; }
+
+        /* PDF Section */
+        .pdf-section {
+            background: linear-gradient(135deg, #fce4ec, #f3e5f5);
+            border-radius: var(--radius); padding: 22px 26px;
+            margin-bottom: 18px; border: 2px dashed #ce93d8;
+        }
+        .pdf-section h3 { color: var(--purple); }
+        .checkbox-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 8px; margin: 12px 0;
+        }
+        .checkbox-item {
+            display: flex; align-items: center; gap: 8px; font-size: 0.85rem;
+            cursor: pointer;
+        }
+        .checkbox-item input[type="checkbox"] {
+            width: 18px; height: 18px; accent-color: var(--purple); cursor: pointer;
+        }
+
+        /* Upgrade Banner */
+        .upgrade-banner {
+            background: linear-gradient(135deg, #FF8F00, #FF6F00);
+            color: white; border-radius: var(--radius); padding: 18px 24px;
+            text-align: center; margin-top: 12px;
+        }
+        .upgrade-banner h4 { font-size: 1rem; margin-bottom: 4px; }
+        .upgrade-banner p { font-size: 0.85rem; opacity: 0.9; margin-bottom: 10px; }
+
+        /* Chat Button */
+        .chat-float {
+            position: fixed; bottom: 24px; right: 24px; z-index: 150;
+        }
+        .chat-float a {
+            display: flex; align-items: center; gap: 8px;
+            background: linear-gradient(135deg, var(--purple), #7B1FA2);
+            color: white; padding: 12px 22px; border-radius: 30px;
+            text-decoration: none; font-weight: 700; font-size: 0.9rem;
+            box-shadow: 0 6px 24px rgba(106,27,154,0.4);
+            transition: var(--transition);
+        }
+        .chat-float a:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(106,27,154,0.5); }
+
+        /* Toast */
+        .toast {
+            position: fixed; top: 20px; right: 20px; z-index: 300;
+            padding: 12px 20px; border-radius: 8px; color: white;
+            font-weight: 600; font-size: 0.85rem; display: none;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .toast.error { background: var(--red); }
+        .toast.success { background: var(--green); }
+        .toast.show { display: block; }
+
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            .top-nav { padding: 8px 12px; }
+            .hero { padding: 20px; }
+            .hero h1 { font-size: 1.3rem; }
+            .form-card { padding: 16px; }
+            .core-numbers { grid-template-columns: 1fr; }
+            .grid-table td { width: 55px; height: 55px; font-size: 18px; }
+            .section-card { padding: 14px 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="top-nav">
+    <div class="brand">🔢 ধ্ৰুৱতৰা <span>AI</span></div>
+    <div class="nav-actions">
+        <a href="/dashboard" class="btn btn-outline">📊 ডেশ্ববৰ্ড</a>
+        <a href="/kundli" class="btn btn-outline">🔮 বৈদিক জ্যোতিষ</a>
+        <a href="/logout" class="btn btn-outline">🚪 লগআউট</a>
+    </div>
+</nav>
+
+<div class="container">
+    <!-- Hero -->
+    <div class="hero">
+        <h1>🔢 অংক জ্যোতিষ (Numerology)</h1>
+        <div class="sub">আপোনাৰ জন্ম তাৰিখ আৰু নামৰ ভিত্তিত সম্পূৰ্ণ অংক জ্যোতিষ বিশ্লেষণ</div>
+    </div>
+
+    <!-- Form -->
+    <div class="form-card" id="numerologyForm">
+        <h2>📝 তথ্য প্ৰদান কৰক</h2>
+        <div class="form-row">
+            <div class="form-group">
+                <label>👤 সম্পূৰ্ণ নাম</label>
+                <input type="text" id="numName" placeholder="আপোনাৰ সম্পূৰ্ণ নাম লিখক..." value="{{ user_name }}" oninput="liveNameCorrection()">
+            </div>
+            <div class="form-group">
+                <label>📅 জন্ম তাৰিখ</label>
+                <input type="date" id="numDob">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>⚧ লিংগ (Kua/এঞ্জেল সংখ্যাৰ বাবে)</label>
+                <select id="numGender" style="padding:10px 14px;border:2px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:0.9rem;outline:none;">
+                    <option value="male">পুৰুষ (Male)</option>
+                    <option value="female">মহিলা (Female)</option>
+                </select>
+            </div>
+            <div class="form-group" id="nameCorrectionGroup" style="display:none;">
+                <label>🔤 নাম সংশোধন (Live)</label>
+                <div id="nameCorrectionPreview" style="padding:10px 14px;background:#f5f0ff;border-radius:var(--radius-sm);font-size:0.85rem;min-height:40px;line-height:1.6;">
+                    <span style="color:#888;">নাম লিখিলে ইয়াত নামাংক আৰু সংশোধনৰ পৰামৰ্শ দেখুৱাব...</span>
+                </div>
+            </div>
+        </div>
+        <button class="btn-calculate" id="btnCalculate" onclick="calculateNumerology()">
+            🔢 অংক জ্যোতিষ গণনা কৰক
+        </button>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">গণনা কৰি আছে, অনুগ্ৰহ কৰি অপেক্ষা কৰক...</div>
+    </div>
+
+    <!-- Results -->
+    <div class="results-container" id="resultsContainer">
+        <!-- Lo Shu Grid -->
+        <div class="section-card" id="secLoShu">
+            <h3><span class="icon">🔢</span> ল' চু গ্ৰীড (Lo Shu Grid)</h3>
+            <div class="grid-wrap" id="loShuGrid"></div>
+        </div>
+
+        <!-- Missing Numbers -->
+        <div class="section-card" id="secMissing">
+            <h3><span class="icon">❌</span> অনুপস্থিত সংখ্যা</h3>
+            <div class="number-cards" id="missingNumbers"></div>
+        </div>
+
+        <!-- Present Numbers -->
+        <div class="section-card" id="secPresent">
+            <h3><span class="icon">✅</span> উপস্থিত সংখ্যা</h3>
+            <div class="number-cards" id="presentNumbers"></div>
+        </div>
+
+        <!-- Compensation (Namanka & Kua fill missing) -->
+        <div class="section-card" id="secCompensation">
+            <h3><span class="icon">🔄</span> নামাংক আৰু কোৱা নম্বৰৰ দ্বাৰা পূৰণ</h3>
+            <div id="compensationInfo"></div>
+        </div>
+
+        <!-- Lo Shu Grid Planes (8 Yogas) -->
+        <div class="section-card" id="secPlanes">
+            <h3><span class="icon">🧩</span> ল' চু গ্ৰীডৰ ৮ যোগ (Planes)</h3>
+            <div id="planesInfo"></div>
+        </div>
+
+        <!-- Core Numbers -->
+        <div class="section-card" id="secCore">
+            <h3><span class="icon">🎯</span> মূল সংখ্যাসমূহ</h3>
+            <div class="core-numbers" id="coreNumbers"></div>
+        </div>
+
+        <!-- Angel Number -->
+        <div class="section-card" id="secAngel">
+            <h3><span class="icon">👼</span> এঞ্জেল সংখ্যা</h3>
+            <div class="angel-box" id="angelNumber"></div>
+        </div>
+
+        <!-- Name Compatibility -->
+        <div class="section-card" id="secNameCompat">
+            <h3><span class="icon">🔤</span> নাম সামঞ্জস্য</h3>
+            <div id="nameCompatibility"></div>
+        </div>
+
+        <!-- Varsha Phal (Pro only) -->
+        <div class="section-card" id="secVarsha" style="display:none;">
+            <h3><span class="icon">📅</span> বৰ্ষফল (১০ বছৰ)</h3>
+            <div class="year-list" id="varshaPhal"></div>
+        </div>
+
+        <!-- Pratikar -->
+        <div class="section-card" id="secPratikar">
+            <h3><span class="icon">🪬</span> প্ৰতিকাৰ (Remedies)</h3>
+            <div class="remedy-grid" id="pratikar"></div>
+        </div>
+
+        <!-- Kua Number -->
+        <div class="section-card" id="secKua">
+            <h3><span class="icon">🧭</span> কোৱা নম্বৰ (Kua Number)</h3>
+            <div id="kuaNumber"></div>
+        </div>
+
+        <!-- Subha Details -->
+        <div class="section-card" id="secSubha">
+            <h3><span class="icon">🍀</span> শুভ ৰং, সংখ্যা আৰু তাৰিখ</h3>
+            <div id="subhaDetails"></div>
+        </div>
+
+        <!-- Number Compatibility (Satru-Mitra-Sama) -->
+        <div class="section-card" id="secNumCompat">
+            <h3><span class="icon">🤝</span> সংখ্যাৰ মিত্ৰতা-শত্ৰুতা</h3>
+            <div id="numberCompatibility"></div>
+        </div>
+
+        <!-- Gem & Rudraksha Advice -->
+        <div class="section-card" id="secGemAdvice">
+            <h3><span class="icon">💍</span> ৰত্ন আৰু ৰুদ্ৰাক্ষৰ পৰামৰ্শ</h3>
+            <div id="gemAdvice"></div>
+        </div>
+
+        <!-- Lal Kitab Remedies -->
+        <div class="section-card" id="secLalKitab">
+            <h3><span class="icon">📖</span> লাল কিতাপৰ ঘৰুৱা প্ৰতিকাৰ</h3>
+            <div id="lalKitabRemedies"></div>
+        </div>
+
+        <!-- Name Breakdown -->
+        <div class="section-card" id="secNameBreakdown">
+            <h3><span class="icon">🔤</span> নামৰ আখৰ অনুযায়ী মান (Chaldean)</h3>
+            <div id="nameBreakdown"></div>
+        </div>
+
+        <!-- Chaldean Reference Chart -->
+        <div class="section-card" id="secChaldeanChart">
+            <h3><span class="icon">📊</span> Chaldean পদ্ধতিৰ আখৰৰ মান</h3>
+            <div id="chaldeanChart" style="white-space:pre-line;font-family:monospace;font-size:0.85rem;background:#fafafa;padding:12px;border-radius:8px;"></div>
+        </div>
+
+        <!-- Final Prediction -->
+        <div class="section-card" id="secFinal">
+            <h3><span class="icon">📋</span> চূড়ান্ত ভৱিষ্যদ্বাণী</h3>
+            <div id="finalPrediction" style="white-space:pre-line;line-height:1.8;font-size:0.9rem;"></div>
+        </div>
+
+        <!-- PDF Section -->
+        <div class="pdf-section" id="pdfSection">
+            <h3>📥 কাষ্টম PDF ডাউনলোড</h3>
+            <p style="font-size:0.85rem;color:#555;">আপুনি যিবোৰ অংশ PDFত অন্তৰ্ভুক্ত কৰিব বিচাৰে সেইবোৰ নিৰ্বাচন কৰক:</p>
+            <div class="checkbox-grid" id="pdfCheckboxes">
+                <label class="checkbox-item"><input type="checkbox" value="lo_shu" checked> ল' চু গ্ৰীড</label>
+                <label class="checkbox-item"><input type="checkbox" value="missing" checked> অনুপস্থিত সংখ্যা</label>
+                <label class="checkbox-item"><input type="checkbox" value="present" checked> উপস্থিত সংখ্যা</label>
+                <label class="checkbox-item"><input type="checkbox" value="mulyanka" checked> মূল্যাংক</label>
+                <label class="checkbox-item"><input type="checkbox" value="bhagyanka" checked> ভাগ্যাংক</label>
+                <label class="checkbox-item"><input type="checkbox" value="namanka" checked> নামাংক</label>
+                <label class="checkbox-item"><input type="checkbox" value="name_compat" checked> নাম সামঞ্জস্য</label>
+                <label class="checkbox-item"><input type="checkbox" value="angel" checked> এঞ্জেল সংখ্যা</label>
+                <label class="checkbox-item" id="cbVarshaPhal"><input type="checkbox" value="varsha_phal"> বৰ্ষফল (প্ৰ')</label>
+                <label class="checkbox-item"><input type="checkbox" value="planes" checked> ল' চু গ্ৰীডৰ ৮ যোগ</label>
+                <label class="checkbox-item"><input type="checkbox" value="pratikar" checked> প্ৰতিকাৰ</label>
+                <label class="checkbox-item"><input type="checkbox" value="final" checked> চূড়ান্ত ভৱিষ্যদ্বাণী</label>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+                <button class="btn btn-purple" id="btnDownloadPdf" onclick="downloadPDF()" style="font-size:0.95rem;padding:12px 24px;">
+                    📥 PDF ডাউনলোড কৰক
+                </button>
+                <span style="font-size:0.78rem;color:#888;" id="pdfNote"></span>
+            </div>
+            <div class="upgrade-banner" id="upgradeBanner" style="display:none;">
+                <h4>🔒 প্ৰ' ভাৰ্চন প্ৰয়োজন</h4>
+                <p>PDF ডাউনলোড আৰু বৰ্ষফল কেৱল প্ৰ' সদস্যৰ বাবে উপলব্ধ।</p>
+                <button class="btn btn-gold" onclick="openSubscription()">⭐ প্ৰ'লৈ আপগ্ৰেড কৰক</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chat Float -->
+<div class="chat-float">
+    <a href="/numerology/chat" id="chatLink">💬 AI জ্যোতিষীৰ সৈতে কথা পাতক</a>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Hidden form for PDF download -->
+<form id="pdfForm" method="POST" action="/numerology/download-pdf" style="display:none;">
+    <input type="hidden" name="name" id="pdfName">
+    <input type="hidden" name="dob" id="pdfDob">
+    <div id="pdfSectionsInputs"></div>
+</form>
+
+<script>
+let currentReport = null;
+let isPro = false;
+let hasPdf = false;
+let adminToggles = {};
+
+// Initialize admin toggles from server
+{% if admin_toggles %}
+adminToggles = {{ admin_toggles | tojson }};
+{% endif %}
+
+function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + type + ' show';
+    setTimeout(() => { t.className = 'toast'; }, 3000);
+}
+
+function openSubscription() {
+    window.location.href = '/dashboard';
+}
+
+// ─── Live Name Correction ──────────────────────────────────────
+const CHALDEAN_MAP = {
+    'A':1,'B':2,'C':3,'D':4,'E':5,'F':8,'G':3,'H':5,'I':1,'J':1,'K':2,'L':3,'M':4,
+    'N':5,'O':7,'P':8,'Q':1,'R':2,'S':3,'T':4,'U':6,'V':6,'W':6,'X':5,'Y':1,'Z':7
+};
+const FRIENDLY_PAIRS = {
+    1:[1,2,3,5,9],2:[1,2,3,5],3:[1,2,3,5,9],4:[5,6,7],5:[1,2,3,4,5,6,7,8,9],
+    6:[4,5,6,7],7:[4,5,6,7],8:[5,6,8],9:[1,3,5,9]
+};
+const NAME_LETTERS = {
+    1:'অ, আ, ই, ঈ, য, জ, ঝ', 2:'ক, খ, ব, ভ, ৰ, ক্ষ', 3:'গ, ঘ, চ, ছ, ল, শ, ষ, স, শ্ৰ',
+    4:'ট, ঠ, ড, ঢ, ত, থ, দ, ধ, ম, ত্ৰ', 5:'এ, ঐ, ঙ, ঞ, ণ, ন, হ, ং, ঃ',
+    6:'উ, ঊ, ৱ', 7:'ও, ঔ', 8:'প, ফ', 9:'অ, আ, ই, ঈ, য, জ, ঝ'
+};
+
+function reduceDigit(n) { while(n>9){n=n.toString().split('').reduce((a,b)=>a+parseInt(b),0);} return n; }
+
+function getChaldeanValue(name) {
+    let sum = 0, breakdown = [];
+    for(const c of name.toUpperCase()) {
+        const v = CHALDEAN_MAP[c] || 0;
+        if(v>0){sum+=v;breakdown.push(c+'('+v+')');}
+        else if(c===' ')breakdown.push('[Space]');
+    }
+    return {sum, namanka:reduceDigit(sum), breakdown:breakdown.join(' + ')};
+}
+
+function liveNameCorrection() {
+    const name = document.getElementById('numName').value.trim();
+    const group = document.getElementById('nameCorrectionGroup');
+    const preview = document.getElementById('nameCorrectionPreview');
+    if(!name || name.length < 2) {
+        group.style.display = 'none';
+        return;
+    }
+    group.style.display = '';
+    const {sum, namanka, breakdown} = getChaldeanValue(name);
+    if(sum === 0) {
+        preview.innerHTML = '<span style="color:#888;">Chaldean মান গণনা কৰিব পৰা নগল। ইংৰাজী বা অসমীয়া আখৰ ব্যৱহাৰ কৰক।</span>';
+        return;
+    }
+    // Check if namanka is 4 or 8 (considered difficult)
+    let warning = '';
+    if(namanka === 4 || namanka === 8) {
+        warning = `<br><span style="color:var(--red);">⚠️ নামাংক ${namanka} — এই সংখ্যা সাধাৰণতে সংগ্ৰামপূৰ্ণ বুলি গণ্য কৰা হয়। নামৰ বানান সালসলনি কৰি ১, ৩, ৫ বা ৬ লৈ আনিলে শুভ।</span>`;
+        // Suggest friendly numbers
+        const suggestions = [1,3,5,6].filter(n=>n!==namanka);
+        warning += `<br><span style="color:var(--purple);">💡 পৰামৰ্শিত নামাংক: ${suggestions.join(' বা ')} — ${suggestions.map(n=>NAME_LETTERS[n]||'').join('; ')}</span>`;
+    }
+    preview.innerHTML = `
+        <strong>আখৰৰ মান:</strong> ${breakdown}<br>
+        <strong>মুঠ যোগফল:</strong> ${sum} → <strong>নামাংক:</strong> <span style="font-size:1.1rem;color:var(--purple);font-weight:800;">${namanka}</span>
+        ${warning}
+    `;
+}
+
+async function calculateNumerology() {
+    const name = document.getElementById('numName').value.trim();
+    const dob = document.getElementById('numDob').value;
+    const gender = document.getElementById('numGender').value;
+
+    if (!name) { showToast('অনুগ্ৰহ কৰি নাম লিখক।', 'error'); return; }
+    if (!dob) { showToast('অনুগ্ৰহ কৰি জন্ম তাৰিখ নিৰ্বাচন কৰক।', 'error'); return; }
+
+    document.getElementById('loadingOverlay').classList.add('show');
+    document.getElementById('btnCalculate').disabled = true;
+
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('dob', dob);
+    formData.append('gender', gender);
+
+    try {
+        const resp = await fetch('/numerology/calculate', { method: 'POST', body: formData });
+        const data = await resp.json();
+
+        if (!data.success) {
+            showToast(data.message || 'গণনা ত্ৰুটি', 'error');
+            return;
+        }
+
+        currentReport = data.report;
+        isPro = data.is_pro;
+        hasPdf = data.has_pdf;
+        if (data.admin_toggles) adminToggles = data.admin_toggles;
+
+        renderResults(data.report);
+        document.getElementById('resultsContainer').classList.add('show');
+        document.getElementById('resultsContainer').scrollIntoView({ behavior: 'smooth' });
+
+        // Update chat link with data
+        updateChatLink(name, dob);
+
+    } catch (e) {
+        showToast('নেটৱৰ্ক ত্ৰুটি: ' + e.message, 'error');
+    } finally {
+        document.getElementById('loadingOverlay').classList.remove('show');
+        document.getElementById('btnCalculate').disabled = false;
+    }
+}
+
+function updateChatLink(name, dob) {
+    const link = document.getElementById('chatLink');
+    link.href = `/numerology/chat?name=${encodeURIComponent(name)}&dob=${encodeURIComponent(dob)}`;
+}
+
+function renderResults(report) {
+    renderLoShuGrid(report.lo_shu_grid);
+    renderMissingNumbers(report.missing_analysis);
+    renderPresentNumbers(report.present_analysis);
+    renderCompensation(report.compensation);
+    renderPlanes(report.planes);
+    renderCoreNumbers(report);
+    renderAngelNumber(report.angel_number);
+    renderNameCompatibility(report.name_compatibility);
+    renderVarshaPhal(report.detailed_varsha_phal || report.varsha_phal);
+    renderPratikar(report.pratikar);
+    // ─── NEW: Desktop app features ───
+    renderKuaNumber(report.kua_number);
+    renderSubhaDetails(report.subha_details);
+    renderNumberCompatibility(report.number_compatibility);
+    renderGemAdvice(report.gem_rudraksha_advice);
+    renderLalKitabRemedies(report.lal_kitab_remedies);
+    renderNameBreakdown(report.name_breakdown);
+    renderChaldeanChart(report.chaldean_chart);
+    // ─── Final ───
+    renderFinalPrediction(report.final_prediction);
+    setupPdfSection();
+    applyAdminToggles();
+}
+
+function renderLoShuGrid(gridData) {
+    const grid = gridData.grid;
+    let html = '<table class="grid-table">';
+    for (let i = 0; i < 3; i++) {
+        html += '<tr>';
+        for (let j = 0; j < 3; j++) {
+            const val = grid[i][j];
+            const hasValue = val && String(val).trim() !== '' && String(val) !== '0';
+            const cls = hasValue ? 'filled' : 'empty';
+            const display = hasValue ? val : '—';
+            html += `<td class="${cls}">${display}</td>`;
+        }
+        html += '</tr>';
+    }
+    html += '</table>';
+    document.getElementById('loShuGrid').innerHTML = html;
+}
+
+function renderMissingNumbers(analysis) {
+    let html = '';
+    if (analysis.length === 0) {
+        html = '<p style="color:var(--green);font-weight:600;">🎉 আপোনাৰ ল\' চু গ্ৰীডত কোনো সংখ্যা অনুপস্থিত নাই!</p>';
+    } else {
+        for (const m of analysis) {
+            html += `
+            <div class="num-card missing">
+                <span class="num-big">${m.number}</span> — ${m.planet}<br>
+                ${m.effect}<br>
+                <small><strong>ৰত্ন:</strong> ${m.gem} | <strong>ৰুদ্ৰাক্ষ:</strong> ${m.rudraksha}</small><br>
+                <small><strong>মন্ত্ৰ:</strong> ${m.mantra}</small>
+            </div>`;
+        }
+    }
+    document.getElementById('missingNumbers').innerHTML = html;
+}
+
+function renderPresentNumbers(analysis) {
+    let html = '';
+    for (const p of analysis) {
+        html += `
+        <div class="num-card present">
+            <span class="num-big">${p.number}</span> (${p.count}×) — ${p.planet}<br>
+            ${p.effect}
+        </div>`;
+    }
+    document.getElementById('presentNumbers').innerHTML = html;
+}
+
+function renderCompensation(comp) {
+    if (!comp) {
+        document.getElementById('compensationInfo').innerHTML = '<p>তথ্য উপলব্ধ নহয়।</p>';
+        return;
+    }
+    let html = '';
+    // Summary
+    if (comp.summary) {
+        html += `<div style="white-space:pre-line;line-height:1.8;font-size:0.9rem;margin-bottom:12px;">${comp.summary}</div>`;
+    }
+    // Compensated details
+    if (comp.details && comp.details.length > 0) {
+        html += '<div class="number-cards">';
+        for (const d of comp.details) {
+            html += `
+            <div class="num-card" style="border-left-color:var(--purple);background:#f5f0ff;">
+                <span class="num-big">${d.number}</span> — ${d.planet}<br>
+                ${d.effect}<br>
+                <small style="color:var(--purple);"><strong>পূৰণকাৰী:</strong> ${d.compensated_by.join(', ')}</small><br>
+                <small><strong>ৰত্ন:</strong> ${d.gem} | <strong>মন্ত্ৰ:</strong> ${d.mantra}</small>
+            </div>`;
+        }
+        html += '</div>';
+    }
+    document.getElementById('compensationInfo').innerHTML = html || '<p>কোনো পূৰণকাৰী তথ্য নাই।</p>';
+}
+
+function renderPlanes(planes) {
+    if (!planes || planes.length === 0) {
+        document.getElementById('planesInfo').innerHTML = '<p>তথ্য উপলব্ধ নহয়।</p>';
+        return;
+    }
+    const statusColors = {
+        'complete': {bg:'#e8f5e9', border:'#2E7D32', icon:'✅'},
+        'partial': {bg:'#fff8e1', border:'#F9A825', icon:'🟡'},
+        'weak':    {bg:'#fff3e0', border:'#E65100', icon:'🟠'},
+        'missing': {bg:'#ffebee', border:'#C62828', icon:'❌'}
+    };
+    let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;">';
+    for (const p of planes) {
+        const sc = statusColors[p.status_class] || statusColors['missing'];
+        html += `
+        <div style="background:${sc.bg};border-left:4px solid ${sc.border};border-radius:8px;padding:14px 16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <strong style="font-size:0.9rem;color:var(--deep-blue);">${p.name_short}</strong>
+                <span style="font-size:0.78rem;font-weight:600;">${sc.icon} ${p.status_text}</span>
+            </div>
+            <div style="font-size:0.78rem;color:#666;margin-bottom:4px;">সংখ্যা: ${p.numbers.join(' — ')}</div>
+            <p style="font-size:0.8rem;line-height:1.6;">${p.description}</p>`;
+        if (p.status === 'complete') {
+            html += `
+            <p style="font-size:0.78rem;line-height:1.6;"><strong>✅ শুভ প্ৰভাৱ (Good Effect):</strong> ${p.personality}</p>
+            <p style="font-size:0.78rem;line-height:1.6;"><strong>💼 উপযুক্ত পেচা:</strong> ${p.career}</p>`;
+        } else {
+            html += `
+            <p style="font-size:0.78rem;line-height:1.6;color:var(--red);"><strong>⚠️ কুপ্ৰভাৱ (Bad Effect):</strong> ${p.bad_effects}</p>`;
+        }
+        if (p.partial_note) {
+            html += `<p style="font-size:0.75rem;color:#888;font-style:italic;">${p.partial_note}</p>`;
+        }
+        html += '</div>';
+    }
+    html += '</div>';
+    document.getElementById('planesInfo').innerHTML = html;
+}
+
+function renderCoreNumbers(report) {
+    const m = report.mulyanka;
+    const b = report.bhagyanka;
+    const n = report.namanka;
+
+    let html = `
+    <div class="core-card">
+        <div class="cn-value">${m.value}</div>
+        <div class="cn-planet">${m.planet}</div>
+        <h4 style="color:var(--purple);">🎯 মূল্যাংক (Psychic Number)</h4>
+        <div class="cn-desc">
+            ${m.description}<br><br>
+            <strong>✅ সকাৰাত্মক:</strong> ${m.positive}<br>
+            <strong>⚠️ নকাৰাত্মক:</strong> ${m.negative}
+        </div>
+    </div>
+    <div class="core-card">
+        <div class="cn-value">${b.value}</div>
+        <div class="cn-planet">${b.planet}</div>
+        <h4 style="color:var(--purple);">🌟 ভাগ্যাংক (Destiny Number)</h4>
+        <div class="cn-desc">
+            ${b.description}<br><br>
+            <strong>✅ সকাৰাত্মক:</strong> ${b.positive}<br>
+            <strong>⚠️ নকাৰাত্মক:</strong> ${b.negative}
+        </div>
+    </div>
+    <div class="core-card">
+        <div class="cn-value">${n.value}</div>
+        <div class="cn-planet">${n.planet}</div>
+        <h4 style="color:var(--purple);">📛 নামাংক (Name Number)</h4>
+        <div class="cn-desc">
+            ${n.description}<br>
+            <small>মূল যোগফল: ${n.raw_total || '—'}</small>
+        </div>
+    </div>`;
+    document.getElementById('coreNumbers').innerHTML = html;
+}
+
+function renderAngelNumber(angel) {
+    document.getElementById('angelNumber').innerHTML = `
+        <div class="angel-num">${angel.value}</div>
+        <p style="margin-top:8px;font-size:0.9rem;">${angel.description}</p>
+    `;
+}
+
+function renderNameCompatibility(nc) {
+    const cls = nc.compatible ? 'good' : 'bad';
+    const icon = nc.compatible ? '✅' : '⚠️';
+    let html = `
+        <p>${icon} <strong>${nc.description}</strong></p>
+        <span class="compat-score ${cls}">${nc.score}%</span>
+    `;
+    for (const r of nc.reasons) {
+        html += `<p style="margin-top:6px;">• ${r}</p>`;
+    }
+    if (nc.correction) {
+        html += `<div class="upgrade-banner" style="margin-top:12px;background:linear-gradient(135deg,#E65100,#BF360C);">
+            <p style="margin:0;">💡 <strong>নাম সংশোধনৰ পৰামৰ্শ:</strong> ${nc.correction}</p>
+        </div>`;
+    }
+    document.getElementById('nameCompatibility').innerHTML = html;
+}
+
+function renderVarshaPhal(vp) {
+    if (!vp || vp.length === 0) {
+        document.getElementById('varshaPhal').innerHTML = '<p>বৰ্ষফল তথ্য উপলব্ধ নহয়।</p>';
+        return;
+    }
+    let html = '';
+    for (const v of vp) {
+        html += `
+        <div class="year-item" style="flex-direction:column;align-items:flex-start;gap:6px;padding:12px 14px;">
+            <div style="display:flex;align-items:center;gap:10px;width:100%;">
+                <span class="year-badge">${v.year}</span>
+                <span style="color:#888;font-size:0.8rem;">ব্যক্তিগত বৰ্ষ: ${v.personal_year_number}</span>
+            </div>
+            <div style="white-space:pre-line;font-size:0.82rem;line-height:1.7;color:#444;">${v.prediction}</div>
+        </div>`;
+    }
+    document.getElementById('varshaPhal').innerHTML = html;
+}
+
+function renderPratikar(pr) {
+    let html = '';
+    if (pr.gems && pr.gems.length > 0) {
+        html += '<div class="remedy-box"><h4>💎 ৰত্ন</h4>' + pr.gems.map(g => '<p>• ' + g + '</p>').join('') + '</div>';
+    }
+    if (pr.mantras && pr.mantras.length > 0) {
+        html += '<div class="remedy-box"><h4>🕉️ মন্ত্ৰ</h4>' + pr.mantras.map(m => '<p>• ' + m + '</p>').join('') + '</div>';
+    }
+    if (pr.rudraksha && pr.rudraksha.length > 0) {
+        html += '<div class="remedy-box"><h4>📿 ৰুদ্ৰাক্ষ</h4>' + pr.rudraksha.map(r => '<p>• ' + r + '</p>').join('') + '</div>';
+    }
+    if (pr.general && pr.general.length > 0) {
+        html += '<div class="remedy-box"><h4>🌿 সাধাৰণ উপায়</h4>' + pr.general.map(g => '<p>• ' + g + '</p>').join('') + '</div>';
+    }
+    document.getElementById('pratikar').innerHTML = html || '<p>কোনো প্ৰতিকাৰৰ প্ৰয়োজন নাই।</p>';
+}
+
+function renderKuaNumber(kua) {
+    if (!kua || kua.value === 0) {
+        document.getElementById('kuaNumber').innerHTML = '<p>গণনা কৰিব পৰা নগল।</p>';
+        return;
+    }
+    let html = `<p><strong>আপোনাৰ কোৱা নম্বৰ: <span style="font-size:1.5rem;color:var(--purple);">${kua.value}</span></strong></p>`;
+    html += `<p><strong>দিশ:</strong> ${kua.group || ''}</p>`;
+    if (kua.directions && Object.keys(kua.directions).length > 0) {
+        html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">';
+        for (const [key, val] of Object.entries(kua.directions)) {
+            html += `<div style="background:#f5f0ff;padding:8px 12px;border-radius:6px;"><strong>${key}:</strong> ${val}</div>`;
+        }
+        html += '</div>';
+    }
+    document.getElementById('kuaNumber').innerHTML = html;
+}
+
+function renderSubhaDetails(sd) {
+    if (!sd) return;
+    document.getElementById('subhaDetails').innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;">
+            <div style="background:#fff8e1;padding:12px 16px;border-radius:8px;text-align:center;">
+                <div style="font-size:0.8rem;color:#888;">🎨 শুভ ৰং</div>
+                <div style="font-weight:700;color:#F57F17;">${sd.color || '-'}</div>
+            </div>
+            <div style="background:#e8f5e9;padding:12px 16px;border-radius:8px;text-align:center;">
+                <div style="font-size:0.8rem;color:#888;">🔢 শুভ সংখ্যা</div>
+                <div style="font-weight:700;color:#2E7D32;">${sd.number || '-'}</div>
+            </div>
+            <div style="background:#e3f2fd;padding:12px 16px;border-radius:8px;text-align:center;">
+                <div style="font-size:0.8rem;color:#888;">📅 শুভ তাৰিখ</div>
+                <div style="font-weight:700;color:#1565C0;">${sd.tarikh || '-'}</div>
+            </div>
+        </div>`;
+}
+
+function renderNumberCompatibility(nc) {
+    if (!nc) return;
+    document.getElementById('numberCompatibility').innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;">
+            <div style="background:#e8f5e9;padding:12px 16px;border-radius:8px;text-align:center;">
+                <div style="font-size:0.8rem;color:#888;">🤝 মিত্ৰ সংখ্যা</div>
+                <div style="font-weight:700;color:#2E7D32;">${nc.friendly || '-'}</div>
+                <div style="font-size:0.7rem;color:#666;">বিবাহ বা ব্যৱসায়ৰ বাবে শুভ</div>
+            </div>
+            <div style="background:#fff3e0;padding:12px 16px;border-radius:8px;text-align:center;">
+                <div style="font-size:0.8rem;color:#888;">⚔️ শত্ৰু সংখ্যা</div>
+                <div style="font-weight:700;color:#E65100;">${nc.enemy || '-'}</div>
+                <div style="font-size:0.7rem;color:#666;">গুৰুত্বপূৰ্ণ কামৰ পৰা বিৰত থাকক</div>
+            </div>
+            <div style="background:#f5f5f5;padding:12px 16px;border-radius:8px;text-align:center;">
+                <div style="font-size:0.8rem;color:#888;">😐 সম সংখ্যা</div>
+                <div style="font-weight:700;color:#546e7a;">${nc.neutral || '-'}</div>
+                <div style="font-size:0.7rem;color:#666;">সাধাৰণ সম্পৰ্ক</div>
+            </div>
+        </div>`;
+}
+
+function renderGemAdvice(ga) {
+    if (!ga || !ga.gem || ga.gem === '-') {
+        document.getElementById('gemAdvice').innerHTML = '<p>তথ্য উপলব্ধ নহয়।</p>';
+        return;
+    }
+    document.getElementById('gemAdvice').innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;">
+            <div style="background:#fff8e1;padding:10px 14px;border-radius:8px;"><strong>ৰত্ন:</strong> ${ga.gem}</div>
+            <div style="background:#fff8e1;padding:10px 14px;border-radius:8px;"><strong>ওজন:</strong> ${ga.weight}</div>
+            <div style="background:#fff8e1;padding:10px 14px;border-radius:8px;"><strong>আঙুলি:</strong> ${ga.finger}</div>
+            <div style="background:#fff8e1;padding:10px 14px;border-radius:8px;"><strong>ধাতু:</strong> ${ga.metal}</div>
+            <div style="background:#e8f5e9;padding:10px 14px;border-radius:8px;grid-column:1/-1;"><strong>📿 ৰুদ্ৰাক্ষ:</strong> ${ga.rudraksha}</div>
+        </div>`;
+}
+
+function renderLalKitabRemedies(remedies) {
+    if (!remedies || remedies.length === 0) {
+        document.getElementById('lalKitabRemedies').innerHTML = '<p>তথ্য উপলব্ধ নহয়।</p>';
+        return;
+    }
+    let html = '<ol style="line-height:2;padding-left:20px;">';
+    remedies.forEach(r => { html += `<li>${r}</li>`; });
+    html += '</ol>';
+    document.getElementById('lalKitabRemedies').innerHTML = html;
+}
+
+function renderNameBreakdown(nb) {
+    if (!nb || !nb.breakdown) {
+        document.getElementById('nameBreakdown').innerHTML = '<p>তথ্য উপলব্ধ নহয়।</p>';
+        return;
+    }
+    document.getElementById('nameBreakdown').innerHTML = `
+        <div style="background:#fafafa;padding:14px;border-radius:8px;font-family:monospace;font-size:0.85rem;">
+            <p><strong>আখৰৰ মান:</strong> ${nb.breakdown}</p>
+            <p><strong>মুঠ যোগফল:</strong> ${nb.total}</p>
+            <p><strong>চূড়ান্ত নামাংক:</strong> <span style="font-size:1.2rem;color:var(--purple);font-weight:800;">${nb.namanka}</span></p>
+        </div>`;
+}
+
+function renderChaldeanChart(chart) {
+    document.getElementById('chaldeanChart').textContent = chart || 'তথ্য উপলব্ধ নহয়।';
+}
+
+function renderFinalPrediction(text) {
+    document.getElementById('finalPrediction').innerHTML = text;
+}
+
+function setupPdfSection() {
+    const btnPdf = document.getElementById('btnDownloadPdf');
+    const upgradeBanner = document.getElementById('upgradeBanner');
+    const pdfNote = document.getElementById('pdfNote');
+    const cbVarsha = document.getElementById('cbVarshaPhal');
+
+    if (hasPdf) {
+        btnPdf.disabled = false;
+        btnPdf.classList.remove('locked');
+        upgradeBanner.style.display = 'none';
+        pdfNote.textContent = '';
+        cbVarsha.style.display = '';
+    } else {
+        btnPdf.disabled = true;
+        btnPdf.classList.add('locked');
+        upgradeBanner.style.display = 'block';
+        pdfNote.textContent = '(প্ৰ\' সদস্যৰ বাবে)';
+        cbVarsha.style.display = 'none';
+    }
+
+    // Show/hide varsha phal section
+    const secVarsha = document.getElementById('secVarsha');
+    if (isPro) {
+        secVarsha.style.display = '';
+    } else {
+        secVarsha.style.display = 'none';
+    }
+}
+
+function applyAdminToggles() {
+    // Hide sections based on admin toggles
+    const toggleMap = {
+        'numerology_lo_shu': 'secLoShu',
+        'numerology_missing': 'secMissing',
+        'numerology_present': 'secPresent',
+        'numerology_mulyanka': 'secCore',
+        'numerology_bhagyanka': 'secCore',
+        'numerology_namanka': 'secCore',
+        'numerology_name_compat': 'secNameCompat',
+        'numerology_angel': 'secAngel',
+        'numerology_varsha_phal': 'secVarsha',
+        'numerology_pratikar': 'secPratikar',
+        'numerology_final': 'secFinal',
+        'numerology_kua': 'secKua',
+        'numerology_subha': 'secSubha',
+        'numerology_num_compat': 'secNumCompat',
+        'numerology_gem_advice': 'secGemAdvice',
+        'numerology_lal_kitab': 'secLalKitab',
+        'numerology_name_breakdown': 'secNameBreakdown',
+        'numerology_chaldean': 'secChaldeanChart',
+        'numerology_planes': 'secPlanes',
+    };
+
+    for (const [key, secId] of Object.entries(toggleMap)) {
+        if (adminToggles.hasOwnProperty(key) && !adminToggles[key]) {
+            const el = document.getElementById(secId);
+            if (el) el.style.display = 'none';
+        }
+    }
+
+    // Handle chat toggle
+    if (adminToggles.hasOwnProperty('numerology_chat') && !adminToggles['numerology_chat']) {
+        const chatFloat = document.querySelector('.chat-float');
+        if (chatFloat) chatFloat.style.display = 'none';
+    }
+}
+
+function downloadPDF() {
+    if (!currentReport) return;
+    if (!hasPdf) {
+        showToast('PDF ডাউনলোড কৰিবলৈ প্ৰ\' ভাৰ্চনলৈ আপগ্ৰেড কৰক।', 'error');
+        return;
+    }
+
+    const name = document.getElementById('numName').value.trim();
+    const dob = document.getElementById('numDob').value;
+
+    document.getElementById('pdfName').value = name;
+    document.getElementById('pdfDob').value = dob;
+
+    // Build selected sections
+    const checkboxes = document.querySelectorAll('#pdfCheckboxes input[type="checkbox"]:checked');
+    const sectionsDiv = document.getElementById('pdfSectionsInputs');
+    sectionsDiv.innerHTML = '';
+    checkboxes.forEach(cb => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'sections';
+        input.value = cb.value;
+        sectionsDiv.appendChild(input);
+    });
+
+    document.getElementById('pdfForm').submit();
+}
+</script>
+
+</body>
+</html>

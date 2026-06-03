@@ -225,6 +225,9 @@
         <button class="nav-item" onclick="showSection('astrologer')">
             <span class="icon">🔮</span> জ্যোতিষীৰ বিৱৰণ
         </button>
+        <button class="nav-item" onclick="showSection('numerology')">
+            <span class="icon">🔢</span> অংক জ্যোতিষ
+        </button>
         <a href="/admin/logout" class="nav-item">
             <span class="icon">🚪</span> লগআউট
         </a>
@@ -549,6 +552,19 @@
                 </div>
             </div>
         </div>
+
+        <!-- Numerology Admin Section -->
+        <div id="section-numerology" class="section">
+            <div class="card">
+                <h3>🔢 অংক জ্যোতিষ ফিচাৰ টগল</h3>
+                <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:16px;">
+                    অংক জ্যোতিষ মডিউলৰ বিভিন্ন ফিচাৰসমূহ সক্ষম/অক্ষম কৰক। এই ছেটিংসমূহ ৰিয়েল-টাইমত ফ্ৰন্টএণ্ডত প্ৰয়োগ হ'ব।
+                </p>
+                <div id="numerologyToggles" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;">
+                    <p>লোড হৈ আছে...</p>
+                </div>
+            </div>
+        </div>
     </main>
 </div>
 
@@ -589,7 +605,7 @@
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         document.getElementById('section-' + name).classList.add('active');
         document.querySelector(`[onclick="showSection('${name}')"]`).classList.add('active');
-        const titles = {dashboard:'📊 ডেশ্ববৰ্ড', users:'👥 ব্যৱহাৰকাৰীসকল', subscriptions:'💳 চাবস্ক্ৰিপশ্যন', features:'⚙️ ফিচাৰ ব্যৱস্থাপনা', images:'🖼️ ফটো ব্যৱস্থাপনা', astrologer:'🔮 জ্যোতিষীৰ বিৱৰণ'};
+        const titles = {dashboard:'📊 ডেশ্ববৰ্ড', users:'👥 ব্যৱহাৰকাৰীসকল', subscriptions:'💳 চাবস্ক্ৰিপশ্যন', features:'⚙️ ফিচাৰ ব্যৱস্থাপনা', images:'🖼️ ফটো ব্যৱস্থাপনা', astrologer:'🔮 জ্যোতিষীৰ বিৱৰণ', numerology:'🔢 অংক জ্যোতিষ'};
         document.getElementById('pageTitle').textContent = titles[name] || '';
     }
 
@@ -1008,6 +1024,7 @@
         origShowSection(name);
         if (name === 'images') loadImages();
         if (name === 'astrologer') { loadAdminAstrologerProfile(); }
+        if (name === 'numerology') { loadNumerologyToggles(); }
     };
 
     // ─── Astrologer Profile Management ───
@@ -1119,6 +1136,49 @@
             statusEl.textContent = 'ছেভ কৰাত বিফল।';
             statusEl.style.color = 'var(--red)';
         });
+    }
+
+    // ─── Numerology Admin Toggles ───
+
+    function loadNumerologyToggles() {
+        const container = document.getElementById('numerologyToggles');
+        container.innerHTML = '<p>লোড হৈ আছে...</p>';
+
+        fetch('/admin/api/numerology-toggles')
+            .then(r => r.json())
+            .then(toggles => {
+                let html = '';
+                toggles.forEach(t => {
+                    html += `
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#fafafa;border-radius:8px;border:1px solid var(--border);">
+                        <div>
+                            <div style="font-weight:600;font-size:0.85rem;">${t.feature_label_asm}</div>
+                            <div style="font-size:0.7rem;color:var(--text-light);">${t.feature_key}</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" ${t.is_enabled ? 'checked' : ''} onchange="toggleNumerologyFeature('${t.feature_key}', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>`;
+                });
+                container.innerHTML = html;
+            })
+            .catch(e => {
+                container.innerHTML = '<p style="color:var(--red);">ত্ৰুটি: ' + e + '</p>';
+            });
+    }
+
+    function toggleNumerologyFeature(featureKey, isEnabled) {
+        fetch('/admin/api/numerology-toggles', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({feature_key: featureKey, is_enabled: isEnabled})
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) alert(data.message);
+        })
+        .catch(err => alert('ত্ৰুটি: ' + err));
     }
 </script>
 </body>

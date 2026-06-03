@@ -189,13 +189,25 @@
         <div class="feature-grid">
             {% for f in feature_defs %}
                 {% if f.feature_key in user_features and user_features[f.feature_key] %}
-                <a href="/kundli" class="feature-card">
-                    <div class="f-icon">{{ feature_icons.get(f.feature_key, '✨') }}</div>
-                    <div class="f-info">
-                        <div class="f-name">{{ f.feature_name_asm }}</div>
-                        <div class="f-desc">{{ f.description }}</div>
-                    </div>
-                </a>
+                    {% if f.feature_key == 'numerology' %}
+                    <a href="/numerology" class="feature-card">
+                        <div class="f-icon">{{ feature_icons.get(f.feature_key, '✨') }}</div>
+                        <div class="f-info">
+                            <div class="f-name">{{ f.feature_name_asm }}</div>
+                            <div class="f-desc">{{ f.description }}</div>
+                        </div>
+                    </a>
+                    {% elif f.feature_key in ['numerology_chat', 'numerology_pdf', 'numerology_varsha'] %}
+                    <!-- Skip sub-features, they're accessed from within numerology page -->
+                    {% else %}
+                    <a href="/kundli" class="feature-card">
+                        <div class="f-icon">{{ feature_icons.get(f.feature_key, '✨') }}</div>
+                        <div class="f-info">
+                            <div class="f-name">{{ f.feature_name_asm }}</div>
+                            <div class="f-desc">{{ f.description }}</div>
+                        </div>
+                    </a>
+                    {% endif %}
                 {% else %}
                 <div class="feature-card locked">
                     <div class="f-icon">🔒</div>
@@ -209,9 +221,12 @@
             {% endfor %}
         </div>
 
-        <!-- Quick Action -->
-        <div style="text-align:center;margin-top:8px;">
+        <!-- Quick Actions -->
+        <div style="text-align:center;margin-top:8px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
             <a href="/kundli" class="btn btn-fill" style="font-size:1rem;padding:14px 32px;">✨ কুণ্ডলী প্ৰস্তুত কৰক</a>
+            {% if user_features.get('numerology') %}
+            <a href="/numerology" class="btn btn-fill" style="font-size:1rem;padding:14px 32px;background:var(--purple);">🔢 অংক জ্যোতিষ</a>
+            {% endif %}
         </div>
     </div>
 
