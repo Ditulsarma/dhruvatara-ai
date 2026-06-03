@@ -259,7 +259,7 @@
             box-shadow: var(--shadow); margin-bottom: 20px;
             border: 1px solid var(--border); overflow: hidden;
         }
-        .section-body { padding: 20px 24px; }
+        .section-body { padding: 20px 24px; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; }
 
         table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
         th, td { border: 1px solid #eee; padding: 10px 12px; text-align: left; }
@@ -482,15 +482,29 @@
         }
         .ai-content strong { color: var(--deep-blue); }
 
-        .tabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
-        .tab-btn {
-            padding: 8px 18px; border-radius: 20px; font-size: 0.82rem;
-            font-weight: 600; font-family: inherit; cursor: pointer;
-            border: 2px solid var(--border); background: white;
-            color: var(--text-light); transition: var(--transition);
+        .tabs {
+            display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
+            justify-content: center;
         }
-        .tab-btn.active { background: var(--orange); color: white; border-color: var(--orange); }
-        .tab-btn:hover:not(.active) { border-color: var(--orange); color: var(--orange); }
+        .tab-btn {
+            padding: 10px 20px; border-radius: 25px; font-size: 0.9rem;
+            font-weight: 700; font-family: inherit; cursor: pointer;
+            border: 2px solid #e0d5c0; background: linear-gradient(135deg, #FFFDF7, #FFF8F0);
+            color: #5a4a3a; transition: all 0.25s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            white-space: nowrap;
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--orange), #FF8F00);
+            color: white; border-color: var(--orange);
+            box-shadow: 0 4px 12px rgba(255,102,0,0.25);
+            transform: translateY(-1px);
+        }
+        .tab-btn:hover:not(.active) {
+            border-color: var(--orange); color: var(--orange);
+            background: #FFF8F0; box-shadow: 0 4px 10px rgba(255,102,0,0.1);
+            transform: translateY(-1px);
+        }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
@@ -504,11 +518,19 @@
             .nav-actions { flex-wrap: wrap; gap: 4px; }
             .btn-sm { padding: 6px 10px; font-size: 0.7rem; border-radius: 16px; }
 
-            /* Tabs - horizontal scroll */
-            .tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; gap: 3px; }
-            .tabs::-webkit-scrollbar { height: 3px; }
-            .tabs::-webkit-scrollbar-thumb { background: var(--orange); border-radius: 3px; }
-            .tab-btn { flex-shrink: 0; padding: 6px 12px; font-size: 0.7rem; white-space: nowrap; }
+            /* Tabs - horizontal scroll for mobile */
+            .tabs {
+                flex-wrap: nowrap; overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                padding: 4px 2px 8px; gap: 6px;
+                justify-content: flex-start;
+            }
+            .tabs::-webkit-scrollbar { height: 4px; }
+            .tabs::-webkit-scrollbar-thumb { background: var(--orange); border-radius: 4px; }
+            .tab-btn {
+                flex-shrink: 0; padding: 9px 16px;
+                font-size: 0.82rem; white-space: nowrap;
+            }
 
             /* Tables - horizontal scroll */
             .section-body { padding: 12px 10px; }
@@ -601,7 +623,7 @@
             .panchanga-grid { grid-template-columns: 1fr 1fr; }
             .top-nav .brand { font-size: 0.9rem; }
             .btn-sm { padding: 5px 8px; font-size: 0.65rem; }
-            .tab-btn { padding: 5px 10px; font-size: 0.65rem; }
+            .tab-btn { padding: 7px 12px; font-size: 0.75rem; }
             .section-body { padding: 8px 6px; }
             table { font-size: 0.62rem; }
             th, td { padding: 4px 5px; font-size: 0.6rem; }
@@ -679,6 +701,72 @@
             font-family: inherit; color: var(--text-light);
         }
         .select-all-row button:hover { background: var(--bg); border-color: var(--orange); color: var(--orange); }
+
+        /* ─── Dwadash Bhab Phala Styles ─── */
+        .dwadash-phala-container { max-width: 1000px; margin: 0 auto; }
+        .dwadash-house-section {
+            background: linear-gradient(135deg, #FFFDF7 0%, #FFF8F0 100%);
+            border-radius: 12px;
+            border: 2px solid #FFE0B2;
+            margin-bottom: 18px;
+            padding: 20px 22px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(255,102,0,0.06);
+        }
+        .dwadash-house-section:hover {
+            box-shadow: 0 6px 20px rgba(255,102,0,0.12);
+            border-color: var(--orange);
+            transform: translateY(-2px);
+        }
+        .dwadash-house-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #FFE0B2;
+            margin-bottom: 14px;
+        }
+        .dwadash-house-title .dwadash-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        .dwadash-house-title h4 {
+            color: var(--deep-blue);
+            font-size: 1.15rem;
+            font-weight: 800;
+            margin: 0;
+            flex: 1;
+            line-height: 1.4;
+        }
+        .dwadash-house-title .dwadash-badge {
+            background: var(--orange);
+            color: #fff;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 20px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .dwadash-positions { margin-top: 4px; }
+        .dwadash-position-item {
+            padding: 6px 0;
+            transition: var(--transition);
+        }
+        .dwadash-position-item:hover { background: rgba(255,102,0,0.03); border-radius: 6px; padding: 6px 8px; }
+        .position-label {
+            font-weight: 700;
+            color: var(--orange);
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+        .position-phala {
+            font-size: 1rem;
+            color: #3a3a3a;
+            line-height: 2;
+            text-align: justify;
+            font-family: 'Noto Sans Bengali', 'Nirmala UI', 'Vrinda', sans-serif;
+        }
     </style>
 </head>
 <body>
@@ -884,6 +972,9 @@
         {% endif %}
         {% if not user_features or user_features.get('graha_bichar', True) %}
         <button class="tab-btn" onclick="switchTab('graha_bichar')">🪐 গ্ৰহ বিচাৰ</button>
+        {% endif %}
+        {% if not user_features or user_features.get('dwadash_bhab_phala', True) %}
+        <button class="tab-btn" onclick="switchTab('dwadash_bhab_phala')">🏠 দ্বাদশ ভাব ফল</button>
         {% endif %}
     </div>
 
@@ -1440,6 +1531,34 @@
         </div></div>
     </div>
 
+    <div id="tab-dwadash_bhab_phala" class="tab-content">
+        <div class="section"><div class="section-body">
+            {% if dwadash_html %}
+            <div style="max-width:1000px;margin:0 auto;">
+                <h4 style="color:var(--deep-blue);margin-bottom:20px;text-align:center;">🏠 দ্বাদশ ভাব ফল (12 House Results)</h4>
+                <div style="margin-bottom:20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;">
+                    <button id="dwadash-select-all" style="padding:8px 16px;border-radius:20px;border:2px solid var(--orange);background:var(--orange);color:white;cursor:pointer;font-weight:600;">সকলো নির্বাচন কৰক</button>
+                    <button id="dwadash-deselect-all" style="padding:8px 16px;border-radius:20px;border:2px solid var(--border);background:white;color:var(--orange);cursor:pointer;font-weight:600;">সকলো আনচিলেক্ট কৰক</button>
+                    <select id="dwadash-filter" style="padding:8px 14px;border:2px solid var(--border);border-radius:20px;font-family:inherit;cursor:pointer;">
+                        <option value="all">সকলো ভাব দেখাও</option>
+                        <option value="1">শুধুমাত্ৰ প্রথম 4 ভাব</option>
+                        <option value="2">শুধুমাত্ৰ মধ্য 4 ভাব</option>
+                        <option value="3">শুধুমাত্ৰ শেষ 4 ভাব</option>
+                    </select>
+                </div>
+                <div id="dwadash-content">
+                    {{ dwadash_html | safe }}
+                </div>
+            </div>
+            {% else %}
+            <div style="text-align:center;padding:30px;color:var(--text-light);">
+                <span style="font-size:2rem;">🏠</span>
+                <p>দ্বাদশ ভাব ফল উপলব্ধ নহয়।</p>
+            </div>
+            {% endif %}
+        </div></div>
+    </div>
+
 </div>
 
 <!-- ─── Kartari Yoga Modal ─── -->
@@ -1587,6 +1706,44 @@
 </div>
 
 <script>
+    // ─── Copy Protection ───
+    // Disable right-click on prediction content
+    document.addEventListener('contextmenu', function(e) {
+        // Allow right-click on inputs, textareas, and nav
+        const tag = e.target.tagName.toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || tag === 'select' || tag === 'button' || tag === 'a') return;
+        e.preventDefault();
+        return false;
+    });
+
+    // Disable keyboard shortcuts for copy/save/print
+    document.addEventListener('keydown', function(e) {
+        // Ctrl+C, Ctrl+U, Ctrl+S, Ctrl+P, Ctrl+Shift+I, F12
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'u' || e.key === 's' || e.key === 'p')) {
+            // Allow Ctrl+C in input/textarea fields
+            if (e.key === 'c') {
+                const tag = e.target.tagName.toLowerCase();
+                if (tag === 'input' || tag === 'textarea') return;
+            }
+            e.preventDefault();
+            return false;
+        }
+        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    // Disable drag (prevents drag-to-copy)
+    document.addEventListener('dragstart', function(e) { e.preventDefault(); });
+
+    // Disable selection on double-click (already handled by CSS user-select)
+    document.addEventListener('selectstart', function(e) {
+        const tag = e.target.tagName.toLowerCase();
+        if (tag === 'input' || tag === 'textarea') return;
+        e.preventDefault();
+    });
+
     const allVargasData = {{ all_vargas | tojson }};
     const ascRasiIndex = {{ asc_rasi_index }};
     const rasiNames = ["মেষ", "বৃষ", "মিথুন", "কৰ্কট", "সিংহ", "কন্যা", "তুলা", "বৃশ্চিক", "ধনু", "মকৰ", "কুম্ভ", "মীন"];
@@ -2489,6 +2646,61 @@
     <img src="/api/images/{{ img.id }}" alt="{{ img.alt_text }}" style="width:{{ img.width }}px;height:{{ img.height }}px;object-fit:contain;margin:4px 8px;border-radius:4px;display:inline-block;">
     {% endfor %}
 </div>
+
+<!-- ─── Dwadash Bhab Phala Controls ─── -->
+<script>
+    // Dwadash Bhab Phala select/deselect functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectAllBtn = document.getElementById('dwadash-select-all');
+        const deselectAllBtn = document.getElementById('dwadash-deselect-all');
+        const filterSelect = document.getElementById('dwadash-filter');
+        const dwadashContent = document.getElementById('dwadash-content');
+
+        if (selectAllBtn && dwadashContent) {
+            selectAllBtn.addEventListener('click', function() {
+                const sections = dwadashContent.querySelectorAll('.dwadash-house-section');
+                sections.forEach(section => section.style.display = 'block');
+                selectAllBtn.style.background = 'var(--orange)';
+                selectAllBtn.style.color = 'white';
+                deselectAllBtn.style.background = 'white';
+                deselectAllBtn.style.color = 'var(--orange)';
+            });
+        }
+
+        if (deselectAllBtn && dwadashContent) {
+            deselectAllBtn.addEventListener('click', function() {
+                const sections = dwadashContent.querySelectorAll('.dwadash-house-section');
+                sections.forEach(section => section.style.display = 'none');
+                deselectAllBtn.style.background = 'var(--orange)';
+                deselectAllBtn.style.color = 'white';
+                selectAllBtn.style.background = 'white';
+                selectAllBtn.style.color = 'var(--orange)';
+            });
+        }
+
+        if (filterSelect && dwadashContent) {
+            filterSelect.addEventListener('change', function() {
+                const sections = dwadashContent.querySelectorAll('.dwadash-house-section');
+                const filter = this.value;
+
+                sections.forEach((section, idx) => {
+                    let show = true;
+                    if (filter === '1') {
+                        // Only first 4 houses (0-3)
+                        show = idx >= 0 && idx <= 3;
+                    } else if (filter === '2') {
+                        // Only middle 4 houses (4-7)
+                        show = idx >= 4 && idx <= 7;
+                    } else if (filter === '3') {
+                        // Only last 4 houses (8-11)
+                        show = idx >= 8 && idx <= 11;
+                    }
+                    section.style.display = show ? 'block' : 'none';
+                });
+            });
+        }
+    });
+</script>
 
 </body>
 </html>

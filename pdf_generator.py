@@ -250,6 +250,8 @@ def _build_html(
     rashi_phala_html: str = "",
     graha_bichar_html: str = "",
     antardasha_phala_html: str = "",
+    dwadash_html: str = "",
+    vimsottari_summary: str = "",
     selected_sections: list = None,
     lagna_lord: str = "",
     moon_rashi_lord: str = "",
@@ -993,6 +995,43 @@ def _build_html(
         font-weight: 700;
     }}
 
+    /* Dwadash Bhab Phala */
+    .dwadash-phala-container {{
+        margin-bottom: 10px; page-break-inside: avoid;
+    }}
+    .dwadash-house-section {{
+        margin-bottom: 10px; padding: 12px 14px;
+        background: #FFFDF7; border: 2px solid #FFE0B2;
+        border-radius: 6px; page-break-inside: avoid;
+    }}
+    .dwadash-house-title {{
+        font-size: 10pt; font-weight: 800; color: {ORANGE};
+        margin-bottom: 8px; border-bottom: 2px solid {ORANGE};
+        padding-bottom: 6px;
+    }}
+    .dwadash-house-title .dwadash-badge {{
+        background: {ORANGE}; color: #fff;
+        font-size: 7pt; font-weight: 700;
+        padding: 2px 8px; border-radius: 10px;
+        margin-left: 8px;
+    }}
+    .dwadash-positions {{
+        font-size: 9pt; line-height: 1.8;
+    }}
+    .dwadash-position-item {{
+        margin-bottom: 4px; padding: 6px 8px;
+        background: white; border-left: 3px solid {DEEP_BLUE};
+        border-radius: 3px;
+    }}
+    .position-label {{
+        font-weight: 700; color: {ORANGE}; font-size: 9pt;
+        margin-bottom: 4px;
+    }}
+    .position-phala {{
+        font-size: 9pt; color: #333; text-align: justify;
+        margin-top: 2px; line-height: 1.8;
+    }}
+
     .footer {{
         margin-top: 24px; padding-top: 10px; border-top: 2px solid {ORANGE};
         text-align: center; font-size: 7pt; color: #999;
@@ -1138,7 +1177,13 @@ def _build_html(
     if _include('graha_bichar'):
         html += '<h2 class="section-heading">🪐 গ্ৰহ বিচাৰ (ভাব অনুসৰি)</h2>' + graha_bichar_html
 
-    if _include('dasha_summary'):
+    if _include('dwadash_bhab_phala'):
+        html += '<h2 class="section-heading">🏠 দ্বাদশ ভাব ফল (12 House Results)</h2>' + dwadash_html
+
+    if vimsottari_summary and _include('dasha_summary'):
+        html += '<h2 class="section-heading">📊 বিংশোত্তৰী দশা সাৰাংশ</h2><div style="background:#FFF8F0;border-left:4px solid #FF6600;padding:12px 16px;font-size:9pt;line-height:1.8;border-radius:6px;margin-bottom:10px;text-align:justify;font-family:\'Noto Sans Bengali\',\'Nirmala UI\',sans-serif;">' + vimsottari_summary.replace('\n', '<br>') + '</div>'
+        html += '<table class="dasha-table"><thead><tr><th>মহাদশা</th><th>আৰম্ভ</th><th>সমাপ্তি</th><th>অন্তৰ্দশা (প্ৰথম ৩)</th></tr></thead><tbody>' + dasha_rows + '</tbody></table>'
+    elif _include('dasha_summary'):
         html += '<h2 class="section-heading">⏳ বিংশোত্তৰী দশা সাৰাংশ</h2><table class="dasha-table"><thead><tr><th>মহাদশা</th><th>আৰম্ভ</th><th>সমাপ্তি</th><th>অন্তৰ্দশা (প্ৰথম ৩)</th></tr></thead><tbody>' + dasha_rows + '</tbody></table>'
 
     if _include('dasha_full'):
@@ -1192,6 +1237,8 @@ def generate_pdf_report(
     rashi_phala_html: str = "",
     graha_bichar_html: str = "",
     antardasha_phala_html: str = "",
+    dwadash_html: str = "",
+    vimsottari_summary: str = "",
     selected_sections: list = None,
     lagna_lord: str = "",
     moon_rashi_lord: str = "",
@@ -1214,6 +1261,8 @@ def generate_pdf_report(
         nakshatra_phala_html, lagna_phala_html, rashi_phala_html,
         graha_bichar_html=graha_bichar_html,
         antardasha_phala_html=antardasha_phala_html,
+        dwadash_html=dwadash_html,
+        vimsottari_summary=vimsottari_summary,
         selected_sections=selected_sections,
         lagna_lord=lagna_lord,
         moon_rashi_lord=moon_rashi_lord,

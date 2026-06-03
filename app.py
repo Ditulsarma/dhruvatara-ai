@@ -40,6 +40,7 @@ from patrika import generate_patrika_text
 from kartari_dosha import generate_kartari_report
 from small_antardasaphal import get_antardasha_phala, get_all_antardasha_phala_for_pdf
 from importantantardasa import get_important_antardasha_phala
+from dwadash_bhab_phala import get_dwadash_html, get_dwadash_text, get_dwadash_json, get_dwadash_phala
 from auth_module import (
     register_user, login_user, login_admin, verify_email, verify_mobile,
     resend_otp, get_user_features, check_feature_access,
@@ -932,6 +933,10 @@ def calculate():
     # Saturn Sare Sati / Dhaiya data for result page
     shani_sare_sati_data = get_shani_sare_sati_data(moon_rasi=rasis[moon_rasi_idx], planets_data=planets_data, user_dob=dob)
 
+    # Dwadash Bhab Phala - 12 House Results (only actual placements)
+    dwadash_html = get_dwadash_html(planet_houses=planet_houses, asc_rasi_idx=asc_rasi_idx)
+    dwadash_json_data = get_dwadash_json(planet_houses=planet_houses, asc_rasi_idx=asc_rasi_idx)
+
     return render_template("result.html",
                            user_name=name, user_dob=dob, user_tob=tob, user_place=place,
                            gender=gender, lat=lat, lon=lon, timezone=tz_offset,
@@ -954,6 +959,8 @@ def calculate():
                            graha_bichar_data=graha_bichar_data,
                            graha_bichar_html=graha_bichar_html,
                            shani_sare_sati_data=shani_sare_sati_data,
+                           dwadash_html=dwadash_html,
+                           dwadash_json_data=dwadash_json_data,
                            planet_houses=planet_houses,
                            user_features=get_user_features(session.get('user_id', 0)),
                            user_subscription_name=user_subscription_name,
@@ -1146,6 +1153,26 @@ def download_pdf():
             panchanga=panchanga,
         )
 
+        # Dwadash Bhab Phala for PDF (only actual placements)
+        dwadash_html = get_dwadash_html(planet_houses=planet_houses, asc_rasi_idx=asc_rasi_idx)
+
+        # Vimsottari Dasha Summary for PDF
+        vimsottari_summary = ""
+        if dasa_hierarchy and len(dasa_hierarchy) > 0:
+            current_maha = dasa_hierarchy[0]
+            maha_name = current_maha.get('planet', 'অজানা')
+            maha_start = current_maha.get('start', '').split('T')[0] if 'start' in current_maha else ''
+            maha_end = current_maha.get('end', '').split('T')[0] if 'end' in current_maha else ''
+            
+            current_antar = current_maha.get('antardasha', [{}])[0]
+            antar_name = current_antar.get('planet', 'অজানা')
+            antar_start = current_antar.get('start', '').split('T')[0] if 'start' in current_antar else ''
+            antar_end = current_antar.get('end', '').split('T')[0] if 'end' in current_antar else ''
+            
+            vimsottari_summary = f"""বৰ্তমান মহাদশা: {maha_name} ({maha_start} ৰ পৰা {maha_end} পৰ্যন্ত)
+বৰ্তমান অন্তৰ্দশা: {antar_name} ({antar_start} ৰ পৰা {antar_end} পৰ্যন্ত)
+এই দশা সময়ে আপোনাৰ জীৱনত ব্যাপক পৰিৱৰ্তন আশা কৰা হৈছে।"""
+
         pdf_bytes = generate_pdf_report(
             name, dob, tob, place, planets_data, panchanga,
             dosha_results, yoga_results, dasa_hierarchy, ai_interpretation,
@@ -1154,6 +1181,8 @@ def download_pdf():
             nakshatra_phala_html, lagna_phala_html, rashi_phala_html,
             graha_bichar_html=graha_bichar_html,
             antardasha_phala_html=antardasha_phala_html,
+            dwadash_html=dwadash_html,
+            vimsottari_summary=vimsottari_summary,
             lagna_lord=lagna_lord, moon_rashi_lord=moon_rashi_lord,
             moon_rasi=moon_rasi, gender=gender,
             astrologer_profile=astrologer_profile,
@@ -1401,6 +1430,26 @@ def download_patrika_pdf():
         antardasha_phala_html = build_important_antardasha_html(
             dasa_hierarchy, gender=gender
         )
+
+        # Dwadash Bhab Phala for PDF (only actual placements)
+        dwadash_html = get_dwadash_html(planet_houses=planet_houses, asc_rasi_idx=asc_rasi_idx)
+
+        # Vimsottari Dasha Summary for PDF
+        vimsottari_summary = ""
+        if dasa_hierarchy and len(dasa_hierarchy) > 0:
+            current_maha = dasa_hierarchy[0]
+            maha_name = current_maha.get('planet', 'অজানা')
+            maha_start = current_maha.get('start', '').split('T')[0] if 'start' in current_maha else ''
+            maha_end = current_maha.get('end', '').split('T')[0] if 'end' in current_maha else ''
+            
+            current_antar = current_maha.get('antardasha', [{}])[0]
+            antar_name = current_antar.get('planet', 'অজানা')
+            antar_start = current_antar.get('start', '').split('T')[0] if 'start' in current_antar else ''
+            antar_end = current_antar.get('end', '').split('T')[0] if 'end' in current_antar else ''
+            
+            vimsottari_summary = f"""বৰ্তমান মহাদশা: {maha_name} ({maha_start} ৰ পৰা {maha_end} পৰ্যন্ত)
+বৰ্তমান অন্তৰ্দশা: {antar_name} ({antar_start} ৰ পৰা {antar_end} পৰ্যন্ত)
+এই দশা সময়ে আপোনাৰ জীৱনত ব্যাপক পৰিৱৰ্তন আশা কৰা হৈছে।"""
         
         pdf_bytes = generate_pdf_report(
             name, dob, tob, place, planets_data, panchanga,
@@ -1410,6 +1459,8 @@ def download_patrika_pdf():
             nakshatra_phala_html, lagna_phala_html, rashi_phala_html,
             graha_bichar_html=graha_bichar_html,
             antardasha_phala_html=antardasha_phala_html,
+            dwadash_html=dwadash_html,
+            vimsottari_summary=vimsottari_summary,
             lagna_lord=lagna_lord, moon_rashi_lord=moon_rashi_lord,
             moon_rasi=moon_rasi, gender=gender,
             astrologer_profile=astrologer_profile,
@@ -1654,6 +1705,28 @@ def custom_pdf():
                     selected_maha=None, include_current_and_future_only=True, gender=gender
                 )
 
+        # Dwadash Bhab Phala for PDF (only if selected, only actual placements)
+        dwadash_html = ""
+        if 'dwadash_bhab_phala' in selected_sections:
+            dwadash_html = get_dwadash_html(planet_houses=planet_houses, asc_rasi_idx=asc_rasi_idx)
+
+        # Vimsottari Dasha Summary for PDF
+        vimsottari_summary = ""
+        if 'dasha_summary' in selected_sections and dasa_hierarchy and len(dasa_hierarchy) > 0:
+            current_maha = dasa_hierarchy[0]
+            maha_name = current_maha.get('planet', 'অজানা')
+            maha_start = current_maha.get('start', '').split('T')[0] if 'start' in current_maha else ''
+            maha_end = current_maha.get('end', '').split('T')[0] if 'end' in current_maha else ''
+            
+            current_antar = current_maha.get('antardasha', [{}])[0]
+            antar_name = current_antar.get('planet', 'অজানা')
+            antar_start = current_antar.get('start', '').split('T')[0] if 'start' in current_antar else ''
+            antar_end = current_antar.get('end', '').split('T')[0] if 'end' in current_antar else ''
+            
+            vimsottari_summary = f"""বৰ্তমান মহাদশা: {maha_name} ({maha_start} ৰ পৰা {maha_end} পৰ্যন্ত)
+বৰ্তমান অন্তৰ্দশা: {antar_name} ({antar_start} ৰ পৰা {antar_end} পৰ্যন্ত)
+এই দশা সময়ে আপোনাৰ জীৱনত ব্যাপক পৰিৱৰ্তন আশা কৰা হৈছে।"""
+
         pdf_bytes = generate_pdf_report(
             name, dob, tob, place, planets_data, panchanga,
             dosha_results, yoga_results, dasa_hierarchy, ai_interpretation,
@@ -1662,6 +1735,8 @@ def custom_pdf():
             nakshatra_phala_html, lagna_phala_html, rashi_phala_html,
             graha_bichar_html=graha_bichar_html,
             antardasha_phala_html=antardasha_phala_html,
+            dwadash_html=dwadash_html,
+            vimsottari_summary=vimsottari_summary,
             selected_sections=selected_sections,
             lagna_lord=lagna_lord, moon_rashi_lord=moon_rashi_lord,
             moon_rasi=moon_rasi, gender=gender,
