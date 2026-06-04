@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="as">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>যোটক মিলন ফলাফল — {{ boy.name }} আৰু {{ girl.name }} | ধ্ৰুৱতৰা AI</title>
+    <meta name="description" content="{{ boy.name }} আৰু {{ girl.name }}ৰ বিবাহ যোটক মিলনৰ সম্পূৰ্ণ ফলাফল — অষ্টকূট গুণ মিলন, মাংগলিক দোষ বিচাৰ, আৰু বিবাহ সামঞ্জস্য বিশ্লেষণ। ধ্ৰুৱতৰা AI, দিতুল শৰ্মাৰ দ্বাৰা নিৰ্মিত প্ৰথম অসমীয়া জ্যোতিষ চফ্টৱেৰ।" />
+    <meta name="keywords" content="যোটক মিলন, Jotok Milan, বিবাহ মিলন, Marriage Matching, অষ্টকূট মিলন, Ashtakoot Milan, গুণ মিলন, Guna Milan, ধ্ৰুৱতৰা AI, Dhrubatara AI, দিতুল শৰ্মা, Ditul Sarma" />
+    <meta name="author" content="দিতুল শৰ্মা, Ditul Sarma" />
+    <meta name="robots" content="index, follow" />
+    <meta name="language" content="Assamese" />
+    <meta property="og:title" content="যোটক মিলন ফলাফল — {{ boy.name }} আৰু {{ girl.name }}" />
+    <meta property="og:description" content="{{ boy.name }} আৰু {{ girl.name }}ৰ বিবাহ যোটক মিলনৰ সম্পূৰ্ণ ফলাফল — ধ্ৰুৱতৰা AI ত।" />
+    <link rel="canonical" href="https://dhrubataraai.com/jotok-milan" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --orange: #FF6600; --orange-dark: #E55D00; --deep-blue: #1a237e;
+            --gold: #D4A017; --bg: #FFF8F0; --card-bg: #FFFFFF;
+            --text: #2c3e50; --text-light: #5a6c7d; --border: #e8e0d5;
+            --shadow: 0 4px 20px rgba(0,0,0,0.06); --radius: 14px; --radius-sm: 8px;
+            --green: #2E7D32; --red: #C62828; --pink: #E91E63; --purple: #6A1B9A;
+            --transition: 0.25s ease;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans Bengali', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #FFF8F0 0%, #FFF3E0 30%, #FFECB3 60%, #FFF8F0 100%);
+            background-attachment: fixed; min-height: 100vh; color: var(--text);
+            line-height: 1.8; -webkit-font-smoothing: antialiased;
+        }
+
+        .top-nav {
+            background: white; border-bottom: 1px solid var(--border);
+            padding: 12px 24px; display: flex; align-items: center;
+            justify-content: space-between; position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .top-nav .brand { font-weight: 800; font-size: 1.2rem; color: var(--orange); text-decoration: none; }
+        .top-nav .brand span { color: var(--deep-blue); }
+        .nav-actions { display: flex; gap: 10px; }
+        .btn-sm {
+            padding: 8px 16px; border-radius: 20px; font-size: 0.82rem;
+            font-weight: 600; font-family: inherit; cursor: pointer;
+            border: none; transition: var(--transition); text-decoration: none;
+            display: inline-flex; align-items: center; gap: 5px;
+        }
+        .btn-outline { background: white; color: var(--orange); border: 2px solid var(--orange); }
+        .btn-outline:hover { background: var(--orange); color: white; }
+        .btn-fill { background: var(--orange); color: white; }
+        .btn-fill:hover { background: var(--orange-dark); }
+
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+
+        /* ─── Score Hero ─── */
+        .score-hero {
+            background: linear-gradient(135deg, var(--deep-blue) 0%, #283593 50%, #1a237e 100%);
+            border-radius: var(--radius); padding: 36px 28px; text-align: center;
+            color: white; margin-bottom: 24px; box-shadow: 0 8px 32px rgba(26,35,126,0.25);
+        }
+        .score-hero .couple-names {
+            font-size: 1.6rem; font-weight: 800; margin-bottom: 4px;
+        }
+        .score-hero .couple-names .heart { color: #ff4081; margin: 0 8px; animation: pulse 1.5s ease-in-out infinite; display: inline-block; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+        .score-hero .score-circle {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 130px; height: 130px; border-radius: 50%;
+            background: rgba(255,255,255,0.12); border: 4px solid rgba(255,255,255,0.3);
+            margin: 16px 0; flex-direction: column;
+        }
+        .score-hero .score-number { font-size: 3rem; font-weight: 900; line-height: 1; }
+        .score-hero .score-max { font-size: 1rem; opacity: 0.8; }
+        .score-hero .verdict {
+            font-size: 1.3rem; font-weight: 700; margin-top: 8px;
+            padding: 8px 24px; border-radius: 50px; display: inline-block;
+        }
+        .verdict-excellent { background: #2E7D32; color: white; }
+        .verdict-good { background: #4CAF50; color: white; }
+        .verdict-average { background: #FF9800; color: white; }
+        .verdict-warning { background: #f44336; color: white; }
+        .verdict-bad { background: #b71c1c; color: white; }
+
+        /* ─── Profile Cards ─── */
+        .profile-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+        @media (max-width: 700px) { .profile-row { grid-template-columns: 1fr; } }
+        .profile-card {
+            background: var(--card-bg); border-radius: var(--radius);
+            box-shadow: var(--shadow); padding: 20px 22px; border: 1px solid var(--border);
+        }
+        .profile-card.boy { border-left: 5px solid var(--deep-blue); }
+        .profile-card.girl { border-left: 5px solid var(--pink); }
+        .profile-card h3 { font-size: 1.1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .profile-card.boy h3 { color: var(--deep-blue); }
+        .profile-card.girl h3 { color: var(--pink); }
+        .profile-table { width: 100%; border-collapse: collapse; }
+        .profile-table td { padding: 6px 4px; font-size: 0.88rem; border-bottom: 1px solid #f5f0e8; }
+        .profile-table td:first-child { font-weight: 600; color: var(--text-light); width: 45%; }
+        .profile-table td:last-child { color: var(--text); font-weight: 500; }
+
+        /* ─── Section Cards ─── */
+        .section-card {
+            background: var(--card-bg); border-radius: var(--radius);
+            box-shadow: var(--shadow); padding: 24px 22px; margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+        .section-card h2 {
+            font-size: 1.25rem; font-weight: 700; color: var(--deep-blue);
+            margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid var(--border);
+            display: flex; align-items: center; gap: 10px;
+        }
+        .section-card h2 .s-icon { font-size: 1.4rem; }
+
+        /* ─── Koota Table ─── */
+        .koota-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+        .koota-table th {
+            background: linear-gradient(135deg, var(--deep-blue), #283593);
+            color: white; padding: 12px 10px; font-size: 0.82rem;
+            font-weight: 600; text-align: center;
+        }
+        .koota-table td {
+            padding: 10px; text-align: center; font-size: 0.85rem;
+            border-bottom: 1px solid #f0ebe0;
+        }
+        .koota-table tr:hover td { background: #fffdf7; }
+        .koota-table .koota-name { text-align: left; font-weight: 700; color: var(--deep-blue); }
+        .koota-table .score-cell { font-weight: 800; font-size: 1rem; }
+        .score-good { color: var(--green); }
+        .score-mid { color: #E65100; }
+        .score-bad { color: var(--red); }
+        .koota-table .total-row td {
+            font-weight: 800; font-size: 1.05rem; background: #fff8f0;
+            border-top: 2px solid var(--orange);
+        }
+
+        /* ─── Koota Detail Cards ─── */
+        .koota-detail {
+            background: linear-gradient(135deg, #fafaf7, #fffdf7);
+            border: 1px solid var(--border); border-radius: var(--radius-sm);
+            padding: 18px 20px; margin-bottom: 16px;
+        }
+        .koota-detail .kd-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 10px; flex-wrap: wrap; gap: 8px;
+        }
+        .koota-detail .kd-title {
+            font-weight: 700; font-size: 1.05rem; color: var(--deep-blue);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .koota-detail .kd-score {
+            font-weight: 800; font-size: 0.9rem; padding: 4px 14px;
+            border-radius: 20px; white-space: nowrap;
+        }
+        .kd-excellent { background: #e8f5e9; color: #2E7D32; }
+        .kd-good { background: #e8f5e9; color: #388E3C; }
+        .kd-average { background: #fff3e0; color: #E65100; }
+        .kd-bad { background: #ffebee; color: #C62828; }
+        .koota-detail .kd-desc { font-size: 0.88rem; color: var(--text); line-height: 1.8; }
+        .koota-detail .kd-prediction {
+            margin-top: 10px; padding: 12px 16px;
+            background: white; border-radius: 8px;
+            border-left: 3px solid var(--orange);
+            font-size: 0.88rem; color: var(--text); line-height: 1.8;
+        }
+
+        /* ─── Mangalik Section ─── */
+        .mangalik-card {
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            border: 1px solid #ffcc80; border-radius: var(--radius);
+            padding: 22px 24px; margin-bottom: 20px;
+        }
+        .mangalik-card h2 { color: #E65100; }
+        .mangalik-status { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+        @media (max-width: 500px) { .mangalik-status { grid-template-columns: 1fr; } }
+        .mangalik-item {
+            background: white; border-radius: var(--radius-sm); padding: 14px 16px;
+            text-align: center;
+        }
+        .mangalik-item .mi-label { font-size: 0.8rem; color: var(--text-light); }
+        .mangalik-item .mi-value { font-size: 1.1rem; font-weight: 700; margin-top: 4px; }
+        .mi-yes { color: var(--red); }
+        .mi-no { color: var(--green); }
+        .remedies-list { margin-top: 12px; }
+        .remedies-list li { margin-bottom: 6px; font-size: 0.88rem; }
+
+        /* ─── Conclusion ─── */
+        .conclusion-card {
+            background: linear-gradient(135deg, #e8eaf6, #c5cae9);
+            border: 2px solid var(--deep-blue); border-radius: var(--radius);
+            padding: 28px 24px; text-align: center; margin-bottom: 20px;
+        }
+        .conclusion-card h2 { color: var(--deep-blue); border: none; justify-content: center; }
+        .conclusion-card .conclusion-text {
+            font-size: 1.05rem; line-height: 1.9; margin: 16px 0;
+            color: var(--text);
+        }
+        .blessing {
+            font-size: 1.2rem; font-weight: 700; color: var(--orange);
+            margin-top: 16px; font-style: italic;
+        }
+
+        .footer {
+            text-align: center; padding: 20px;
+            color: var(--text-light); font-size: 0.8rem;
+        }
+        .footer span { color: var(--orange); font-weight: 600; }
+
+        @media (max-width: 600px) {
+            .container { padding: 12px; }
+            .score-hero { padding: 24px 16px; }
+            .score-hero .couple-names { font-size: 1.2rem; }
+            .score-hero .score-circle { width: 100px; height: 100px; }
+            .score-hero .score-number { font-size: 2.2rem; }
+            .section-card { padding: 16px 14px; }
+            .koota-table th, .koota-table td { padding: 8px 6px; font-size: 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="top-nav">
+    <a href="/" class="brand">🔮 ধ্ৰুৱতৰা <span>AI</span></a>
+    <div class="nav-actions">
+        <a href="/jotok-milan" class="btn-sm btn-outline">🔄 নতুন মিলন</a>
+        <a href="/" class="btn-sm btn-fill">🏠 মূল পৃষ্ঠা</a>
+    </div>
+</nav>
+
+<div class="container">
+
+    <!-- ═══════════ SCORE HERO ═══════════ -->
+    <div class="score-hero">
+        <div class="couple-names">
+            {{ boy.name }} <span class="heart">💖</span> {{ girl.name }}
+        </div>
+        <div class="score-circle">
+            <span class="score-number">{{ "%.1f"|format(result.total_score) }}</span>
+            <span class="score-max">/ {{ result.max_score }} গুণ</span>
+        </div>
+        <div class="verdict verdict-{{ result.verdict_class }}">
+            {{ result.verdict }}
+        </div>
+    </div>
+
+    <!-- ═══════════ PROFILE CARDS ═══════════ -->
+    <div class="profile-row">
+        <div class="profile-card boy">
+            <h3>🧑 পাত্ৰ — {{ boy.name }}</h3>
+            <table class="profile-table">
+                <tr><td>ৰাশি (Moon Sign)</td><td>♈ {{ boy.rashi }}</td></tr>
+                <tr><td>নক্ষত্ৰ</td><td>⭐ {{ boy.nakshatra }}</td></tr>
+                <tr><td>চৰণ / পাদ</td><td>🦶 {{ boy.charan }}ম চৰণ</td></tr>
+                <tr><td>লগ্ন</td><td>🌅 {{ boy.lagna or 'উল্লেখ নাই' }}</td></tr>
+                <tr><td>মঙ্গলৰ অৱস্থান</td><td>🔥 {{ boy.mars_house }}ম ঘৰ {% if result.mangalik.boy_mangalik %}(মাংগলিক){% else %}(অমাংগলিক){% endif %}</td></tr>
+            </table>
+        </div>
+        <div class="profile-card girl">
+            <h3>👩 পাত্ৰী — {{ girl.name }}</h3>
+            <table class="profile-table">
+                <tr><td>ৰাশি (Moon Sign)</td><td>♈ {{ girl.rashi }}</td></tr>
+                <tr><td>নক্ষত্ৰ</td><td>⭐ {{ girl.nakshatra }}</td></tr>
+                <tr><td>চৰণ / পাদ</td><td>🦶 {{ girl.charan }}ম চৰণ</td></tr>
+                <tr><td>লগ্ন</td><td>🌅 {{ girl.lagna or 'উল্লেখ নাই' }}</td></tr>
+                <tr><td>মঙ্গলৰ অৱস্থান</td><td>🔥 {{ girl.mars_house }}ম ঘৰ {% if result.mangalik.girl_mangalik %}(মাংগলিক){% else %}(অমাংগলিক){% endif %}</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- ═══════════ ASHTAKOOT SUMMARY TABLE ═══════════ -->
+    <div class="section-card">
+        <h2><span class="s-icon">📊</span> অষ্টকূট গুণ মিলন — সাৰাংশ</h2>
+        <div style="overflow-x:auto;">
+        <table class="koota-table">
+            <thead>
+                <tr>
+                    <th>ক্ৰম</th>
+                    <th>কূটৰ নাম</th>
+                    <th>প্ৰাপ্ত গুণ</th>
+                    <th>সৰ্বোচ্চ গুণ</th>
+                    <th>স্থিতি</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set koota_order = ['varna', 'vashya', 'tara', 'yoni', 'graha_maitri', 'gana', 'bhakoot', 'nadi'] %}
+                {% for key in koota_order %}
+                {% set k = result.kootas[key] %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td class="koota-name">{{ get_koota_icon(key) }} {{ get_koota_name_asm(key) }}</td>
+                    <td class="score-cell {% if k.score == k.max_score %}score-good{% elif k.score >= k.max_score * 0.5 %}score-mid{% else %}score-bad{% endif %}">
+                        {{ k.score }}</td>
+                    </td>
+                    <td>{{ k.max_score }}</td>
+                    <td style="font-weight:600;{% if 'উত্তম' in k.result %}color:#2E7D32{% elif 'অশুভ' in k.result or 'অমিল' in k.result %}color:#C62828{% else %}color:#E65100{% endif %}">
+                        {{ k.result }}
+                    </td>
+                </tr>
+                {% endfor %}
+                <tr class="total-row">
+                    <td colspan="2">🌟 সৰ্বমুঠ গুণ</td>
+                    <td class="score-cell" style="color:var(--deep-blue);">{{ "%.1f"|format(result.total_score) }}</td>
+                    <td>{{ result.max_score }}</td>
+                    <td style="font-weight:700; color:var(--deep-blue);">{{ result.verdict }}</td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <!-- ═══════════ DETAILED KOOTA ANALYSIS ═══════════ -->
+    <div class="section-card">
+        <h2><span class="s-icon">🔍</span> অষ্টকূটৰ সবিশেষ বিশ্লেষণ</h2>
+
+        <!-- 1. VARNA -->
+        <div class="koota-detail">
+            <div class="kd-header">
+                <div class="kd-title">🕉️ ১। বৰ্ণ কূট (Varna Koota) — আধ্যাত্মিক আৰু মানসিক সামঞ্জস্য</div>
+                <div class="kd-score {% if result.kootas.varna.score == 1 %}kd-excellent{% else %}kd-bad{% endif %}">
+                    {{ result.kootas.varna.score }} / {{ result.kootas.varna.max_score }} গুণ
+                </div>
+            </div>
+            <div class="kd-desc">
+                {{ result.kootas.varna.description }}
+            </div>
+            <div class="kd-prediction">
+                {% if result.kootas.varna.score == 1 %}
+                <strong>শুভ ফল:</strong> পাত্ৰ-পাত্ৰীৰ বৰ্ণগত সামঞ্জস্য অতি উত্তম। পাত্ৰৰ বৰ্ণ পাত্ৰীতকৈ উচ্চ বা সমান হোৱাৰ বাবে ই এক সুস্থ আৰু সমতাপূৰ্ণ দাম্পত্য সম্পৰ্কৰ ইংগিত দিয়ে। ইয়াৰ অৰ্থ হ'ল যে তেওঁলোকৰ মাজত পাৰস্পৰিক শ্ৰদ্ধা, বুজাবুজি, আৰু আধ্যাত্মিক চিন্তাধাৰাৰ মিল থাকিব। তেওঁলোকৰ মানসিক স্তৰ একে হোৱাৰ বাবে জীৱনৰ গুৰুত্বপূৰ্ণ সিদ্ধান্তসমূহত সহমতত উপনীত হ'ব পাৰিব। ই দাম্পত্য জীৱনৰ ভেটি সবল কৰে আৰু পৰিয়ালত শান্তি বিৰাজ কৰে।
+                {% else %}
+                <strong>সাৱধানতা:</strong> পাত্ৰ-পাত্ৰীৰ বৰ্ণগত অমিল আছে। পাত্ৰীৰ বৰ্ণ পাত্ৰতকৈ উচ্চ হোৱাৰ বাবে দাম্পত্য জীৱনত কেতিয়াবা মানসিক দূৰত্ব আৰু অহংকাৰৰ সংঘাত হ'ব পাৰে। জীৱনৰ গুৰুত্বপূৰ্ণ সিদ্ধান্তত মতানক্য হোৱাৰ সম্ভাৱনা থাকে। তথাপিও পাৰস্পৰিক শ্ৰদ্ধা আৰু বুজাবুজিৰ দ্বাৰা এই অমিল সহজে অতিক্ৰম কৰিব পাৰি। আধ্যাত্মিক চৰ্চা আৰু ধ্যানৰ দ্বাৰা মানসিক সমতা আনিব পাৰি।
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 2. VASHYA -->
+        <div class="koota-detail">
+            <div class="kd-header">
+                <div class="kd-title">💑 ২। বশ্য কূট (Vashya Koota) — পাৰস্পৰিক আকৰ্ষণ আৰু নিয়ন্ত্ৰণ</div>
+                <div class="kd-score {% if result.kootas.vashya.score == 2 %}kd-excellent{% elif result.kootas.vashya.score == 1 %}kd-average{% else %}kd-bad{% endif %}">
+                    {{ result.kootas.vashya.score }} / {{ result.kootas.vashya.max_score }} গুণ
+                </div>
+            </div>
+            <div class="kd-desc">
+                {{ result.kootas.vashya.description }}
+            </div>
+            <div class="kd-prediction">
+                {% if result.kootas.vashya.score == 2 %}
+                <strong>শুভ ফল:</strong> বশ্য কূটত পূৰ্ণ গুণ প্ৰাপ্তিয়ে এক গভীৰ পাৰস্পৰিক আকৰ্ষণ আৰু প্ৰভাৱৰ সম্পৰ্ক নিৰ্দেশ কৰে। পাত্ৰ-পাত্ৰীৰ মাজত এক স্বাভাৱিক চুম্বকীয় আকৰ্ষণ থাকিব, যিয়ে তেওঁলোকৰ দাম্পত্য জীৱনক প্ৰগাঢ় কৰি ৰাখিব। তেওঁলোকে পৰস্পৰৰ প্ৰতি এক সুস্থ প্ৰভাৱ বিস্তাৰ কৰিব আৰু জীৱনৰ প্ৰত্যাহ্বানসমূহ একেলগে মোকাবিলা কৰিব পাৰিব। ই এক সুখী আৰু স্থায়ী বিবাহৰ বাবে অতি শুভ লক্ষণ।
+                {% elif result.kootas.vashya.score == 1 %}
+                <strong>মধ্যম ফল:</strong> বশ্য কূটত আংশিক মিল আছে। পাত্ৰ-পাত্ৰীৰ মাজত আকৰ্ষণ থাকিলেও সম্পূৰ্ণ পাৰস্পৰিক প্ৰভাৱ নাথাকিব পাৰে। কোনো এজনৰ প্ৰভাৱ আনজনৰ ওপৰত বেছি হ'ব পাৰে। ইয়াৰ ফলত কেতিয়াবা দাম্পত্য জীৱনত ভাৰসাম্যহীনতা আহিব পাৰে। পাৰস্পৰিক বুজাবুজি আৰু সম্মানেৰে এই পৰিস্থিতিৰ সমাধান সম্ভৱ।
+                {% else %}
+                <strong>সাৱধানতা:</strong> বশ্য কূটত অমিল আছে। পাত্ৰ-পাত্ৰীৰ মাজত স্বাভাৱিক আকৰ্ষণৰ অভাৱ হ'ব পাৰে। তেওঁলোকৰ ব্যক্তিত্ব আৰু জীৱনশৈলীৰ পাৰ্থক্যই দাম্পত্য জীৱনত সংঘাতৰ সৃষ্টি কৰিব পাৰে। পৰস্পৰৰ প্ৰতি সহনশীলতা বৃদ্ধি কৰা আৰু একেলগে সময় কটোৱাৰ অভ্যাস গঢ়ি তোলা উচিত।
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 3. TARA -->
+        <div class="koota-detail">
+            <div class="kd-header">
+                <div class="kd-title">⭐ ৩। তাৰা কূট (Tara Koota) — ভাগ্য, স্বাস্থ্য আৰু মঙ্গল</div>
+                <div class="kd-score {% if result.kootas.tara.score == 3 %}kd-excellent{% elif result.kootas.tara.score >= 1.5 %}kd-average{% else %}kd-bad{% endif %}">
+                    {{ "%.1f"|format(result.kootas.tara.score) }} / {{ result.kootas.tara.max_score }} গুণ
+                </div>
+            </div>
+            <div class="kd-desc">
+                {{ result.kootas.tara.description }}
+            </div>
+            <div class="kd-prediction">
+                {% if result.kootas.tara.score == 3 %}
+                <strong>শুভ ফল:</strong> তাৰা কূটত পূৰ্ণ গুণ — ই অত্যন্ত শুভ! পাত্ৰীৰ নক্ষত্ৰৰ পৰা পাত্ৰৰ নক্ষত্ৰলৈ ব্যৱধান শুভ তাৰাত পৰিছে। ইয়াৰ অৰ্থ হ'ল যে তেওঁলোকৰ দাম্পত্য জীৱনত ভাগ্যৰ সহায় থাকিব। স্বাস্থ্যৰ ক্ষেত্ৰত ই অতি শুভ — দুয়োৰে আয়ুস আৰু স্বাস্থ্য সুৰক্ষিত থাকিব। জীৱনৰ সংকটসমূহত তেওঁলোকে ঐশ্বৰিক সহায় লাভ কৰিব। ই এক অতি মঙ্গলময় দাম্পত্য জীৱনৰ ইংগিত।
+                {% elif result.kootas.tara.score == 1.5 %}
+                <strong>মধ্যম ফল:</strong> তাৰা কূটত মধ্যম গুণ — জন্ম বা প্ৰত্যৰি তাৰা। ইয়াৰ অৰ্থ হ'ল যে দাম্পত্য জীৱনত কিছুমান উত্থান-পতন থাকিব পাৰে। স্বাস্থ্যৰ ক্ষেত্ৰত সাৱধানতা অৱলম্বন কৰা উচিত। নিয়মিত স্বাস্থ্য পৰীক্ষা আৰু সুষম জীৱনশৈলীৰ দ্বাৰা এই প্ৰভাৱ নিয়ন্ত্ৰণ কৰিব পাৰি। ভাগ্যৰ সহায় কিছু পৰিমাণে থাকিব।
+                {% else %}
+                <strong>অশুভ ফল:</strong> তাৰা কূটত অশুভ গুণ — বিপৎ বা নৈধন তাৰা। ইয়াৰ অৰ্থ হ'ল যে দাম্পত্য জীৱনত স্বাস্থ্যজনিত সমস্যা বা অপ্রত্যাশিত বিপদ আহিব পাৰে। বিশেষকৈ বিবাহৰ প্ৰাৰম্ভিক বছৰসমূহত সাৱধানতা অৱলম্বন কৰা উচিত। নিয়মিত পূজা-অৰ্চনা, দান-পুণ্য, আৰু স্বাস্থ্যৰ প্ৰতি যত্নশীল হোৱাৰ দ্বাৰা এই অশুভ প্ৰভাৱ কমাব পাৰি।
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 4. YONI -->
+        <div class="koota-detail">
+            <div class="kd-header">
+                <div class="kd-title">💕 ৪। যোনি কূট (Yoni Koota) — শাৰীৰিক সামঞ্জস্য আৰু জৈৱিক সমতা</div>
+                <div class="kd-score {% if result.kootas.yoni.score >= 3 %}kd-excellent{% elif result.kootas.yoni.score >= 2 %}kd-average{% else %}kd-bad{% endif %}">
+                    {{ result.kootas.yoni.score }} / {{ result.kootas.yoni.max_score }} গুণ
+                </div>
+            </div>
+            <div class="kd-desc">
+                {{ result.kootas.yoni.description }}
+            </div>
+            <div class="kd-prediction">
+                {% if result.kootas.yoni.score == 4 %}
+                <strong>শুভ ফল:</strong> যোনি কূটত সৰ্বোচ্চ গুণ — পাত্ৰ-পাত্ৰীৰ একে যোনি! ই অত্যন্ত বিৰল আৰু অতি শুভ। ইয়াৰ অৰ্থ হ'ল যে তেওঁলোকৰ মাজত শাৰীৰিক আৰু জৈৱিক স্তৰত গভীৰ সামঞ্জস্য থাকিব। তেওঁলোকৰ দাম্পত্য জীৱন প্ৰেম, ঘনিষ্ঠতা, আৰু পাৰস্পৰিক আকৰ্ষণেৰে পৰিপূৰ্ণ হ'ব। সন্তান সুখৰ ক্ষেত্ৰতো ই অতি শুভ। তেওঁলোকৰ মাজত এক স্বাভাৱিক বুজাবুজি থাকিব যিয়ে সম্পৰ্কক দীৰ্ঘস্থায়ী কৰি ৰাখিব।
+                {% elif result.kootas.yoni.score == 3 %}
+                <strong>শুভ ফল:</strong> যোনি কূটত উত্তম গুণ — মিত্ৰ যোনি। পাত্ৰ-পাত্ৰীৰ যোনি পৰস্পৰৰ মিত্ৰ হোৱাৰ বাবে তেওঁলোকৰ শাৰীৰিক সম্পৰ্ক সুস্থ আৰু সমতাপূৰ্ণ হ'ব। দাম্পত্য জীৱনত পাৰস্পৰিক আকৰ্ষণ আৰু প্ৰেম থাকিব। সন্তানৰ ক্ষেত্ৰতো ই শুভ ফল প্ৰদান কৰে।
+                {% elif result.kootas.yoni.score == 2 %}
+                <strong>মধ্যম ফল:</strong> যোনি কূটত মধ্যম গুণ। পাত্ৰ-পাত্ৰীৰ যোনি সম্পৰ্ক সাধাৰণ — বিশেষ মিত্ৰতাও নাই, শত্ৰুতাও নাই। শাৰীৰিক সম্পৰ্কত কিছু পাৰ্থক্য থাকিব পাৰে যদিও পাৰস্পৰিক বুজাবুজি আৰু প্ৰেমৰ দ্বাৰা ইয়াক অতিক্ৰম কৰিব পাৰি।
+                {% else %}
+                <strong>অশুভ ফল:</strong> যোনি কূটত অমিল — শত্ৰু যোনি। পাত্ৰ-পাত্ৰীৰ যোনি পৰস্পৰৰ শত্ৰু হোৱাৰ বাবে শাৰীৰিক সম্পৰ্কত গুৰুতৰ অমিল থাকিব পাৰে। ইয়াৰ ফলত দাম্পত্য জীৱনত অসন্তুষ্টি আৰু দূৰত্ব আহিব পাৰে। সন্তানৰ ক্ষেত্ৰতো সমস্যা হ'ব পাৰে। বিশেষ পূজা-অৰ্চনা আৰু জ্যোতিষীৰ পৰামৰ্শ লোৱা উচিত।
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 5. GRAHA MAITRI -->
+        <div class="koota-detail">
+            <div class="kd-header">
+                <div class="kd-title">🪐 ৫। গ্ৰহ মৈত্ৰী কূট (Graha Maitri) — মানসিক স্বভাৱ আৰু গ্ৰহগত বন্ধুত্ব</div>
+                <div class="kd-score {% if result.kootas.graha_maitri.score >= 4 %}kd-excellent{% elif result.kootas.graha_maitri.score >= 3 %}kd-average{% else %}kd-bad{% endif %}">
+                    {{ result.kootas.graha_maitri.score }} / {{ result.kootas.graha_maitri.max_score }} গুণ
+                </div>
+            </div>
+            <div class="kd-desc">
+                {{ result.kootas.graha_maitri.description }}
+            </div>
+            <div class="kd-prediction">
+                {% if result.kootas.graha_maitri.score == 5 %}
+                <strong>শুভ ফল:</strong> গ্ৰহ মৈত্ৰী কূটত সৰ্বোচ্চ গুণ! পাত্ৰ-পাত্ৰীৰ ৰাশি অধিপতি গ্ৰহদ্বয় পৰস্পৰৰ পৰম মিত্ৰ বা একে গ্ৰহ। ইয়াৰ অৰ্থ হ'ল যে তেওঁলোকৰ মানসিক স্বভাৱ, চিন্তাধাৰা, আৰু জীৱনৰ প্ৰতি দৃষ্টিভংগী অতি মিল থকা। তেওঁলোকে পৰস্পৰক সহজে বুজিব পাৰিব আৰু জীৱনৰ প্ৰত্যাহ্বানসমূহ একেলগে মোকাবিলা কৰিব পাৰিব। ই দাম্পত্য জীৱনৰ বাবে এক অতি শক্তিশালী ভেটি।
+                {% elif result.kootas.graha_maitri.score == 4 %}
+                <strong>শুভ ফল:</strong> গ্ৰহ মৈত্ৰী কূটত উত্তম গুণ — ৰাশি অধিপতি গ্ৰহদ্বয় পৰস্পৰৰ মিত্ৰ। তেওঁলোকৰ মানসিক স্বভাৱৰ মাজত ভাল সামঞ্জস্য থাকিব। পাৰস্পৰিক বুজাবুজি আৰু সহযোগিতাৰে দাম্পত্য জীৱন সুখময় হ'ব।
+                {% elif result.kootas.graha_maitri.score == 3 %}
+                <strong>মধ্যম ফল:</strong> গ্ৰহ মৈত্ৰী কূটত মধ্যম গুণ — ৰাশি অধিপতি গ্ৰহদ্বয় পৰস্পৰৰ সম (neutral)। তেওঁলোকৰ মানসিক স্বভাৱত কিছু পাৰ্থক্য থাকিব পাৰে যদিও গুৰুতৰ সংঘাত নহয়। পাৰস্পৰিক বুজাবুজি বৃদ্ধিৰ বাবে একেলগে সময় কটোৱা আৰু কথা-বতৰা হোৱা উচিত।
+                {% else %}
+                <strong>অশুভ ফল:</strong> গ্ৰহ মৈত্ৰী কূটত অমিল — ৰাশি অধিপতি গ্ৰহদ্বয় পৰস্পৰৰ শত্ৰু। তেওঁলোকৰ মানসিক স্বভাৱ আৰু চিন্তাধাৰাৰ মাজত গুৰুতৰ পাৰ্থক্য থাকিব। দাম্পত্য জীৱনত মতানক্য আৰু কাজিয়া হোৱাৰ সম্ভাৱনা বেছি। পাৰস্পৰিক সহনশীলতা আৰু বুজাবুজি বৃদ্ধিৰ বাবে প্ৰচেষ্টা কৰা উচিত।
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 6. GANA -->
+        <div class="koota-detail">
+            <div class="kd-header">
+                <div class="kd-title">🎭 ৬। গণ কূট (Gana Koota) — স্বভাৱগত মিল আৰু আচৰণ</div>
+                <div class="kd-score {% if result.kootas.gana.score >= 5 %}kd-excellent{% elif result.kootas.gana.score >= 3 %}kd-average{% else %}kd-bad{% endif %}">
+                    {{ result.kootas.gana.score }} / {{ result.kootas.gana.max_score }} গুণ
+                </div>
+            </div>
+            <div class="kd-desc">
+                {{ result.kootas.gana.description }}
+            </div>
+            <div class="kd-prediction">
+                {% if result.kootas.gana.score == 6 %}
+                <strong>শুভ ফল:</strong> গণ কূটত সৰ্বোচ্চ গুণ — পাত্ৰ-পাত্ৰীৰ একে গণ! তেওঁলোকৰ স্বভাৱ, আচৰণ, আৰু জীৱনশৈলী অতি মিল থকা। ইয়াৰ ফলত তেওঁলোকৰ মাজত স্বাভাৱিক বুজাবুজি থাকিব আৰু দাম্পত্য জীৱনত সংঘাতৰ পৰিমাণ নূন্যতম হ'ব। একেলগে জীৱন কটোৱাটো তেওঁলোকৰ বাবে সহজ আৰু আনন্দময় হ'ব।
+                {% elif result.kootas.gana.score == 5 %}
+                <strong>শুভ ফল:</strong> গণ কূটত উত্তম গুণ — দেৱ-মনুষ্য সম্পৰ্ক। পাত্ৰ-পাত্ৰীৰ স্বভাৱৰ মাজত ভাল সামঞ্জস্য থাকিব। দেৱ গণৰ ব্যক্তি আধ্যাত্মিক আৰু শান্ত প্ৰকৃতিৰ, আনহাতে মনুষ্য গণৰ ব্যক্তি বাস্তৱবাদী আৰু কৰ্মঠ। এই সংমিশ্ৰণে দাম্পত্য জীৱনত এক সুস্থ ভাৰসাম্য আনিব।
+                {% elif result.kootas.gana.score == 3 %}
+                <strong>মধ্যম ফল:</strong> গণ কূটত মধ্যম গুণ — মনুষ্য-ৰাক্ষস সম্পৰ্ক। স্বভাৱৰ পাৰ্থক্যই কেতিয়াবা সংঘাতৰ সৃষ্টি কৰিব পাৰে। ৰাক্ষস গণৰ ব্যক্তিৰ তীব্ৰ আৰু আক্রমণাত্মক স্বভাৱে মনুষ্য গণৰ ব্যক্তিক অস্বস্তিত পেলাব পাৰে। পাৰস্পৰিক বুজাবুজি আৰু সহনশীলতাৰ দ্বাৰা এই পাৰ্থক্য দূৰ কৰিব পাৰি।
+                {% else %}
+                <strong>অশুভ ফল:</strong> গণ কূটত অমিল — দেৱ-ৰাক্ষস সম্পৰ্ক। স্বভাৱৰ মাজত অতি গুৰুতৰ পাৰ্থক্য আছে। দেৱ গণৰ শান্ত আৰু আধ্যাত্মিক স্বভাৱ ৰাক্ষস গণৰ তীব্ৰ আৰু আক্রমণাত্মক স্বভাৱৰ সৈতে খাপ নাখাব পাৰে। দাম্পত্য জীৱনত গুৰুতৰ সংঘাত হোৱাৰ সম্ভাৱনা আছে। জ্যোতিষীৰ পৰামৰ্শ আৰু বিশেষ প্ৰতিকাৰৰ প্ৰয়োজন।
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 7. BHAKOOT -->
+        <div class="koota-detail">
+            <div class="kd-header">
+                <div class="kd-title">🏠 ৭। ভকূট কূট (Bhakoot Koota) — পাৰিবাৰিক কল্যাণ আৰু সমৃদ্ধি</div>
+                <div class="kd-score {% if result.kootas.bhakoot.score == 7 %}kd-excellent{% elif result.kootas.bhakoot.score >= 4 %}kd-average{% else %}kd-bad{% endif %}">
+                    {{ result.kootas.bhakoot.score }} / {{ result.kootas.bhakoot.max_score }} গুণ
+                </div>
+            </div>
+            <div class="kd-desc">
+                {{ result.kootas.bhakoot.description }}
+            </div>
+            <div class="kd-prediction">
+                {% if result.kootas.bhakoot.score == 7 %}
+                <strong>শুভ ফল:</strong> ভকূট কূটত পূৰ্ণ গুণ — কোনো ভকূট দোষ নাই! ইয়াৰ অৰ্থ হ'ল যে পাত্ৰ-পাত্ৰীৰ দাম্পত্য জীৱনত পাৰিবাৰিক কল্যাণ, অৰ্থনৈতিক সমৃদ্ধি, আৰু সুখ-শান্তি বিৰাজ কৰিব। তেওঁলোকৰ সংসাৰ ধন-ধান্যেৰে পৰিপূৰ্ণ হ'ব আৰু পৰিয়ালত আনন্দৰ পৰিবেশ বিৰাজ কৰিব। ই বিবাহৰ বাবে অতি শুভ লক্ষণ।
+                {% elif result.kootas.bhakoot.score == 4 %}
+                <strong>মধ্যম ফল:</strong> ভকূট কূটত মধ্যম গুণ। পাৰিবাৰিক জীৱনত কিছু উত্থান-পতন থাকিব পাৰে যদিও গুৰুতৰ সংকট নহয়। অৰ্থনৈতিক ক্ষেত্ৰত স্থিৰতাৰ বাবে প্ৰচেষ্টা কৰা উচিত। পৰিয়ালৰ সদস্যসকলৰ মাজত বুজাবুজি বৃদ্ধিৰ বাবে পাৰিবাৰিক আলোচনা আৰু একেলগে সময় কটোৱা গুৰুত্বপূৰ্ণ।
+                {% else %}
+                <strong>অশুভ ফল:</strong> ভকূট কূটত {{ result.kootas.bhakoot.result }} উপস্থিত! ইয়াৰ অৰ্থ হ'ল যে দাম্পত্য জীৱনত পাৰিবাৰিক অশান্তি, অৰ্থনৈতিক সংকট, আৰু মানসিক অস্থিৰতা আহিব পাৰে। বিশেষকৈ বিবাহৰ প্ৰাৰম্ভিক বছৰসমূহত সাৱধানতা অৱলম্বন কৰা উচিত। ভকূট দোষ নিবাৰণৰ বাবে বিশেষ পূজা-অৰ্চনা আৰু জ্যোতিষীৰ পৰামৰ্শ লোৱা অতি জৰুৰী।
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 8. NADI -->
+        <div class="koota-detail">
+            <div class="kd-header">
+                <div class="kd-title">🧬 ৮। নাড়ী কূট (Nadi Koota) — সন্তান সুখ আৰু জিনগত স্বাস্থ্য</div>
+                <div class="kd-score {% if result.kootas.nadi.score == 8 %}kd-excellent{% else %}kd-bad{% endif %}">
+                    {{ result.kootas.nadi.score }} / {{ result.kootas.nadi.max_score }} গুণ
+                </div>
+            </div>
+            <div class="kd-desc">
+                {{ result.kootas.nadi.description }}
+            </div>
+            <div class="kd-prediction">
+                {% if result.kootas.nadi.score == 8 %}
+                <strong>শুভ ফল:</strong> নাড়ী কূটত পূৰ্ণ গুণ — নাড়ী দোষ সম্পূৰ্ণ অনুপস্থিত! ইয়াৰ অৰ্থ হ'ল যে পাত্ৰ-পাত্ৰীৰ জিনগত আৰু শাৰীৰিক স্তৰত সম্পূৰ্ণ সামঞ্জস্য আছে। তেওঁলোকৰ সন্তান সুখ অতি শুভ হ'ব — সুস্থ আৰু বুদ্ধিমান সন্তান লাভ কৰিব। পৰিয়ালত ৰোগ-ব্যাধিৰ প্ৰভাৱ কম থাকিব। ই বিবাহৰ বাবে এক অতি গুৰুত্বপূৰ্ণ আৰু শুভ লক্ষণ।
+                {% else %}
+                <strong>অশুভ ফল:</strong> নাড়ী কূটত অমিল — <strong style="color:#C62828;">নাড়ী দোষ</strong> উপস্থিত! পাত্ৰ-পাত্ৰীৰ নক্ষত্ৰ একে নাড়ীত পৰিছে। ইয়াৰ ফলত সন্তানৰ ক্ষেত্ৰত সমস্যা, স্বাস্থ্যজনিত জটিলতা, আৰু দাম্পত্য জীৱনত অশান্তি হ'ব পাৰে। নাড়ী দোষ বিবাহৰ বাবে এক গুৰুতৰ বাধা হিচাপে গণ্য কৰা হয়। <strong>নাড়ী দোষ নিবাৰণৰ বাবে বিশেষ পূজা, মহামৃত্যুঞ্জয় মন্ত্ৰ জপ, আৰু জ্যোতিষীৰ পৰামৰ্শ লোৱা অতি জৰুৰী।</strong>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ MANGALIK DOSHA ANALYSIS ═══════════ -->
+    <div class="section-card">
+        <h2><span class="s-icon">🔥</span> মাংগলিক দোষ (কূজ দোষ) বিচাৰ</h2>
+
+        <div class="mangalik-status">
+            <div class="mangalik-item">
+                <div class="mi-label">🧑 পাত্ৰ ({{ boy.name }})</div>
+                <div class="mi-value {% if result.mangalik.boy_mangalik %}mi-yes{% else %}mi-no{% endif %}">
+                    {% if result.mangalik.boy_mangalik %}
+                    ⚠️ মাংগলিক ({{ result.mangalik.boy_severity }})
+                    {% else %}
+                    ✅ অমাংগলিক
+                    {% endif %}
+                </div>
+                <div style="font-size:0.8rem;color:var(--text-light);margin-top:4px;">
+                    মঙ্গল {{ result.mangalik.boy_mars_house }}ম ঘৰত
+                </div>
+            </div>
+            <div class="mangalik-item">
+                <div class="mi-label">👩 পাত্ৰী ({{ girl.name }})</div>
+                <div class="mi-value {% if result.mangalik.girl_mangalik %}mi-yes{% else %}mi-no{% endif %}">
+                    {% if result.mangalik.girl_mangalik %}
+                    ⚠️ মাংগলিক ({{ result.mangalik.girl_severity }})
+                    {% else %}
+                    ✅ অমাংগলিক
+                    {% endif %}
+                </div>
+                <div style="font-size:0.8rem;color:var(--text-light);margin-top:4px;">
+                    মঙ্গল {{ result.mangalik.girl_mars_house }}ম ঘৰত
+                </div>
+            </div>
+        </div>
+
+        <div class="koota-detail" style="margin-top:12px;">
+            <div class="kd-prediction">
+                {% if result.mangalik.boy_mangalik and result.mangalik.girl_mangalik %}
+                <strong>দোষ সাম্য (Cancellation):</strong> পাত্ৰ আৰু পাত্ৰী উভয়ে মাংগলিক। ই এক অতি শুভ পৰিস্থিতি কাৰণ উভয়ৰে মাংগলিক দোষ পৰস্পৰে নিষ্ক্ৰিয় কৰে। ইয়াক <strong>"দোষ সাম্য"</strong> বোলে। উভয় মাংগলিক হোৱাৰ বাবে মঙ্গল গ্ৰহৰ অশুভ প্ৰভাৱ পৰস্পৰে সমাপ্ত কৰে আৰু দাম্পত্য জীৱনত কোনো নেতিবাচক প্ৰভাৱ নপৰে। ই বিবাহৰ বাবে এক সুখবৰ!
+                {% elif result.mangalik.boy_mangalik and not result.mangalik.girl_mangalik %}
+                <strong>সাৱধানতা:</strong> পাত্ৰ মাংগলিক কিন্তু পাত্ৰী অমাংগলিক। ইয়াৰ অৰ্থ হ'ল যে পাত্ৰৰ মঙ্গল দোষৰ প্ৰভাৱ দাম্পত্য জীৱনত পৰিব পাৰে। বিবাহৰ পিছত কলহ, অশান্তি, বা স্বাস্থ্যজনিত সমস্যা হ'ব পাৰে। <strong>মাংগলিক দোষ নিবাৰণৰ বাবে প্ৰতিকাৰ কৰাটো অতি জৰুৰী।</strong>
+                {% elif not result.mangalik.boy_mangalik and result.mangalik.girl_mangalik %}
+                <strong>সাৱধানতা:</strong> পাত্ৰী মাংগলিক কিন্তু পাত্ৰ অমাংগলিক। ইয়াৰ অৰ্থ হ'ল যে পাত্ৰীৰ মঙ্গল দোষৰ প্ৰভাৱ দাম্পত্য জীৱনত পৰিব পাৰে। বিবাহৰ পিছত কলহ, অশান্তি, বা স্বাস্থ্যজনিত সমস্যা হ'ব পাৰে। <strong>মাংগলিক দোষ নিবাৰণৰ বাবে প্ৰতিকাৰ কৰাটো অতি জৰুৰী।</strong>
+                {% else %}
+                <strong>শুভ:</strong> পাত্ৰ আৰু পাত্ৰী উভয়ে অমাংগলিক। মাংগলিক দোষ সম্পূৰ্ণ অনুপস্থিত। ই বিবাহৰ বাবে অতি শুভ লক্ষণ। দাম্পত্য জীৱনত মঙ্গল গ্ৰহৰ কোনো অশুভ প্ৰভাৱ নপৰে।
+                {% endif %}
+            </div>
+        </div>
+
+        {% if result.mangalik.boy_mangalik or result.mangalik.girl_mangalik %}
+        <div style="margin-top:16px;">
+            <h3 style="font-size:1rem;color:#E65100;margin-bottom:10px;">🛐 মাংগলিক দোষৰ প্ৰতিকাৰ (Remedies):</h3>
+            <ul class="remedies-list" style="padding-left:20px;">
+                {% for remedy in result.mangalik.remedies %}
+                <li>{{ remedy }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ═══════════ CONCLUSION ═══════════ -->
+    <div class="conclusion-card">
+        <h2><span class="s-icon">🌟</span> সৰ্বমুঠ মূল্যাংকন আৰু সিদ্ধান্ত</h2>
+        <div class="conclusion-text">
+            <p><strong>{{ boy.name }}</strong> আৰু <strong>{{ girl.name }}</strong>ৰ যোটক মিলনত সৰ্বমুঠ <strong>{{ "%.1f"|format(result.total_score) }} / {{ result.max_score }}</strong> গুণ প্ৰাপ্ত হৈছে।</p>
+            <p style="margin-top:12px;">{{ result.verdict_desc }}</p>
+
+            {% if result.has_nadi_dosha %}
+            <p style="margin-top:12px;color:#C62828;"><strong>⚠️ গুৰুত্বপূৰ্ণ:</strong> এই যোটকত <strong>নাড়ী দোষ</strong> উপস্থিত আছে। নাড়ী দোষ নিবাৰণ নকৰাকৈ বিবাহ কৰাটো পৰামৰ্শিত নহয়। জ্যোতিষীৰ পৰামৰ্শ লৈ উপযুক্ত প্ৰতিকাৰ কৰক।</p>
+            {% endif %}
+
+            {% if result.has_bhakoot_dosha %}
+            <p style="margin-top:12px;color:#C62828;"><strong>⚠️ গুৰুত্বপূৰ্ণ:</strong> এই যোটকত <strong>ভকূট দোষ</strong> উপস্থিত আছে। পাৰিবাৰিক কল্যাণৰ বাবে ভকূট দোষ নিবাৰণৰ প্ৰতিকাৰ কৰাটো উচিত।</p>
+            {% endif %}
+        </div>
+        <div class="blessing">
+            ✨ ঈশ্বৰে আপোনালোকৰ দাম্পত্য জীৱন সুখময়, সমৃদ্ধিশালী আৰু দীৰ্ঘস্থায়ী কৰি তোলক।<br>
+            শুভম ভৱতু। 🙏
+        </div>
+    </div>
+
+    <div style="text-align:center;margin-bottom:20px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <a href="/jotok-milan" class="btn-sm btn-fill" style="font-size:1rem;padding:12px 28px;">🔄 নতুন যোটক মিলন বিচাৰ কৰক</a>
+
+        {% if can_download_pdf %}
+        <!-- Paid user: active PDF button -->
+        <form action="/jotok-milan/download-pdf" method="POST" style="display:inline;">
+            <input type="hidden" name="boy_name" value="{{ boy.name }}">
+            <input type="hidden" name="boy_rashi_calc" value="{{ boy.rashi }}">
+            <input type="hidden" name="boy_nakshatra_calc" value="{{ boy.nakshatra }}">
+            <input type="hidden" name="boy_charan_calc" value="{{ boy.charan }}">
+            <input type="hidden" name="boy_lagna_calc" value="{{ boy.lagna }}">
+            <input type="hidden" name="boy_mars_house_calc" value="{{ boy.mars_house }}">
+            <input type="hidden" name="girl_name" value="{{ girl.name }}">
+            <input type="hidden" name="girl_rashi_calc" value="{{ girl.rashi }}">
+            <input type="hidden" name="girl_nakshatra_calc" value="{{ girl.nakshatra }}">
+            <input type="hidden" name="girl_charan_calc" value="{{ girl.charan }}">
+            <input type="hidden" name="girl_lagna_calc" value="{{ girl.lagna }}">
+            <input type="hidden" name="girl_mars_house_calc" value="{{ girl.mars_house }}">
+            <button type="submit" class="btn-sm btn-fill" style="font-size:1rem;padding:12px 28px;background:linear-gradient(135deg,#C62828,#B71C1C);cursor:pointer;">
+                📄 PDF ডাউনলোড কৰক
+            </button>
+        </form>
+        {% else %}
+        <!-- Free user: locked PDF button with upgrade link -->
+        <div style="display:inline-block;position:relative;">
+            <button class="btn-sm btn-fill" disabled
+                style="font-size:1rem;padding:12px 28px;background:#ccc;color:#888;cursor:not-allowed;opacity:0.7;border:none;">
+                📄 PDF ডাউনলোড কৰক 🔒
+            </button>
+            <div style="margin-top:6px;">
+                <a href="javascript:void(0)" onclick="openUpgradePlansModal()"
+                   style="color:#FF6600;font-weight:700;font-size:0.82rem;text-decoration:underline;cursor:pointer;">
+                    💳 Upgrade to Pro Version
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- ─── Upgrade Plans Modal ─── -->
+<div class="modal-overlay" id="upgradePlansModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+    <div class="modal-box" style="background:white;border-radius:14px;max-width:750px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 16px 48px rgba(0,0,0,0.2);">
+        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid #e8e0d5;">
+            <h3 style="margin:0;color:#1a237e;">💳 চাবস্ক্ৰিপশ্যন প্লেনসমূহ</h3>
+            <button onclick="closeUpgradePlansModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#888;">&times;</button>
+        </div>
+        <div class="modal-body" style="padding:16px 20px;">
+            <p style="font-size:0.85rem;color:#5a6c7d;margin-bottom:12px;">
+                আপোনাৰ বৰ্তমানৰ প্লেন: <strong style="color:#1a237e;">{{ user_subscription_name }}</strong>।
+                উন্নত সুবিধাৰ বাবে তলৰ প্লেনসমূহৰ পৰা আপগ্ৰেড কৰক।
+            </p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+                {% for sub in all_subscriptions %}
+                <div style="background:{% if sub.id == user_subscription_id %}#E8F5E9{% else %}#FFF8F0{% endif %};border:2px solid {% if sub.id == user_subscription_id %}#4CAF50{% else %}#e8e0d5{% endif %};border-radius:10px;padding:16px;text-align:center;">
+                    <div style="font-weight:700;font-size:1rem;color:#1a237e;">{{ sub.name_asm }}</div>
+                    <div style="font-size:1.5rem;font-weight:800;color:#FF6600;margin:6px 0;">₹{{ sub.price }}</div>
+                    <div style="font-size:0.8rem;color:#888;">{{ sub.duration_days }} দিনৰ বাবে</div>
+                    <div style="font-size:0.8rem;color:#5a6c7d;margin-top:6px;">{{ sub.description }}</div>
+                    {% if sub.id == user_subscription_id %}
+                    <span style="display:inline-block;margin-top:8px;padding:4px 12px;background:#4CAF50;color:white;border-radius:12px;font-size:0.75rem;font-weight:600;">✅ বৰ্তমানৰ প্লেন</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            <p style="font-size:0.75rem;color:#5a6c7d;margin-top:16px;text-align:center;">
+                আপগ্ৰেড কৰিবলৈ এডমিনৰ সৈতে যোগাযোগ কৰক। 📧
+            </p>
+        </div>
+        <div class="modal-footer" style="padding:12px 20px;border-top:1px solid #e8e0d5;text-align:right;">
+            <button onclick="closeUpgradePlansModal()" style="padding:8px 20px;border-radius:20px;border:2px solid #FF6600;background:white;color:#FF6600;font-weight:600;cursor:pointer;font-family:inherit;">বন্ধ কৰক</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function openUpgradePlansModal() {
+    document.getElementById('upgradePlansModal').style.display = 'flex';
+}
+function closeUpgradePlansModal() {
+    document.getElementById('upgradePlansModal').style.display = 'none';
+}
+// Close modal when clicking outside
+document.getElementById('upgradePlansModal').addEventListener('click', function(e) {
+    if (e.target === this) closeUpgradePlansModal();
+});
+</script>
+
+<footer class="footer">
+    <p>© ২০২৬ <span>ধ্ৰুৱতৰা AI</span> • দিতুল শৰ্মাৰ দ্বাৰা নিৰ্মিত প্ৰথম অসমীয়া জ্যোতিষ চফ্টৱেৰ • সকলো অধিকাৰ সংৰক্ষিত • dhrubataraai.com</p>
+</footer>
+
+</body>
+</html>

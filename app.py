@@ -38,6 +38,8 @@ from graha_bichar import get_all_graha_bichar, get_graha_bichar_html
 from kundli_chart import draw_kundli_chart, draw_all_styles
 from patrika import generate_patrika_text
 from kartari_dosha import generate_kartari_report
+from jotok_milan_engine import get_complete_jotok_milan, get_koota_name_asm, get_koota_icon
+from jotok_milan_pdf import generate_jotok_milan_pdf
 from small_antardasaphal import get_antardasha_phala, get_all_antardasha_phala_for_pdf
 from importantantardasa import get_important_antardasha_phala
 from dwadash_bhab_phala import get_dwadash_html, get_dwadash_text, get_dwadash_json, get_dwadash_phala
@@ -246,6 +248,10 @@ nakshatras = [
 ]
 dasa_lords = ["কেতু", "শুক্ৰ", "ৰবি", "চন্দ্ৰ", "মংগল", "ৰাহু", "বৃহস্পতি", "শনি", "বুধ"]
 dasa_years = [7, 20, 6, 10, 7, 18, 16, 19, 17]
+
+# Uppercase aliases for template use
+RASHIS = rasis
+NAKSHATRAS = nakshatras
 
 def fmt_date(ymd_str):
     """Convert YYYY-MM-DD to DD/MM/YYYY for display"""
@@ -3174,6 +3180,238 @@ def api_chart_image():
     except Exception as e:
         logger.error(f"Chart drawing error: {e}")
         return jsonify({"error": str(e)}), 500
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  যোটক মিলন / MARRIAGE MATCHING ROUTES (Jotok Milan)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.route("/jotok-milan")
+def jotok_milan_page():
+    """Marriage matching input form page."""
+    user_features = get_user_features(session.get('user_id', 0))
+    feature_defs = get_all_feature_definitions()
+    return render_template("jotok_milan.html",
+                           user_features=user_features,
+                           feature_defs=feature_defs,
+                           rashis=RASHIS,
+                           nakshatras=NAKSHATRAS)
+
+
+@app.route("/jotok-milan/calculate", methods=["POST"])
+def jotok_milan_calculate():
+    """Calculate marriage matching (যোটক মিলন) result."""
+    try:
+        # Boy data - check for auto-calculated fields first, then fall back to manual
+        boy_name = request.form.get("boy_name", "").strip()
+        boy_rashi = request.form.get("boy_rashi_calc", "").strip() or request.form.get("boy_rashi", "").strip()
+        boy_nakshatra = request.form.get("boy_nakshatra_calc", "").strip() or request.form.get("boy_nakshatra", "").strip()
+        boy_charan = int(request.form.get("boy_charan_calc", "0") or request.form.get("boy_charan", "1"))
+        boy_lagna = request.form.get("boy_lagna_calc", "").strip() or request.form.get("boy_lagna", "").strip()
+        boy_mars_house = int(request.form.get("boy_mars_house_calc", "0") or request.form.get("boy_mars_house", "0"))
+
+        # Girl data - check for auto-calculated fields first, then fall back to manual
+        girl_name = request.form.get("girl_name", "").strip()
+        girl_rashi = request.form.get("girl_rashi_calc", "").strip() or request.form.get("girl_rashi", "").strip()
+        girl_nakshatra = request.form.get("girl_nakshatra_calc", "").strip() or request.form.get("girl_nakshatra", "").strip()
+        girl_charan = int(request.form.get("girl_charan_calc", "0") or request.form.get("girl_charan", "1"))
+        girl_lagna = request.form.get("girl_lagna_calc", "").strip() or request.form.get("girl_lagna", "").strip()
+        girl_mars_house = int(request.form.get("girl_mars_house_calc", "0") or request.form.get("girl_mars_house", "0"))
+
+        # Validate required fields
+        if not boy_name or not girl_name:
+            return render_template("jotok_milan.html",
+                                   error="অনুগ্ৰহ কৰি পাত্ৰ আৰু পাত্ৰী উভয়ৰে নাম প্ৰদান কৰক।",
+                                   rashis=RASHIS, nakshatras=NAKSHATRAS,
+                                   user_features=get_user_features(session.get('user_id', 0)),
+                                   feature_defs=get_all_feature_definitions())
+
+        if not boy_rashi or not girl_rashi or not boy_nakshatra or not girl_nakshatra:
+            return render_template("jotok_milan.html",
+                                   error="অনুগ্ৰহ কৰি পাত্ৰ আৰু পাত্ৰী উভয়ৰে জন্মৰ সম্পূৰ্ণ তথ্য প্ৰদান কৰক। ৰাশি-নক্ষত্ৰ স্বয়ংক্ৰিয়ভাৱে গণনা কৰিবলৈ জন্ম তাৰিখ, সময়, আৰু স্থান দিয়ক।",
+                                   rashis=RASHIS, nakshatras=NAKSHATRAS,
+                                   user_features=get_user_features(session.get('user_id', 0)),
+                                   feature_defs=get_all_feature_definitions())
+
+        boy_data = {
+            "name": boy_name,
+            "rashi": boy_rashi,
+            "nakshatra": boy_nakshatra,
+            "charan": boy_charan,
+            "lagna": boy_lagna,
+            "mars_house": boy_mars_house
+        }
+
+        girl_data = {
+            "name": girl_name,
+            "rashi": girl_rashi,
+            "nakshatra": girl_nakshatra,
+            "charan": girl_charan,
+            "lagna": girl_lagna,
+            "mars_house": girl_mars_house
+        }
+
+        # Calculate matching
+        result = get_complete_jotok_milan(boy_data, girl_data)
+
+        # Get subscription info for the result page
+        user_subscription_name = "বিনামূলীয়া"
+        user_subscription_id = 1
+        all_subscriptions = []
+        if session.get('user_id'):
+            conn = sqlite3.connect(DB_PATH)
+            conn.row_factory = sqlite3.Row
+            row = conn.execute(
+                "SELECT s.name_asm, s.id FROM users u JOIN subscriptions s ON u.subscription_id = s.id WHERE u.id = ?",
+                (session['user_id'],)
+            ).fetchone()
+            if row:
+                user_subscription_name = row['name_asm']
+                user_subscription_id = row['id']
+            subs = conn.execute("SELECT * FROM subscriptions WHERE is_active = 1 ORDER BY id").fetchall()
+            all_subscriptions = [dict(s) for s in subs]
+            conn.close()
+
+        # Check if user can download PDF (subscription_id > 1 = paid user)
+        can_download_pdf = user_subscription_id > 1
+
+        return render_template("jotok_milan_result.html",
+                               result=result,
+                               boy=boy_data,
+                               girl=girl_data,
+                               get_koota_name_asm=get_koota_name_asm,
+                               get_koota_icon=get_koota_icon,
+                               user_features=get_user_features(session.get('user_id', 0)),
+                               user_subscription_name=user_subscription_name,
+                               user_subscription_id=user_subscription_id,
+                               all_subscriptions=all_subscriptions,
+                               can_download_pdf=can_download_pdf)
+
+    except Exception as e:
+        logger.error(f"Jotok Milan calculation error: {e}")
+        logger.error(traceback.format_exc())
+        return render_template("jotok_milan.html",
+                               error=f"গণনা ত্ৰুটি: {str(e)}",
+                               rashis=RASHIS, nakshatras=NAKSHATRAS,
+                               user_features=get_user_features(session.get('user_id', 0)),
+                               feature_defs=get_all_feature_definitions())
+
+
+@app.route("/api/jotok-calc-planets", methods=["POST"])
+def api_jotok_calc_planets():
+    """API: Auto-calculate rashi, nakshatra, lagna, and mars house from DOB/Time/Place."""
+    try:
+        data = request.get_json()
+        dob = data.get("dob", "")
+        tob = data.get("tob", "")
+        lat = float(data.get("lat", 26.1445))
+        lon = float(data.get("lon", 91.7362))
+
+        if not dob or not tob:
+            return jsonify({"error": "জন্ম তাৰিখ আৰু সময় আৱশ্যক।"}), 400
+
+        # Use IST (UTC+5:30) as default for India
+        tz_offset = 5.5
+
+        ist_time = datetime.strptime(f"{dob} {tob}", "%Y-%m-%d %H:%M")
+        jd = swe.julday(ist_time.year, ist_time.month, ist_time.day,
+                        (ist_time.hour + ist_time.minute / 60.0) - tz_offset)
+
+        swe.set_sid_mode(swe.SIDM_LAHIRI)
+        ayanamsa = swe.get_ayanamsa(jd)
+
+        # Moon position → Rashi & Nakshatra
+        moon_pos, _ = swe.calc_ut(jd, swe.MOON, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
+        moon_lon = moon_pos[0]
+        rasi_idx, rasi_name, rasi_deg = get_rasi_and_degree(moon_lon)
+        nak_idx, nak_name, nak_lord = get_nakshatra_details(moon_lon)
+
+        # Charan/Pada (1-4) based on degree within nakshatra
+        # Each nakshatra spans 13°20' = 13.3333°, each charan = 3°20' = 3.3333°
+        deg_in_nak = moon_lon % 13.333333
+        charan = int(deg_in_nak / 3.333333) + 1  # 1-4
+
+        # Lagna (Ascendant)
+        cusps, ascmc = swe.houses(jd, lat, lon, b'P')
+        asc_sidereal = (ascmc[0] - ayanamsa) % 360
+        asc_rasi_idx, asc_rasi, asc_deg = get_rasi_and_degree(asc_sidereal)
+
+        # Mars position → House
+        mars_pos, _ = swe.calc_ut(jd, swe.MARS, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
+        mars_lon = mars_pos[0]
+        mars_house = (int(mars_lon / 30) - asc_rasi_idx) % 12 + 1  # 1-indexed
+
+        # Check if Mangalik
+        mangalik = mars_house in [1, 4, 7, 8, 12]
+
+        return jsonify({
+            "rashi": rasi_name,
+            "nakshatra": nak_name,
+            "charan": charan,
+            "lagna": asc_rasi,
+            "mars_house": mars_house,
+            "mangalik": mangalik
+        })
+
+    except Exception as e:
+        logger.error(f"Jotok planet calc error: {e}")
+        logger.error(traceback.format_exc())
+        return jsonify({"error": f"গণনা ত্ৰুটি: {str(e)}"}), 500
+
+
+@app.route("/jotok-milan/download-pdf", methods=["POST"])
+def jotok_milan_download_pdf():
+    """Generate and download Jotok Milan PDF report."""
+    try:
+        # Boy data
+        boy_name = request.form.get("boy_name", "").strip()
+        boy_rashi = request.form.get("boy_rashi_calc", "").strip() or request.form.get("boy_rashi", "").strip()
+        boy_nakshatra = request.form.get("boy_nakshatra_calc", "").strip() or request.form.get("boy_nakshatra", "").strip()
+        boy_charan = int(request.form.get("boy_charan_calc", "0") or request.form.get("boy_charan", "1"))
+        boy_lagna = request.form.get("boy_lagna_calc", "").strip() or request.form.get("boy_lagna", "").strip()
+        boy_mars_house = int(request.form.get("boy_mars_house_calc", "0") or request.form.get("boy_mars_house", "0"))
+
+        # Girl data
+        girl_name = request.form.get("girl_name", "").strip()
+        girl_rashi = request.form.get("girl_rashi_calc", "").strip() or request.form.get("girl_rashi", "").strip()
+        girl_nakshatra = request.form.get("girl_nakshatra_calc", "").strip() or request.form.get("girl_nakshatra", "").strip()
+        girl_charan = int(request.form.get("girl_charan_calc", "0") or request.form.get("girl_charan", "1"))
+        girl_lagna = request.form.get("girl_lagna_calc", "").strip() or request.form.get("girl_lagna", "").strip()
+        girl_mars_house = int(request.form.get("girl_mars_house_calc", "0") or request.form.get("girl_mars_house", "0"))
+
+        boy_data = {
+            "name": boy_name, "rashi": boy_rashi, "nakshatra": boy_nakshatra,
+            "charan": boy_charan, "lagna": boy_lagna, "mars_house": boy_mars_house
+        }
+        girl_data = {
+            "name": girl_name, "rashi": girl_rashi, "nakshatra": girl_nakshatra,
+            "charan": girl_charan, "lagna": girl_lagna, "mars_house": girl_mars_house
+        }
+
+        # Calculate matching
+        result = get_complete_jotok_milan(boy_data, girl_data)
+
+        # Get astrologer profile (user's profile first, fallback to admin)
+        user_id = session.get('user_id', 0)
+        astrologer_profile = get_astrologer_profile(user_id)
+
+        # Generate PDF
+        pdf_bytes = generate_jotok_milan_pdf(result, boy_data, girl_data, astrologer_profile)
+
+        # Create filename
+        filename = f"Jotok_Milan_{boy_name}_{girl_name}.pdf".replace(" ", "_")
+
+        return send_file(
+            io.BytesIO(pdf_bytes),
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=filename
+        )
+
+    except Exception as e:
+        logger.error(f"Jotok Milan PDF error: {e}")
+        logger.error(traceback.format_exc())
+        return f"<div style='padding:40px;text-align:center;font-family:sans-serif;'><h2 style='color:#C62828;'>PDF নিৰ্মাণ ত্ৰুটি</h2><p>{str(e)}</p><a href='/jotok-milan'>আকৌ চেষ্টা কৰক</a></div>", 500
 
 
 if __name__ == "__main__":
