@@ -28,6 +28,8 @@
             background: linear-gradient(135deg, #FFF8F0 0%, #FFF3E0 30%, #FFECB3 60%, #FFF8F0 100%);
             background-attachment: fixed; min-height: 100vh; color: var(--text);
             line-height: 1.8; -webkit-font-smoothing: antialiased;
+            user-select: none; -webkit-user-select: none;
+            -moz-user-select: none; -ms-user-select: none;
         }
 
         .top-nav {
@@ -647,6 +649,26 @@
 </div>
 
 <script>
+// ─── Copy Protection ───────────────────────────────────────
+document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; });
+document.addEventListener('copy', function(e) { e.preventDefault(); return false; });
+document.addEventListener('cut', function(e) { e.preventDefault(); return false; });
+document.addEventListener('dragstart', function(e) { e.preventDefault(); return false; });
+document.addEventListener('selectstart', function(e) { e.preventDefault(); return false; });
+document.onkeydown = function(e) {
+    if (e.ctrlKey && (e.key === 'c' || e.key === 'C' || e.key === 'u' || e.key === 'U' ||
+        e.key === 's' || e.key === 'S' || e.key === 'p' || e.key === 'P' ||
+        e.key === 'a' || e.key === 'A')) {
+        e.preventDefault(); return false;
+    }
+    if (e.ctrlKey && e.shiftKey && (e.key === 'i' || e.key === 'I' || e.key === 'j' || e.key === 'J')) {
+        e.preventDefault(); return false;
+    }
+    if (e.key === 'F12' || e.key === 'PrintScreen') {
+        e.preventDefault(); return false;
+    }
+};
+
 function openUpgradePlansModal() {
     document.getElementById('upgradePlansModal').style.display = 'flex';
 }

@@ -12,6 +12,7 @@
             --text: #2c3e50; --text-light: #5a6c7d; --border: #e8e0d5;
             --shadow: 0 4px 20px rgba(0,0,0,0.06); --radius: 14px; --radius-sm: 8px;
             --green: #2E7D32; --red: #C62828; --purple: #6A1B9A;
+            --pink: #E91E63; --pink-dark: #C2185B;
             --transition: 0.25s ease;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -224,7 +225,8 @@
         <!-- Quick Actions -->
         <div style="text-align:center;margin-top:8px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
             <a href="/kundli" class="btn btn-fill" style="font-size:1rem;padding:14px 32px;">✨ কুণ্ডলী প্ৰস্তুত কৰক</a>
-            <a href="/jotok-milan" class="btn btn-fill" style="font-size:1rem;padding:14px 32px;background:var(--pink);">💍 যোটক মিলন</a>
+            <a href="/jotok-milan" class="btn btn-fill" style="font-size:1rem;padding:14px 32px;background:linear-gradient(135deg, #E91E63, #C2185B);">💍 যোটক মিলন</a>
+            <a href="/rashifal" class="btn btn-fill" style="font-size:1rem;padding:14px 32px;background:linear-gradient(135deg, #FF6600, #D4A017);">⭐ ৰাশিফল</a>
             {% if user_features.get('numerology') %}
             <a href="/numerology" class="btn btn-fill" style="font-size:1rem;padding:14px 32px;background:var(--purple);">🔢 অংক জ্যোতিষ</a>
             {% endif %}

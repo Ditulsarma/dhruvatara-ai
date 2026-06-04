@@ -24,6 +24,7 @@ from yoga_engine import get_complete_yoga_analysis
 from ai_engine import generate_ai_interpretation
 from pdf_generator import generate_pdf_report, get_shani_sare_sati_data
 from chat_engine import chat_with_ai, PREDEFINED_QUESTIONS
+from rashifal_engine import generate_rashifal, RASHI_NAMES as RASHIFAL_RASHI_NAMES
 from tripap_rista import get_tripap_rista, analyze_tripap_rista, TRIPAP_AGES
 from dasha_engine import (
     get_full_dasha_prediction, get_all_maha_antar_predictions,
@@ -2126,6 +2127,37 @@ def kundli_page():
     return render_template("index.html", places=places, timezones=timezones,
                            user_features=user_features, feature_defs=feature_defs,
                            panchanga=panchanga)
+
+
+# ═══════════════════════════════════════════
+#  RASHIFAL ROUTES (দৈনিক, মাহেকীয়া, বছেৰেকীয়া ৰাশিফল)
+# ═══════════════════════════════════════════
+
+@app.route("/rashifal")
+def rashifal_page():
+    """Rashifal (horoscope) page — daily, monthly, yearly. Public access."""
+    return render_template("rashifal.html")
+
+
+@app.route("/api/rashifal", methods=["POST"])
+def api_rashifal():
+    """API endpoint to generate rashifal using Ollama AI."""
+    data = request.get_json()
+    rashi = data.get("rashi", "").strip()
+    period = data.get("period", "daily").strip()
+
+    if not rashi or rashi not in RASHIFAL_RASHI_NAMES:
+        return jsonify({"success": False, "error": "অনুগ্ৰহ কৰি এটা বৈধ ৰাশি বাছনি কৰক।"}), 400
+
+    if period not in ("daily", "monthly", "yearly"):
+        return jsonify({"success": False, "error": "অবৈধ সময়সীমা।"}), 400
+
+    try:
+        rashifal_text = generate_rashifal(rashi, period)
+        return jsonify({"success": True, "rashifal": rashifal_text})
+    except Exception as e:
+        logger.error(f"Rashifal generation error: {e}")
+        return jsonify({"success": False, "error": "ৰাশিফল প্ৰস্তুত কৰিব নোৱাৰিলে। পিছত পুনৰ চেষ্টা কৰক।"}), 500
 
 
 # ═══════════════════════════════════════════

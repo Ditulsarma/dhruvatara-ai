@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="as">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ৰাশিফল | ধ্ৰুৱতৰা AI — দৈনিক, মাহেকীয়া, বছেৰেকীয়া ৰাশিফল</title>
+    <meta name="description" content="ধ্ৰুৱতৰা AI ত আপোনাৰ ৰাশি অনুসৰি দৈনিক, মাহেকীয়া আৰু বছেৰেকীয়া ৰাশিফল চাওক। ১২ ৰাশিৰ সম্পূৰ্ণ ৰাশিফল অসমীয়াত।" />
+    <meta name="keywords" content="ৰাশিফল, দৈনিক ৰাশিফল, মাহেকীয়া ৰাশিফল, বছেৰেকীয়া ৰাশিফল, Rashifal, Daily Horoscope, Monthly Horoscope, Yearly Horoscope, ধ্ৰুৱতৰা AI, Dhrubatara AI, অসমীয়া ৰাশিফল" />
+    <meta name="author" content="দিতুল শৰ্মা, Ditul Sarma" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --orange: #FF6600; --orange-dark: #E55D00; --deep-blue: #1a237e;
+            --gold: #D4A017; --bg: #FFF8F0; --card-bg: #FFFFFF;
+            --text: #2c3e50; --text-light: #5a6c7d; --border: #e8e0d5;
+            --shadow: 0 8px 32px rgba(0,0,0,0.08); --radius: 16px; --radius-sm: 10px;
+            --green: #2E7D32; --red: #C62828; --transition: 0.3s ease;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans Bengali', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #FFF8F0 0%, #FFF3E0 30%, #FFECB3 60%, #FFF8F0 100%);
+            min-height: 100vh; color: var(--text); line-height: 1.7;
+            user-select: none; -webkit-user-select: none;
+            -moz-user-select: none; -ms-user-select: none;
+        }
+        .bg-pattern {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 0; opacity: 0.03;
+            background-image: radial-gradient(circle at 20% 50%, var(--orange) 1px, transparent 1px),
+                              radial-gradient(circle at 80% 20%, var(--deep-blue) 1px, transparent 1px),
+                              radial-gradient(circle at 50% 80%, var(--gold) 1px, transparent 1px);
+            background-size: 60px 60px, 80px 80px, 70px 70px;
+        }
+
+        /* ─── Header ─── */
+        .header {
+            position: relative; z-index: 1;
+            text-align: center; padding: 30px 20px 10px;
+        }
+        .header .logo-icon { font-size: 48px; display: block; margin-bottom: 4px; }
+        .header h1 {
+            font-size: 2rem; font-weight: 800;
+            background: linear-gradient(135deg, var(--orange), var(--deep-blue));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header .subtitle {
+            font-size: 1rem; color: var(--text-light); margin-top: 4px;
+        }
+
+        /* ─── Nav ─── */
+        .nav-bar {
+            position: relative; z-index: 1;
+            display: flex; justify-content: center; gap: 12px;
+            padding: 10px 20px; flex-wrap: wrap;
+        }
+        .nav-bar a {
+            text-decoration: none; padding: 8px 18px;
+            border-radius: 25px; font-weight: 600; font-size: 0.85rem;
+            transition: var(--transition);
+            border: 2px solid var(--border);
+            color: var(--text); background: white;
+        }
+        .nav-bar a:hover, .nav-bar a.active {
+            background: var(--orange); color: white; border-color: var(--orange);
+        }
+
+        /* ─── Main Container ─── */
+        .container {
+            position: relative; z-index: 1;
+            max-width: 900px; margin: 0 auto; padding: 20px;
+        }
+
+        /* ─── Selector Card ─── */
+        .selector-card {
+            background: var(--card-bg); border-radius: var(--radius);
+            box-shadow: var(--shadow); padding: 28px 24px;
+            border: 1px solid var(--border); margin-bottom: 24px;
+        }
+        .selector-card h2 {
+            text-align: center; color: var(--deep-blue);
+            margin-bottom: 20px; font-size: 1.2rem;
+        }
+        .selector-row {
+            display: flex; gap: 16px; flex-wrap: wrap;
+            align-items: flex-end; justify-content: center;
+        }
+        .selector-group {
+            flex: 1; min-width: 200px;
+        }
+        .selector-group label {
+            display: block; font-weight: 700; font-size: 0.9rem;
+            color: var(--text); margin-bottom: 6px;
+        }
+        .selector-group select {
+            width: 100%; padding: 12px 14px;
+            border: 2px solid var(--border); border-radius: var(--radius-sm);
+            font-size: 1rem; font-family: inherit; font-weight: 600;
+            background: #FAFAFA; cursor: pointer;
+            transition: var(--transition); outline: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23FF6600' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 14px center;
+        }
+        .selector-group select:focus {
+            border-color: var(--orange); background: #FFF;
+            box-shadow: 0 0 0 3px rgba(255,102,0,0.08);
+        }
+
+        .btn-generate {
+            padding: 12px 32px; border: none; border-radius: var(--radius-sm);
+            font-size: 1rem; font-weight: 700; font-family: inherit; cursor: pointer;
+            background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+            color: white; box-shadow: 0 4px 16px rgba(255,102,0,0.3);
+            transition: var(--transition); white-space: nowrap;
+            min-width: 140px;
+        }
+        .btn-generate:hover {
+            transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,102,0,0.4);
+        }
+        .btn-generate:disabled {
+            opacity: 0.6; cursor: not-allowed; transform: none;
+        }
+
+        /* ─── Result Card ─── */
+        .result-card {
+            background: var(--card-bg); border-radius: var(--radius);
+            box-shadow: var(--shadow); padding: 32px 28px;
+            border: 1px solid var(--border);
+            display: none;
+        }
+        .result-card.show { display: block; }
+
+        .result-header {
+            text-align: center; margin-bottom: 24px;
+            padding-bottom: 16px; border-bottom: 2px solid var(--border);
+        }
+        .result-header .rashi-emoji {
+            font-size: 56px; display: block; margin-bottom: 4px;
+        }
+        .result-header h2 {
+            font-size: 1.5rem; font-weight: 800;
+            background: linear-gradient(135deg, var(--orange), var(--deep-blue));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .result-header .period-badge {
+            display: inline-block; margin-top: 8px; padding: 6px 16px;
+            background: linear-gradient(135deg, var(--deep-blue), #283593);
+            color: white; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
+        }
+
+        .result-content {
+            font-size: 1rem; line-height: 2; color: var(--text);
+            white-space: pre-wrap;
+            user-select: none; -webkit-user-select: none;
+            -moz-user-select: none; -ms-user-select: none;
+        }
+        .result-content strong {
+            color: var(--deep-blue);
+        }
+
+        /* ─── Loading Spinner ─── */
+        .loading-overlay {
+            display: none; text-align: center; padding: 40px;
+        }
+        .loading-overlay.show { display: block; }
+        .spinner {
+            width: 48px; height: 48px; margin: 0 auto 16px;
+            border: 4px solid var(--border); border-top-color: var(--orange);
+            border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text {
+            font-size: 0.95rem; color: var(--text-light); font-weight: 500;
+        }
+
+        /* ─── Error ─── */
+        .error-box {
+            background: #FFEBEE; color: var(--red); border: 1px solid #FFCDD2;
+            border-radius: var(--radius-sm); padding: 14px 18px;
+            margin-top: 16px; font-weight: 500; display: none;
+        }
+        .error-box.show { display: block; }
+
+        /* ─── Quick Rashi Grid ─── */
+        .quick-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px; margin-top: 20px;
+        }
+        .quick-chip {
+            text-align: center; padding: 10px 6px;
+            background: white; border: 2px solid var(--border);
+            border-radius: var(--radius-sm); cursor: pointer;
+            transition: var(--transition); font-weight: 600; font-size: 0.85rem;
+        }
+        .quick-chip:hover {
+            border-color: var(--orange); background: #FFF8F0;
+            transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,102,0,0.1);
+        }
+        .quick-chip.selected {
+            border-color: var(--orange); background: linear-gradient(135deg, #FFF8F0, #FFE0B2);
+            color: var(--orange-dark);
+        }
+        .quick-chip .qc-emoji { font-size: 1.3rem; display: block; }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 768px) {
+            .quick-grid { grid-template-columns: repeat(4, 1fr); }
+            .selector-row { flex-direction: column; align-items: stretch; }
+            .btn-generate { width: 100%; }
+            .header h1 { font-size: 1.5rem; }
+            .result-card { padding: 20px 16px; }
+        }
+        @media (max-width: 480px) {
+            .quick-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+            .quick-chip { padding: 8px 4px; font-size: 0.75rem; }
+            .quick-chip .qc-emoji { font-size: 1.1rem; }
+            .container { padding: 12px; }
+            .selector-card { padding: 16px 12px; }
+        }
+    </style>
+</head>
+<body>
+<div class="bg-pattern"></div>
+
+<!-- ─── Header ─── -->
+<div class="header">
+    <span class="logo-icon">🌟</span>
+    <h1>ধ্ৰুৱতৰা AI ৰাশিফল</h1>
+    <p class="subtitle">দৈনিক • মাহেকীয়া • বছেৰেকীয়া ৰাশিফল</p>
+</div>
+
+<!-- ─── Navigation ─── -->
+<div class="nav-bar">
+    <a href="/dashboard">🏠 ডেশ্বব'ৰ্ড</a>
+    <a href="/kundli">🔮 কুণ্ডলী</a>
+    <a href="/rashifal" class="active">⭐ ৰাশিফল</a>
+    <a href="/logout">🚪 লগআউট</a>
+</div>
+
+<!-- ─── Main Container ─── -->
+<div class="container">
+
+    <!-- Selector Card -->
+    <div class="selector-card">
+        <h2>🔮 আপোনাৰ ৰাশি বাছনি কৰক</h2>
+
+        <!-- Quick Rashi Grid -->
+        <div class="quick-grid" id="quickGrid">
+            {% set rashi_list = ["মেষ", "বৃষ", "মিথুন", "কৰ্কট", "সিংহ", "কন্যা", "তুলা", "বৃশ্চিক", "ধনু", "মকৰ", "কুম্ভ", "মীন"] %}
+            {% set rashi_emojis = {"মেষ":"♈","বৃষ":"♉","মিথুন":"♊","কৰ্কট":"♋","সিংহ":"♌","কন্যা":"♍","তুলা":"♎","বৃশ্চিক":"♏","ধনু":"♐","মকৰ":"♑","কুম্ভ":"♒","মীন":"♓"} %}
+            {% for r in rashi_list %}
+            <div class="quick-chip" data-rashi="{{ r }}" onclick="selectRashi('{{ r }}')">
+                <span class="qc-emoji">{{ rashi_emojis[r] }}</span>
+                {{ r }}
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Dropdown + Period + Button -->
+        <div class="selector-row" style="margin-top:20px;">
+            <div class="selector-group">
+                <label for="rashiSelect">🌟 ৰাশি বাছনি কৰক</label>
+                <select id="rashiSelect">
+                    <option value="">-- ৰাশি বাছনি কৰক --</option>
+                    {% for r in rashi_list %}
+                    <option value="{{ r }}">{{ rashi_emojis[r] }} {{ r }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="selector-group">
+                <label for="periodSelect">📅 ৰাশিফলৰ ধৰণ</label>
+                <select id="periodSelect">
+                    <option value="daily">🌅 দৈনিক ৰাশিফল</option>
+                    <option value="monthly">📆 মাহেকীয়া ৰাশিফল</option>
+                    <option value="yearly">📋 বছেৰেকীয়া ৰাশিফল</option>
+                </select>
+            </div>
+            <button class="btn-generate" onclick="generateRashifal()" id="generateBtn">
+                ✨ ৰাশিফল চাওক
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p class="loading-text">আপোনাৰ ৰাশিফল প্ৰস্তুত কৰি আছে, অনুগ্ৰহ কৰি অপেক্ষা কৰক...</p>
+    </div>
+
+    <!-- Error -->
+    <div class="error-box" id="errorBox"></div>
+
+    <!-- Result Card -->
+    <div class="result-card" id="resultCard">
+        <div class="result-header">
+            <span class="rashi-emoji" id="resultEmoji">♈</span>
+            <h2 id="resultTitle">মেষ ৰাশিৰ ৰাশিফল</h2>
+            <span class="period-badge" id="resultPeriod">দৈনিক ৰাশিফল</span>
+        </div>
+        <div class="result-content" id="resultContent"></div>
+    </div>
+
+</div>
+
+<script>
+    // ─── Copy Protection ───────────────────────────────────────
+    document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; });
+    document.addEventListener('copy', function(e) { e.preventDefault(); return false; });
+    document.addEventListener('cut', function(e) { e.preventDefault(); return false; });
+    document.addEventListener('dragstart', function(e) { e.preventDefault(); return false; });
+    document.addEventListener('selectstart', function(e) { e.preventDefault(); return false; });
+    document.onkeydown = function(e) {
+        if (e.ctrlKey && (e.key === 'c' || e.key === 'C' || e.key === 'u' || e.key === 'U' ||
+            e.key === 's' || e.key === 'S' || e.key === 'p' || e.key === 'P' ||
+            e.key === 'a' || e.key === 'A')) {
+            e.preventDefault(); return false;
+        }
+        if (e.ctrlKey && e.shiftKey && (e.key === 'i' || e.key === 'I' || e.key === 'j' || e.key === 'J')) {
+            e.preventDefault(); return false;
+        }
+        if (e.key === 'F12' || e.key === 'PrintScreen') {
+            e.preventDefault(); return false;
+        }
+    };
+
+    const rashiEmojis = {
+        "মেষ": "♈", "বৃষ": "♉", "মিথুন": "♊", "কৰ্কট": "♋",
+        "সিংহ": "♌", "কন্যা": "♍", "তুলা": "♎", "বৃশ্চিক": "♏",
+        "ধনু": "♐", "মকৰ": "♑", "কুম্ভ": "♒", "মীন": "♓"
+    };
+    const periodLabels = {
+        "daily": "দৈনিক ৰাশিফল",
+        "monthly": "মাহেকীয়া ৰাশিফল",
+        "yearly": "বছেৰেকীয়া ৰাশিফল"
+    };
+
+    function selectRashi(rashi) {
+        document.getElementById('rashiSelect').value = rashi;
+        // Update quick grid selection
+        document.querySelectorAll('.quick-chip').forEach(chip => {
+            chip.classList.toggle('selected', chip.dataset.rashi === rashi);
+        });
+    }
+
+    // Sync dropdown with quick grid
+    document.getElementById('rashiSelect').addEventListener('change', function() {
+        const rashi = this.value;
+        document.querySelectorAll('.quick-chip').forEach(chip => {
+            chip.classList.toggle('selected', chip.dataset.rashi === rashi);
+        });
+    });
+
+    async function generateRashifal() {
+        const rashi = document.getElementById('rashiSelect').value;
+        const period = document.getElementById('periodSelect').value;
+
+        if (!rashi) {
+            showError('অনুগ্ৰহ কৰি এটা ৰাশি বাছনি কৰক।');
+            return;
+        }
+
+        // Show loading
+        document.getElementById('loadingOverlay').classList.add('show');
+        document.getElementById('resultCard').classList.remove('show');
+        document.getElementById('errorBox').classList.remove('show');
+        document.getElementById('generateBtn').disabled = true;
+
+        try {
+            const response = await fetch('/api/rashifal', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rashi: rashi, period: period })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                document.getElementById('resultEmoji').textContent = rashiEmojis[rashi] || '';
+                document.getElementById('resultTitle').textContent = rashi + ' ৰাশিৰ ৰাশিফল';
+                document.getElementById('resultPeriod').textContent = periodLabels[period] || '';
+                document.getElementById('resultContent').innerHTML = formatRashifal(data.rashifal);
+                document.getElementById('resultCard').classList.add('show');
+                // Scroll to result
+                document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                showError(data.error || 'ৰাশিফল প্ৰস্তুত কৰিব নোৱাৰিলে। পুনৰ চেষ্টা কৰক।');
+            }
+        } catch (err) {
+            showError('সংযোগ ত্ৰুটি। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।');
+        } finally {
+            document.getElementById('loadingOverlay').classList.remove('show');
+            document.getElementById('generateBtn').disabled = false;
+        }
+    }
+
+    function formatRashifal(text) {
+        // Convert markdown-style bold to HTML
+        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        // Convert newlines to <br>
+        text = text.replace(/\n/g, '<br>');
+        return text;
+    }
+
+    function showError(msg) {
+        const box = document.getElementById('errorBox');
+        box.textContent = '⚠️ ' + msg;
+        box.classList.add('show');
+        box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+</script>
+
+</body>
+</html>
