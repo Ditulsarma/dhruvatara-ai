@@ -11,19 +11,6 @@ ENGLISH_MONTHS_ASM = [
     "জুলাই", "আগষ্ট", "ছেপ্টেম্বৰ", "অক্টোবৰ", "নৱেম্বৰ", "ডিচেম্বৰ"
 ]
 
-# ─── Hora lords (order starting from weekday lord) ─────────────
-HORA_LORDS_ORDER = ["ৰবি", "শুক্ৰ", "বুধ", "চন্দ্ৰ", "শনি", "বৃহস্পতি", "মংগল"]
-WEEKDAY_LORDS = ["চন্দ্ৰ", "মংগল", "বুধ", "বৃহস্পতি", "শুক্ৰ", "শনি", "ৰবি"]  # Mon=0..Sun=6
-
-# ─── Drekkana lords (D3) ───────────────────────────────────────
-DREKKANA_LORDS = ["মংগল", "শুক্ৰ", "বুধ", "চন্দ্ৰ", "ৰবি", "বুধ", "শুক্ৰ", "মংগল", "বৃহস্পতি", "শনি", "শনি", "বৃহস্পতি"]
-
-# ─── Navamsa lords (D9) ────────────────────────────────────────
-NAVAMSA_LORDS = [
-    "মংগল", "শুক্ৰ", "বুধ", "চন্দ্ৰ", "ৰবি", "বুধ", "শুক্ৰ", "মংগল", "বৃহস্পতি",
-    "শনি", "শনি", "বৃহস্পতি", "মংগল", "শুক্ৰ", "বুধ", "চন্দ্ৰ", "ৰবি", "বুধ",
-    "শুক্ৰ", "মংগল", "বৃহস্পতি", "শনি", "শনি", "বৃহস্পতি"
-]
 
 # ─── Ashtottari dasha starting lord by nakshatra ───────────────
 # Based on nakshatra index (0-26)
@@ -72,37 +59,59 @@ def calculate_bhaskara_year(gregorian_year: int) -> int:
     return gregorian_year - 593
 
 
-def get_hora_lord(weekday_index: int, birth_hour: float, sunrise_hour: float = 6.0) -> str:
+def get_hora_lord(rasi_index: int, degree: float) -> str:
     """
-    Calculate Hora lord at birth time.
-    weekday_index: 0=Mon..6=Sun
-    birth_hour: hour of birth (0-24)
-    sunrise_hour: approximate sunrise hour
+    Get Hora (D2) lord based on rasi and degree.
+    Hora is always either Sun (ৰবি) or Moon (চন্দ্ৰ).
+    - Odd rasis (0,2,4,6,8,10): 0-15° → ৰবি, 15-30° → চন্দ্ৰ
+    - Even rasis (1,3,5,7,9,11): 0-15° → চন্দ্ৰ, 15-30° → ৰবি
     """
-    # Find the starting lord for this weekday
-    start_lord = WEEKDAY_LORDS[weekday_index]
-    start_idx = HORA_LORDS_ORDER.index(start_lord)
+    is_odd_rasi = (rasi_index % 2 == 0)
+    first_half = (degree < 15.0)
     
-    # Each hora is ~1 hour. Count horas since sunrise.
-    hours_since_sunrise = birth_hour - sunrise_hour
-    if hours_since_sunrise < 0:
-        hours_since_sunrise += 24
-    
-    hora_index = int(hours_since_sunrise) % 7
-    lord_idx = (start_idx + hora_index) % 7
-    return HORA_LORDS_ORDER[lord_idx]
+    if is_odd_rasi:
+        return "ৰবি" if first_half else "চন্দ্ৰ"
+    else:
+        return "চন্দ্ৰ" if first_half else "ৰবি"
 
 
 def get_drekkana_lord(rasi_index: int, degree: float) -> str:
-    """Get Drekkana (D3) lord based on rasi and degree."""
-    drek_index = int(degree / 10)  # 0, 1, or 2
-    return DREKKANA_LORDS[rasi_index]
+    """
+    Get Drekkana (D3) lord based on rasi and degree.
+    Each drekkana is 10°. The lord is the lord of the drekkana's rashi.
+    - Drekkana 1 (0-10°): same rasi
+    - Drekkana 2 (10-20°): 5th rasi from it
+    - Drekkana 3 (20-30°): 9th rasi from it
+    """
+    drek_index = int(degree / 10.0)  # 0, 1, or 2
+    drekkana_rasi = (rasi_index + drek_index * 4) % 12
+    return RASHI_LORDS_LIST[drekkana_rasi]
 
 
 def get_navamsa_lord(rasi_index: int, degree: float) -> str:
-    """Get Navamsa (D9) lord based on rasi and degree."""
+    """
+    Get Navamsa (D9) lord based on rasi and degree.
+    Each navamsa is 3°20' (3.333°). The lord is the lord of the navamsa's rashi.
+    - Fiery signs (0,4,8): start from Aries (0)
+    - Earthy signs (1,5,9): start from Capricorn (9)
+    - Airy signs (2,6,10): start from Libra (6)
+    - Watery signs (3,7,11): start from Cancer (3)
+    """
     nav_index = int(degree / 3.333333)  # 0-8
-    return NAVAMSA_LORDS[rasi_index]
+    
+    # Determine starting rashi for navamsa based on element
+    element = rasi_index % 4
+    if element == 0:   # Fiery: Aries, Leo, Sagittarius
+        start_rasi = 0  # Aries
+    elif element == 1: # Earthy: Taurus, Virgo, Capricorn
+        start_rasi = 9  # Capricorn
+    elif element == 2: # Airy: Gemini, Libra, Aquarius
+        start_rasi = 6  # Libra
+    else:              # Watery: Cancer, Scorpio, Pisces
+        start_rasi = 3  # Cancer
+    
+    navamsa_rasi = (start_rasi + nav_index) % 12
+    return RASHI_LORDS_LIST[navamsa_rasi]
 
 
 def get_ashtottari_lord(nakshatra_index: int) -> str:
@@ -179,8 +188,7 @@ def generate_patrika_text(
         sunrise_hour = 6.0
     
     # Calculate derived values
-    weekday_idx = vaar.get('index', 0)
-    hora_lord = get_hora_lord(weekday_idx, birth_hour + birth_min / 60.0, sunrise_hour)
+    hora_lord = get_hora_lord(asc_rasi_idx, asc_degree)
     drekkana_lord = get_drekkana_lord(asc_rasi_idx, asc_degree)
     navamsa_lord = get_navamsa_lord(asc_rasi_idx, asc_degree)
     
