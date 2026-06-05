@@ -419,6 +419,57 @@ def build_important_antardasha_html(dasa_hierarchy, gender='male'):
     html += '</div>'
     return html
 
+def build_vimsottari_summary(dasa_hierarchy):
+    """
+    Build a complete Vimsottari Dasha Summary showing ALL 9 Mahadashas
+    with their start and end dates, plus the currently running Antardasha.
+    Returns a formatted Assamese string.
+    """
+    if not dasa_hierarchy or len(dasa_hierarchy) == 0:
+        return ""
+
+    today = datetime.now()
+    lines = []
+    lines.append("【বিংশোত্তৰী দশা সাৰাংশ】")
+    lines.append("")
+
+    current_md_lord = ""
+    current_ad_lord = ""
+    current_ad_start = ""
+    current_ad_end = ""
+
+    for i, md in enumerate(dasa_hierarchy):
+        md_lord = md.get('md_lord', 'অজানা')
+        md_start = md.get('start', '')
+        md_end = md.get('end', '')
+        md_years = md.get('years', '')
+
+        # Mark the currently running mahadasha
+        md_start_dt = parse_dasha_date(md_start)
+        md_end_dt = parse_dasha_date(md_end)
+        is_current_md = (md_start_dt <= today <= md_end_dt)
+
+        marker = " ★ বৰ্তমান" if is_current_md else ""
+        lines.append(f"{i+1}. {md_lord} মহাদশা ({md_years} বছৰ): {md_start} ৰ পৰা {md_end} লৈ{marker}")
+
+        # Find current antardasha
+        if is_current_md:
+            current_md_lord = md_lord
+            for ad in md.get('sub_dasas', []):
+                ad_start_dt = parse_dasha_date(ad.get('start', ''))
+                ad_end_dt = parse_dasha_date(ad.get('end', ''))
+                if ad_start_dt <= today <= ad_end_dt:
+                    current_ad_lord = ad.get('ad_lord', '')
+                    current_ad_start = ad.get('start', '')
+                    current_ad_end = ad.get('end', '')
+                    break
+
+    lines.append("")
+    if current_md_lord and current_ad_lord:
+        lines.append(f"বৰ্তমান চলি থকা দশা: {current_md_lord} মহাদশাৰ অন্তৰ্গত {current_ad_lord} অন্তৰ্দশা ({current_ad_start} ৰ পৰা {current_ad_end} লৈ)।")
+
+    return "\n".join(lines)
+
 def apply_gender(text: str, gender: str) -> str:
     """Replace জাতক/জাতিকা based on gender. Male->জাতক, Female->জাতিকা"""
     if not text:
@@ -1164,21 +1215,7 @@ def download_pdf():
         dwadash_html = get_dwadash_html(planet_houses=planet_houses, asc_rasi_idx=asc_rasi_idx)
 
         # Vimsottari Dasha Summary for PDF
-        vimsottari_summary = ""
-        if dasa_hierarchy and len(dasa_hierarchy) > 0:
-            current_maha = dasa_hierarchy[0]
-            maha_name = current_maha.get('planet', 'অজানা')
-            maha_start = current_maha.get('start', '').split('T')[0] if 'start' in current_maha else ''
-            maha_end = current_maha.get('end', '').split('T')[0] if 'end' in current_maha else ''
-            
-            current_antar = current_maha.get('antardasha', [{}])[0]
-            antar_name = current_antar.get('planet', 'অজানা')
-            antar_start = current_antar.get('start', '').split('T')[0] if 'start' in current_antar else ''
-            antar_end = current_antar.get('end', '').split('T')[0] if 'end' in current_antar else ''
-            
-            vimsottari_summary = f"""বৰ্তমান মহাদশা: {maha_name} ({maha_start} ৰ পৰা {maha_end} পৰ্যন্ত)
-বৰ্তমান অন্তৰ্দশা: {antar_name} ({antar_start} ৰ পৰা {antar_end} পৰ্যন্ত)
-এই দশা সময়ে আপোনাৰ জীৱনত ব্যাপক পৰিৱৰ্তন আশা কৰা হৈছে।"""
+        vimsottari_summary = build_vimsottari_summary(dasa_hierarchy)
 
         pdf_bytes = generate_pdf_report(
             name, dob, tob, place, planets_data, panchanga,
@@ -1442,21 +1479,7 @@ def download_patrika_pdf():
         dwadash_html = get_dwadash_html(planet_houses=planet_houses, asc_rasi_idx=asc_rasi_idx)
 
         # Vimsottari Dasha Summary for PDF
-        vimsottari_summary = ""
-        if dasa_hierarchy and len(dasa_hierarchy) > 0:
-            current_maha = dasa_hierarchy[0]
-            maha_name = current_maha.get('planet', 'অজানা')
-            maha_start = current_maha.get('start', '').split('T')[0] if 'start' in current_maha else ''
-            maha_end = current_maha.get('end', '').split('T')[0] if 'end' in current_maha else ''
-            
-            current_antar = current_maha.get('antardasha', [{}])[0]
-            antar_name = current_antar.get('planet', 'অজানা')
-            antar_start = current_antar.get('start', '').split('T')[0] if 'start' in current_antar else ''
-            antar_end = current_antar.get('end', '').split('T')[0] if 'end' in current_antar else ''
-            
-            vimsottari_summary = f"""বৰ্তমান মহাদশা: {maha_name} ({maha_start} ৰ পৰা {maha_end} পৰ্যন্ত)
-বৰ্তমান অন্তৰ্দশা: {antar_name} ({antar_start} ৰ পৰা {antar_end} পৰ্যন্ত)
-এই দশা সময়ে আপোনাৰ জীৱনত ব্যাপক পৰিৱৰ্তন আশা কৰা হৈছে।"""
+        vimsottari_summary = build_vimsottari_summary(dasa_hierarchy)
         
         pdf_bytes = generate_pdf_report(
             name, dob, tob, place, planets_data, panchanga,
@@ -1719,20 +1742,8 @@ def custom_pdf():
 
         # Vimsottari Dasha Summary for PDF
         vimsottari_summary = ""
-        if 'dasha_summary' in selected_sections and dasa_hierarchy and len(dasa_hierarchy) > 0:
-            current_maha = dasa_hierarchy[0]
-            maha_name = current_maha.get('planet', 'অজানা')
-            maha_start = current_maha.get('start', '').split('T')[0] if 'start' in current_maha else ''
-            maha_end = current_maha.get('end', '').split('T')[0] if 'end' in current_maha else ''
-            
-            current_antar = current_maha.get('antardasha', [{}])[0]
-            antar_name = current_antar.get('planet', 'অজানা')
-            antar_start = current_antar.get('start', '').split('T')[0] if 'start' in current_antar else ''
-            antar_end = current_antar.get('end', '').split('T')[0] if 'end' in current_antar else ''
-            
-            vimsottari_summary = f"""বৰ্তমান মহাদশা: {maha_name} ({maha_start} ৰ পৰা {maha_end} পৰ্যন্ত)
-বৰ্তমান অন্তৰ্দশা: {antar_name} ({antar_start} ৰ পৰা {antar_end} পৰ্যন্ত)
-এই দশা সময়ে আপোনাৰ জীৱনত ব্যাপক পৰিৱৰ্তন আশা কৰা হৈছে।"""
+        if 'dasha_summary' in selected_sections:
+            vimsottari_summary = build_vimsottari_summary(dasa_hierarchy)
 
         pdf_bytes = generate_pdf_report(
             name, dob, tob, place, planets_data, panchanga,

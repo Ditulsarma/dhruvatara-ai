@@ -308,104 +308,137 @@ def generate_ai_interpretation(
     sannari_data: dict = None,
 ) -> str:
     """
-    Generate a complete AI-powered interpretation in Assamese.
+    Generate a compact AI-powered interpretation in Assamese (fits ~3 PDF pages).
+    Merges related sections and removes redundancy with other PDF sections.
     """
     lines = []
     lines.append(f"প্ৰিয় {user_name},")
     lines.append("")
-    lines.append("আপোনাৰ কুণ্ডলীৰ বিশ্লেষণ আগবঢ়োৱা হ'ল। এই বিশ্লেষণ বৈদিক জ্যোতিষ শাস্ত্ৰৰ শুদ্ধ গণনাৰ আধাৰত প্ৰস্তুত কৰা হৈছে।")
+    lines.append("আপোনাৰ জন্মকুণ্ডলীৰ বৈদিক জ্যোতিষ শাস্ত্ৰৰ শুদ্ধ গণনাৰ আধাৰত এই AI বিশ্লেষণ প্ৰস্তুত কৰা হৈছে।")
     lines.append("")
 
-    # ১। লগ্ন বিশ্লেষণ
-    lines.append("**১। লগ্ন বিশ্লেষণ:**")
+    # ── ১। লগ্ন + লগ্নফল (merged) ──
+    lines.append("**১। লগ্ন আৰু লগ্নফল:**")
     lines.append(generate_lagna_interpretation(asc_rasi))
+    lagna_summaries = {
+        "মেষ": "সাহসী, উদ্যমী, নেতৃত্বগুণ সম্পন্ন। কৰ্মক্ষেত্ৰত সফলতাৰ বাবে পৰিশ্ৰম আৰু ধৈৰ্য্যৰ প্ৰয়োজন।",
+        "বৃষ": "ধৈৰ্যশীল, স্থিৰ, বিলাসী। আৰ্থিক স্থিৰতা আৰু পাৰিবাৰিক সুখৰ বাবে পৰিশ্ৰম কৰে।",
+        "মিথুন": "বুদ্ধিমান, বাক্পটু, কৌতূহলী। যোগাযোগ আৰু শিক্ষাৰ ক্ষেত্ৰত সফলতা লাভ কৰে।",
+        "কৰ্কট": "সংবেদনশীল, যত্নশীল, পাৰিবাৰিক। ঘৰ-পৰিয়াল আৰু আৱেগিক সুৰক্ষাৰ ওপৰত গুৰুত্ব দিয়ে।",
+        "সিংহ": "ৰাজকীয়, আত্মবিশ্বাসী, সৃষ্টিশীল। নেতৃত্ব আৰু প্ৰশাসনিক ক্ষেত্ৰত সফলতা লাভ কৰে।",
+        "কন্যা": "বিশ্লেষণাত্মক, পৰিপাটি, সেৱাভাৱী। স্বাস্থ্য আৰু সেৱাৰ ক্ষেত্ৰত সফলতা লাভ কৰে।",
+        "তুলা": "কূটনীতিজ্ঞ, ন্যায়পৰায়ণ, সামাজিক। সম্পৰ্ক আৰু সৌন্দৰ্য্যৰ ক্ষেত্ৰত সফলতা লাভ কৰে।",
+        "বৃশ্চিক": "ৰহস্যময়, গভীৰ, সংকল্পবদ্ধ। গৱেষণা আৰু গোপন বিষয়ত সফলতা লাভ কৰে।",
+        "ধনু": "আশাবাদী, স্বাধীনচেতীয়া, দাৰ্শনিক। উচ্চ শিক্ষা আৰু ধৰ্মৰ ক্ষেত্ৰত সফলতা লাভ কৰে।",
+        "মকৰ": "উচ্চাকাংক্ষী, পৰিশ্ৰমী, শৃংখলাবদ্ধ। কৰ্মজীৱন আৰু সামাজিক মৰ্যাদাৰ ক্ষেত্ৰত সফলতা লাভ কৰে।",
+        "কুম্ভ": "উদ্ভাৱনী, মানৱতাবাদী, স্বাধীনচেতীয়া। প্ৰযুক্তি আৰু সমাজসেৱাৰ ক্ষেত্ৰত সফলতা লাভ কৰে।",
+        "মীন": "কল্পনাপ্ৰৱণ, দয়ালু, আধ্যাত্মিক। কলা আৰু আধ্যাত্মিকতাৰ ক্ষেত্ৰত সফলতা লাভ কৰে।",
+    }
+    lines.append(lagna_summaries.get(asc_rasi, ""))
     lines.append("")
 
-    # ২। গ্ৰহৰ অৱস্থান (সকলো গ্ৰহ)
+    # ── ২। গ্ৰহৰ অৱস্থান (compact - only key planets) ──
     lines.append("**২। গ্ৰহৰ বিশেষ অৱস্থান:**")
-    all_planets = ["ৰবি", "চন্দ্ৰ", "মংগল", "বুধ", "বৃহস্পতি", "শুক্ৰ", "শনি", "ৰাহু", "কেতু"]
+    key_planets = ["ৰবি", "চন্দ্ৰ", "মংগল", "বুধ", "বৃহস্পতি", "শুক্ৰ", "শনি"]
     for p in planets_data:
-        if p['name'] in all_planets:
+        if p['name'] in key_planets:
+            interp = get_rasi_interpretation(p['name'], p['rasi'])
+            lines.append(f"• {interp}")
+    # Rahu & Ketu combined
+    rahu_ketu = [p for p in planets_data if p['name'] in ("ৰাহু", "কেতু")]
+    if rahu_ketu:
+        for p in rahu_ketu:
             interp = get_rasi_interpretation(p['name'], p['rasi'])
             lines.append(f"• {interp}")
     lines.append("")
 
-    # ৩। দোষ বিশ্লেষণ
+    # ── ৩। দোষ + যোগ (merged) ──
     present_doshas = [d for d in dosha_results if d.get('present')]
-    lines.append(f"**৩। দোষ বিশ্লেষণ ({len(present_doshas)}টা ধৰা পৰিছে):**")
-    lines.append(generate_dosha_interpretation(dosha_results))
+    lines.append(f"**৩। দোষ আৰু যোগ বিশ্লেষণ:**")
+    if present_doshas:
+        dosha_names = []
+        for d in present_doshas:
+            info = d.get('info', {})
+            name = info.get('name', d.get('key', ''))
+            severity = d.get('severity_text', '')
+            dosha_names.append(f"{name} ({severity})")
+        lines.append(f"উপস্থিত দোষ ({len(present_doshas)}টা): {', '.join(dosha_names)}।")
+    else:
+        lines.append("কোনো গুৰুতৰ দোষ ধৰা পৰা নাই — ই এক শুভ লক্ষণ।")
+
+    if yoga_results:
+        yoga_names = [y.get('name', '') for y in yoga_results[:5]]
+        lines.append(f"শুভ যোগ ({len(yoga_results)}টা): {', '.join(yoga_names)}।")
     lines.append("")
 
-    # ৪। যোগ বিশ্লেষণ
-    lines.append(f"**৪। যোগ বিশ্লেষণ ({len(yoga_results)}টা ধৰা পৰিছে):**")
-    lines.append(generate_yoga_interpretation(yoga_results))
-    lines.append("")
-
-    # ৫। দশা বিশ্লেষণ
-    lines.append("**৫। দশা বিশ্লেষণ:**")
+    # ── ৪। দশা বিশ্লেষণ (compact) ──
+    lines.append("**৪। বৰ্তমান দশা বিশ্লেষণ:**")
     lines.append(generate_dasha_interpretation(dasa_data))
     lines.append("")
 
-    # ৬। লগ্নফলৰ চমু বিশ্লেষণ
-    lines.append(f"**৬। লগ্নফল ({asc_rasi} লগ্ন):**")
-    lagna_summaries = {
-        "মেষ": "মেষ লগ্নৰ জাতক সাহসী, উদ্যমী আৰু নেতৃত্বগুণ সম্পন্ন। কৰ্মক্ষেত্ৰত সফলতাৰ বাবে পৰিশ্ৰম আৰু ধৈৰ্য্যৰ প্ৰয়োজন।",
-        "বৃষ": "বৃষ লগ্নৰ জাতক ধৈৰ্যশীল, স্থিৰ আৰু বিলাসী। আৰ্থিক স্থিৰতা আৰু পাৰিবাৰিক সুখৰ বাবে পৰিশ্ৰম কৰে।",
-        "মিথুন": "মিথুন লগ্নৰ জাতক বুদ্ধিমান, বাক্পটু আৰু কৌতূহলী। যোগাযোগ আৰু শিক্ষাৰ ক্ষেত্ৰত সফলতা লাভ কৰে।",
-        "কৰ্কট": "কৰ্কট লগ্নৰ জাতক সংবেদনশীল, যত্নশীল আৰু পাৰিবাৰিক। ঘৰ-পৰিয়াল আৰু আৱেগিক সুৰক্ষাৰ ওপৰত গুৰুত্ব দিয়ে।",
-        "সিংহ": "সিংহ লগ্নৰ জাতক ৰাজকীয়, আত্মবিশ্বাসী আৰু সৃষ্টিশীল। নেতৃত্ব আৰু প্ৰশাসনিক ক্ষেত্ৰত সফলতা লাভ কৰে।",
-        "কন্যা": "কন্যা লগ্নৰ জাতক বিশ্লেষণাত্মক, পৰিপাটি আৰু সেৱাভাৱী। স্বাস্থ্য আৰু সেৱাৰ ক্ষেত্ৰত সফলতা লাভ কৰে।",
-        "তুলা": "তুলা লগ্নৰ জাতক কূটনীতিজ্ঞ, ন্যায়পৰায়ণ আৰু সামাজিক। সম্পৰ্ক আৰু সৌন্দৰ্য্যৰ ক্ষেত্ৰত সফলতা লাভ কৰে।",
-        "বৃশ্চিক": "বৃশ্চিক লগ্নৰ জাতক ৰহস্যময়, গভীৰ আৰু সংকল্পবদ্ধ। গৱেষণা আৰু গোপন বিষয়ত সফলতা লাভ কৰে।",
-        "ধনু": "ধনু লগ্নৰ জাতক আশাবাদী, স্বাধীনচেতীয়া আৰু দাৰ্শনিক। উচ্চ শিক্ষা আৰু ধৰ্মৰ ক্ষেত্ৰত সফলতা লাভ কৰে।",
-        "মকৰ": "মকৰ লগ্নৰ জাতক উচ্চাকাংক্ষী, পৰিশ্ৰমী আৰু শৃংখলাবদ্ধ। কৰ্মজীৱন আৰু সামাজিক মৰ্যাদাৰ ক্ষেত্ৰত সফলতা লাভ কৰে।",
-        "কুম্ভ": "কুম্ভ লগ্নৰ জাতক উদ্ভাৱনী, মানৱতাবাদী আৰু স্বাধীনচেতীয়া। প্ৰযুক্তি আৰু সমাজসেৱাৰ ক্ষেত্ৰত সফলতা লাভ কৰে।",
-        "মীন": "মীন লগ্নৰ জাতক কল্পনাপ্ৰৱণ, দয়ালু আৰু আধ্যাত্মিক। কলা আৰু আধ্যাত্মিকতাৰ ক্ষেত্ৰত সফলতা লাভ কৰে।",
-    }
-    lines.append(lagna_summaries.get(asc_rasi, f"{asc_rasi} লগ্নৰ ফলাফল কুণ্ডলীত বিতংভাৱে দিয়া হৈছে।"))
-    lines.append("")
-
-    # ৭। নক্ষত্ৰফলৰ চমু বিশ্লেষণ
-    if moon_nak_name:
-        lines.append(f"**৭। নক্ষত্ৰফল ({moon_nak_name} নক্ষত্ৰ):**")
-        lines.append(f"আপোনাৰ জন্ম নক্ষত্ৰ {moon_nak_name}। এই নক্ষত্ৰৰ প্ৰভাৱত আপোনাৰ ব্যক্তিত্ব আৰু জীৱনশৈলী গঢ় লৈছে। নক্ষত্ৰফলৰ বিতং বিশ্লেষণ কুণ্ডলীৰ নক্ষত্ৰ ফলাফল অংশত দিয়া হৈছে।")
+    # ── ৫। নক্ষত্ৰ + ৰাশি (merged) ──
+    if moon_nak_name or moon_rasi:
+        lines.append("**৫। নক্ষত্ৰ আৰু ৰাশি:**")
+        if moon_nak_name:
+            lines.append(f"জন্ম নক্ষত্ৰ: {moon_nak_name}। এই নক্ষত্ৰৰ প্ৰভাৱত আপোনাৰ ব্যক্তিত্ব আৰু জীৱনশৈলী গঢ় লৈছে।")
+        if moon_rasi:
+            lines.append(f"চন্দ্ৰ ৰাশি: {moon_rasi}। চন্দ্ৰ ৰাশিৰ পৰা আপোনাৰ মন, আৱেগ, আৰু দৈনন্দিন জীৱনৰ ফলাফল নিৰ্ণয় কৰা হয়।")
         lines.append("")
 
-    # ৮। ৰাশিফলৰ চমু বিশ্লেষণ
-    if moon_rasi:
-        lines.append(f"**৮। ৰাশিফল ({moon_rasi} ৰাশি — চন্দ্ৰ ৰাশি):**")
-        lines.append(f"আপোনাৰ চন্দ্ৰ ৰাশি {moon_rasi}। চন্দ্ৰ ৰাশিৰ পৰা আপোনাৰ মন, আৱেগ, আৰু দৈনন্দিন জীৱনৰ ফলাফল নিৰ্ণয় কৰা হয়। ৰাশিফলৰ বিতং বিশ্লেষণ কুণ্ডলীৰ ৰাশিফল অংশত দিয়া হৈছে।")
-        lines.append("")
-
-    # ৯। নৱতাৰা চক্ৰৰ চমু বিশ্লেষণ
-    if navatara_data:
-        lines.append("**৯। নৱতাৰা চক্ৰ:**")
-        lines.append("নৱতাৰা চক্ৰ হ'ল জন্ম নক্ষত্ৰৰ পৰা আৰম্ভ কৰি ২৭ নক্ষত্ৰক ৯টা ভাগত বিভক্ত কৰা এক বিশেষ জ্যোতিষীয় গণনা। ইয়াৰ দ্বাৰা জাতকৰ জীৱনৰ বিভিন্ন সময়ত গ্ৰহ-নক্ষত্ৰৰ শুভ-অশুভ প্ৰভাৱ নিৰ্ণয় কৰা হয়। বিতং বিশ্লেষণ কুণ্ডলীৰ নৱতাৰা চক্ৰ অংশত দিয়া হৈছে।")
-        lines.append("")
-
-    # ১০। সন্নাড়ী চক্ৰৰ চমু বিশ্লেষণ
-    if sannari_data:
-        lines.append("**১০। সন্নাড়ী চক্ৰ:**")
-        lines.append("সন্নাড়ী চক্ৰ হ'ল জন্ম নক্ষত্ৰৰ ওপৰত আধাৰিত এক বিশেষ চক্ৰ যিয়ে জাতকৰ জীৱনৰ বিভিন্ন দিশ যেনে- দেহ, অৰ্থ, ভ্ৰাতৃ, মাতৃ, পুত্ৰ, শত্ৰু, দাৰা, মৃত্যু, শুভ, কৰ্ম, লাভ, ব্যয় আদিৰ বিষয়ে সূচনা দিয়ে। বিতং বিশ্লেষণ কুণ্ডলীৰ সন্নাড়ী চক্ৰ অংশত দিয়া হৈছে।")
-        lines.append("")
-
-    # ১১। ত্ৰিপাপ ৰিষ্টৰ সম্ভাব্য বছৰ
+    # ── ৬। ত্ৰিপাপ ৰিষ্ট + নৱতাৰা + সন্নাড়ী (merged) ──
+    extras = []
     if tripap_ages:
         ages_str = ', '.join(str(a) for a in tripap_ages)
-        lines.append("**১১। ত্ৰিপাপ ৰিষ্টৰ সম্ভাব্য বছৰ:**")
-        lines.append(f"ত্ৰিপাপ ৰিষ্ট হ'ব পৰা সম্ভাব্য বয়সসমূহ: **{ages_str}**। এই বয়সসমূহত বিশেষ সাৱধানতা অৱলম্বন কৰা উচিত। স্বাস্থ্য, দুৰ্ঘটনা, আৰু অপায়-অমঙ্গলৰ পৰা ৰক্ষা পাবলৈ সতৰ্ক থাকিব। বিতং বিশ্লেষণ কুণ্ডলীৰ ত্ৰিপাপ ৰিষ্ট অংশত দিয়া হৈছে।")
+        extras.append(f"ত্ৰিপাপ ৰিষ্টৰ সম্ভাব্য বয়স: {ages_str} — এই বয়সসমূহত বিশেষ সাৱধানতা অৱলম্বন কৰক।")
+    if navatara_data:
+        extras.append("নৱতাৰা চক্ৰ: জন্ম নক্ষত্ৰৰ পৰা ২৭ নক্ষত্ৰক ৯ ভাগত বিভক্ত কৰি জীৱনৰ শুভ-অশুভ সময় নিৰ্ণয় কৰা হয়।")
+    if sannari_data:
+        extras.append("সন্নাড়ী চক্ৰ: জন্ম নক্ষত্ৰৰ আধাৰত দেহ, অৰ্থ, ভ্ৰাতৃ, মাতৃ, পুত্ৰ, শত্ৰু, দাৰা আদিৰ বিষয়ে সূচনা দিয়ে।")
+    if extras:
+        lines.append("**৬। অন্যান্য গুৰুত্বপূৰ্ণ বিশ্লেষণ:**")
+        for e in extras:
+            lines.append(f"• {e}")
         lines.append("")
 
-    # ১২। ৰত্ন পৰামৰ্শ আৰু বীজ মন্ত্ৰ
+    # ── ৭। ৰত্ন পৰামৰ্শ + বীজ মন্ত্ৰ + সাৰাংশ (merged) ──
+    lines.append("**৭। ৰত্ন পৰামৰ্শ, বীজ মন্ত্ৰ আৰু সাৰাংশ:**")
     if planet_signs:
-        lines.append("**১২। ৰত্ন পৰামৰ্শ আৰু বীজ মন্ত্ৰ:**")
-        lines.append(generate_gemstone_recommendation(asc_rasi_idx, planet_signs))
-        lines.append("")
-
-    # ১৩। সাৰাংশ
-    lines.append("**১৩। সাৰাংশ:**")
-    lines.append(generate_overall_summary(planets_data, asc_rasi, len(present_doshas), len(yoga_results)))
+        lines.append(generate_gemstone_recommendation_compact(asc_rasi_idx, planet_signs))
+    lines.append("")
+    lines.append(f"**সাৰাংশ:** {generate_overall_summary(planets_data, asc_rasi, len(present_doshas), len(yoga_results))}")
     lines.append("")
     lines.append("— ধ্ৰুৱতৰা AI, আপোনাৰ বিশ্বাসযোগ্য জ্যোতিষ সহায়ক")
+
+    return '\n'.join(lines)
+
+
+def generate_gemstone_recommendation_compact(asc_rasi_idx: int, planet_signs: dict) -> str:
+    """Compact gemstone + mantra recommendation (shorter version for PDF)."""
+    lines = []
+    lagna_lord = RASHI_LORDS.get(asc_rasi_idx, "")
+    fifth_house_idx = (asc_rasi_idx + 4) % 12
+    fifth_lord = RASHI_LORDS.get(fifth_house_idx, "")
+    ninth_house_idx = (asc_rasi_idx + 8) % 12
+    ninth_lord = RASHI_LORDS.get(ninth_house_idx, "")
+
+    lords = []
+    if lagna_lord:
+        lords.append(("লগ্নপতি", lagna_lord))
+    if fifth_lord and fifth_lord != lagna_lord:
+        lords.append(("পঞ্চমপতি", fifth_lord))
+    if ninth_lord and ninth_lord not in [lagna_lord, fifth_lord]:
+        lords.append(("নৱমপতি", ninth_lord))
+
+    for title, lord in lords:
+        gem = GEMSTONES.get(lord, "")
+        mantra = BEEJA_MANTRAS.get(lord, "")
+        if gem:
+            lines.append(f"• {title} {lord}: ৰত্ন — {gem}")
+        if mantra:
+            lines.append(f"  মন্ত্ৰ — {mantra}")
+
+    if lords:
+        lines.append("")
+        lines.append("ৰত্ন সদায় শুদ্ধ-প্ৰাকৃতিক হ'ব লাগে আৰু অভিজ্ঞ জ্যোতিষীৰ পৰামৰ্শ লৈহে ধাৰণ কৰিব। মন্ত্ৰ নিতৌ ১০৮ বাৰ জাপ কৰিলে গ্ৰহদোষ নাশ হয়।")
 
     return '\n'.join(lines)

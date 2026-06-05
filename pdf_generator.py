@@ -23,6 +23,29 @@ WHITE = '#FFFFFF'
 RED = '#C62828'
 GREEN = '#2E7D32'
 
+# ─── Ganesh Image Helper ────────────────────────────────────────
+_GANESH_BASE64 = None
+
+def _get_ganesh_base64():
+    """Load Ganesh image from static/images and return base64 data URI."""
+    global _GANESH_BASE64
+    if _GANESH_BASE64 is not None:
+        return _GANESH_BASE64
+    # Try multiple possible paths
+    possible_paths = [
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'images', 'Ganesh_Image_Dhrubatara.png'),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Image', 'Ganesh_Image_Dhrubatara.png'),
+    ]
+    for img_path in possible_paths:
+        if os.path.exists(img_path):
+            with open(img_path, 'rb') as f:
+                data = f.read()
+            ext = os.path.splitext(img_path)[1].lower()
+            mime = 'image/png' if ext == '.png' else 'image/jpeg'
+            _GANESH_BASE64 = f'data:{mime};base64,{base64.b64encode(data).decode()}'
+            return _GANESH_BASE64
+    return None
+
 # ─── SVG Kundli Chart Generator (Bengali Style) ─────────────────
 
 def _svg_chart(chart_data: dict, size: int = 400, title: str = "", show_rasi_names: bool = True) -> str:
@@ -232,6 +255,87 @@ def _render_shani_sare_sati_html(moon_rasi: str, planets_data: list, user_dob: s
                 <thead><tr><th>আনুমানিক বয়স</th><th>আনুমানিক চন</th><th>শনি ৰাশি</th><th>দশা</th></tr></thead>
                 <tbody>{rows}</tbody>
             </table>
+        </div>
+        <div class=\"sare-sati-analysis\">
+            <h3 class=\"ss-analysis-heading\">শনিৰ সাৰে সাতিৰ ৭.৫ বছৰীয়া সময়কালৰ বিতং বিশ্লেষণ:</h3>
+            <p class=\"ss-analysis-intro\">শনিৰ সাৰে সাতটি মূলতঃ ২.৫ বছৰকৈ তিনিটা ভাগত বিভক্ত কৰা হয়। প্ৰতিটো ভাগৰ প্ৰভাৱ আৰু পৰিস্থিতি বেলেগ বেলেগ হয়।</p>
+
+            <div class=\"ss-phase-card\">
+                <div class=\"ss-phase-title\">১. সাৰে সাতিৰ উদয় (১ম চৰণ - প্ৰথম ২.৫ বছৰ)</div>
+                <div class=\"ss-phase-body\">
+                    <p>এই সময়ছোৱাক সাৰে সাতিৰ <b>\"আৰম্ভণিৰ দুৱাৰদলি\"</b> বুলি ক'ব পাৰি। এই সময়ত শনি গ্ৰহ জন্ম ৰাশিৰ ঠিক আগৰ ঘৰত (দ্বাদশ স্থানত) থাকে।</p>
+                    <p class=\"ss-sub-heading\">মুখ্য প্ৰভাৱ (সমস্যাসমূহ):</p>
+                    <ul>
+                        <li><b>আৰ্থিক চাপ:</b> উপাৰ্জনতকৈ খৰচৰ মাত্ৰা বহুগুণে বৃদ্ধি পায়। আৰ্থিক সংকটৰ সৃষ্টি হ'ব পাৰে।</li>
+                        <li><b>কৰ্মক্ষেত্ৰত বাধা:</b> অফিচ বা ব্যৱসায়ত সহকৰ্মীৰ সৈতে মতানৈক্য হ'ব পাৰে। শনিৰ গতি লেহেমীয়া হোৱাৰ বাবে যিকোনো কাম সম্পূৰ্ণ হওঁতে পলম হয়।</li>
+                        <li><b>গুপ্ত শত্ৰু:</b> আপোনাক সন্মুখৰ পৰা আক্ৰমণ নকৰিলেও, কিছুমান গুপ্ত শত্ৰুৱে পিছফালৰ পৰা লোকচান কৰাৰ চেষ্টা কৰিব পাৰে।</li>
+                    </ul>
+                    <p class=\"ss-sub-heading\">ল'বলগীয়া সাৱধানতা:</p>
+                    <p>দুৰ্ঘটনাৰ আশংকা থকাৰ বাবে দূৰণিৰ যাত্ৰা পৰাপক্ষত এৰাই চলিব। টকা-পইচাৰ ক্ষেত্ৰত হিচাপী হ'ব আৰু ব্যৱসায়ত ডাঙৰ ৰিস্ক (Risk) একেবাৰেই নল'ব। খৰখেদা নকৰি উচিত সময়লৈকে ধৈৰ্য্য ধৰিলেহে কামত সফলতা মিলিব।</p>
+                </div>
+            </div>
+
+            <div class=\"ss-phase-card\">
+                <div class=\"ss-phase-title\">২. সাৰে সাতিৰ শিখৰ (২য় চৰণ - মাজৰ ২.৫ বছৰ)</div>
+                <div class=\"ss-phase-body\">
+                    <p>এই সময়ছোৱা সাৰে সাতিৰ <b>\"চৰম বা আটাইতকৈ কঠিন\"</b> পৰ্যায়। এই সময়ত শনি গ্ৰহ আপোনাৰ জন্ম ৰাশিতেই অৱস্থান কৰে।</p>
+                    <p class=\"ss-sub-heading\">মুখ্য প্ৰভাৱ (সমস্যাসমূহ):</p>
+                    <ul>
+                        <li><b>মানসিক আৰু শাৰীৰিক কষ্ট:</b> মনত অকাৰণ ভয়, হতাশা আৰু তীব্ৰ মানসিক অশান্তি থাকে। স্বাস্থ্যৰ অৱনতি ঘটিব পাৰে। সৰু কাম এটাৰ বাবেও কঠোৰ সংগ্ৰাম কৰিবলগীয়া হয়।</li>
+                        <li><b>সম্পৰ্কত ফাট:</b> ভাতৃ-ভগ্নী, আত্মীয়-স্বজন আনকি পত্নীৰ সৈতেও বিনা কাৰণত কাজিয়া বা মনোমালিন্য হ'ব পাৰে।</li>
+                        <li><b>চৰিত্ৰত দাগ:</b> এই সময়ত শত্ৰুৱে আপোনাৰ বদনাম বা চৰিত্ৰ হনন কৰাৰ পূৰ্ণ চেষ্টা চলায়। লগতে পিতৃ-মাতৃৰ বাবেও সময়টো শুভ নহয়।</li>
+                    </ul>
+                    <p class=\"ss-sub-heading\">ল'বলগীয়া সাৱধানতা:</p>
+                    <p>এই সময়ত মানসিকভাৱে অতিশয় দৃঢ় হোৱাৰ প্ৰয়োজন। কাৰো সৈতে তৰ্কত লিপ্ত নহ'ব আৰু নিজৰ চৰিত্ৰ সৱল কৰি ৰাখিব।</p>
+                </div>
+            </div>
+
+            <div class=\"ss-phase-card\">
+                <div class=\"ss-phase-title\">৩. সাৰে সাতিৰ অস্ত (৩য় চৰণ - শেষৰ ২.৫ বছৰ)</div>
+                <div class=\"ss-phase-body\">
+                    <p>এইটো সাৰে সাতিৰ <b>\"বিদায় বেলা\"</b>। আগৰ ৫ বছৰৰ ভয়ংকৰ কষ্টৰ পিছত এই সময়ছোৱাত ব্যক্তিয়ে কিছু সকাহ অনুভৱ কৰিবলৈ আৰম্ভ কৰে।</p>
+                    <p class=\"ss-sub-heading\">মুখ্য প্ৰভাৱ (সমস্যাসমূহ):</p>
+                    <ul>
+                        <li><b>আৰ্থিক স্থিতি:</b> সকাহ পালেও টকা-পইচাৰ সম্পৰ্কীয় কিছুমান সমস্যা থাকি যায়। হঠাতে ধনহানি বা চুৰি হোৱাৰ সম্ভাৱনা থাকে।</li>
+                        <li><b>মানসিক অৱস্থা:</b> মনলৈ সঘনাই অশুভ বা নেতিবাচক চিন্তা আহিব পাৰে। বিদ্যাৰ্থীসকলে পঢ়া-শুনাত মনোযোগ দিলেও আশানুৰূপ ফলাফল পোৱাত বাধাৰ সৃষ্টি হয়।</li>
+                    </ul>
+                    <p class=\"ss-sub-heading\">ল'বলগীয়া সাৱধানতা:</p>
+                    <p>আটাইতকৈ গুৰুত্বপূৰ্ণ কথাটো হ'ল নিজৰ কথা-বতৰা বা <b>বাণীৰ ওপৰত নিয়ন্ত্ৰণ ৰখা</b>। ভুল কথাৰ বাবে মানুহৰ লগত শত্ৰুতা হ'ব পাৰে। যান-বাহন চলোৱা আৰু সা-সম্পত্তিৰ লেনদেন কৰোঁতে অতিশয় সাৱধান হ'ব। পিতৃ-মাতৃৰ স্বাস্থ্যৰ প্ৰতি চকু ৰাখিব।</p>
+                </div>
+            </div>
+
+            <div class=\"ss-note-box\">
+                <b>বিশেষ দ্ৰষ্টব্য:</b> শনিৰ সাৰে সাতিৰ প্ৰভাৱ মানুহৰ বয়সৰ ওপৰতো নিৰ্ভৰ কৰে। সৰুকালত (শৈশৱত) ইয়াৰ প্ৰভাৱ বৰ বেছি অনুভৱ নহয়, কিন্তু জীৱনৰ মাজভাগত (যৌৱন/কৰ্মজীৱনত) আৰু শেষ ভাগত (বাৰ্ধক্যত) ইয়াৰ প্ৰভাৱ অত্যন্ত গভীৰ আৰু নিৰ্ণায়ক হয়। শনি হৈছে ন্যায়াধীশ, সেয়ে সৎ কৰ্ম আৰু ধৈৰ্য্যৰে এই সময় পাৰ কৰিব পাৰি।
+            </div>
+
+            <h3 class=\"ss-analysis-heading\">শনিৰ ধেয়া (ঢৈয়া) সময়ৰ বিশ্লেষণ:</h3>
+
+            <div class=\"ss-phase-card\">
+                <div class=\"ss-phase-title\">১. শনিৰ ধেয়া: চতুৰ্থ স্থান (ৰাশিৰ পৰা চতুৰ্থত অৱস্থান)</div>
+                <div class=\"ss-phase-body\">
+                    <p>এই সময়ছোৱাত শনি গ্ৰহ জন্ম ৰাশিৰ পৰা চতুৰ্থ ঘৰত থাকে। ই ঘাইকৈ পাৰিবাৰিক সুখ, সম্পত্তি আৰু কৰ্মজীৱনত প্ৰভাৱ পেলায়।</p>
+                    <ul>
+                        <li><b>সম্পৰ্ক আৰু পৰিয়াল:</b> বন্ধু-বান্ধৱ বা আপোন মানুহৰ লগত মনোমালিন্য হোৱাৰ সম্ভাৱনা থাকে। পিতৃ-মাতৃৰ সৈতে সম্পৰ্কৰ অৱনতি ঘটিব পাৰে নাইবা তেওঁলোকৰ স্বাস্থ্যজনিত সমস্যাই দেখা দিব পাৰে। ভাতৃ-ভগ্নীৰ লগত যিকোনো ধৰণৰ লেনদেন কৰোঁতে সাৱধান হোৱা উচিত।</li>
+                        <li><b>সম্পত্তি আৰু বাহন:</b> মাটি-বাৰী, সম্পত্তি বা বন্ধুৰ লগত জড়িত কামবোৰত সতৰ্ক হোৱা প্ৰয়োজন। যদি নতুনকৈ ঘৰ নিৰ্মাণ কৰি আছে, তেন্তে বিভিন্ন দিশৰ পৰা বাধা বা সমস্যা আহিব পাৰে। যান-বাহন চলোৱাৰ ক্ষেত্ৰতো বিশেষ সাৱধানতা অৱলম্বন কৰিব লাগে।</li>
+                        <li><b>কৰ্মক্ষেত্ৰ:</b> অফিচ বা ব্যৱসায়ত পৰিস্থিতি কঠিন হ'ব পাৰে। কামৰ বাবে অত্যাধিক পৰিশ্ৰম কৰিবলগীয়া হয় আৰু আনৰ সৈতে প্ৰত্যক্ষ বা পৰোক্ষভাৱে বিবাদ বা মতানৈক্য হোৱাৰ শংকা থাকে।</li>
+                        <li><b>বয়সৰ প্ৰভাৱ:</b> সাৰে সাতিৰ দৰেই চতুৰ্থ স্থানৰ ধেয়াৰ প্ৰভাৱো সৰুকালত বিশেষভাৱে অনুভূত নহয় যদিও জীৱনৰ মাজভাগত আৰু শেষৰ ফালে ইয়াৰ প্ৰভাৱ যথেষ্ট বেছি হয়।</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class=\"ss-phase-card\">
+                <div class=\"ss-phase-title\">২. শনিৰ ধেয়া: অষ্টম স্থান (ৰাশিৰ পৰা অষ্টমত অৱস্থান)</div>
+                <div class=\"ss-phase-body\">
+                    <p>এই সময়ছোৱাত শনি জন্ম ৰাশিৰ পৰা অষ্টম ঘৰত থাকে। ইয়াক 'অষ্টম শনি' বুলিও কোৱা হয় আৰু ই সাধাৰণতে অধিক কষ্টদায়ক হ'ব পাৰে।</p>
+                    <ul>
+                        <li><b>কৰ্ম আৰু পাৰিবাৰিক জীৱন:</b> কৰ্মক্ষেত্ৰত কঠিন সংগ্ৰাম আৰু বিবাদৰ সৃষ্টি হ'ব পাৰে। ঠিক একেদৰে, পাৰিবাৰিক দিশতো সময়টো বৰ শুভ নহয়, অশান্তি আহিব পাৰে।</li>
+                        <li><b>বাণী বা কথা-বতৰা:</b> নিজৰ কথা-বতৰাৰ ওপৰত কঠোৰ নিয়ন্ত্ৰণ ৰখাটো অত্যন্ত গুৰুত্বপূৰ্ণ। আপুনি হয়তো কাৰোবাৰ ভালৰ বাবে কথা এটা ক'ব, কিন্তু সেয়া ভুল অৰ্থত লোৱা হ'ব পাৰে আৰু সম্পৰ্ক বেয়া হ'ব পাৰে।</li>
+                        <li><b>আৰ্থিক সংকট:</b> টকা-পইচাৰ তীব্ৰ অভাৱ বা আৰ্থিক সমস্যাই দেখা দিব পাৰে। ধাৰলৈ দিয়া ধন ঘূৰাই নোপোৱা, ঋণৰ সূত বা মূল ধন পৰিশোধ কৰিব নোৱাৰা, অথবা নতুন আঁচনিৰ বাবে প্ৰয়োজনীয় ধন গোটাব নোৱাৰা আদি সমস্যা হ'ব পাৰে। আত্মীয়ৰ লগত ধনৰ লেনদেন কৰোঁতে অতিশয় সাৱধান হ'ব।</li>
+                        <li><b>শাৰীৰিক আৰু আইনী বিপদ:</b> অষ্টম স্থানত শনি থকাৰ বাবে দুৰ্ঘটনা হোৱা বা আঘাত পোৱাৰ সম্ভাৱনা প্ৰবল থাকে। যাৰ জন্মকুণ্ডলীত অষ্টম স্থানত অশুভ গ্ৰহ থাকে বা অষ্টম পতি অশুভ হৈ থাকে, তেওঁলোকৰ এই সময়ত ডাঙৰ বিবাদ, আনকি ক'ৰ্ট-কাছাৰীৰ (Court Case) গোচৰ পৰ্যন্ত হ'ব পাৰে। কিছুমানে চৰকাৰীভাৱে নিষিদ্ধ বা বেআইনী কামতো হাত দিয়াৰ আশংকা থাকে।</li>
+                        <li><b>শিক্ষা:</b> বিদ্যাৰ্থীসকলৰ বাবে এই সময়ছোৱা প্ৰত্যাহ্বানজনক। পঢ়া-শুনাত বাধা আহিব পাৰে আৰু আশানুৰূপ ফলাফল লাভ কৰাত অসুবিধা হ'ব পাৰে।</li>
+                    </ul>
+                </div>
+            </div>
         </div>"""
 
 
@@ -528,10 +632,54 @@ def _build_html(
     # ── AI Section ──
     ai_html = ""
     if ai_interpretation:
-        ai_lines = ''.join(f'<p>{line.strip()}</p>' for line in ai_interpretation.strip().split('\n') if line.strip())
+        # Parse AI text into sections based on numbered points or double newlines
+        ai_paragraphs = [line.strip() for line in ai_interpretation.strip().split('\n') if line.strip()]
+        ai_cards = ""
+        for para in ai_paragraphs:
+            # Detect if it's a heading-like line (starts with number, emoji, or contains colon)
+            is_heading = False
+            heading_text = ""
+            body_text = para
+            
+            # Check for patterns like "1.", "1)", "【", "★", or lines ending with ":" or "ঃ"
+            if para and (para[0].isdigit() and ('.' in para[:4] or ')' in para[:4])):
+                # Numbered point: "1. Something" or "1) Something"
+                parts = para.split('.', 1) if '.' in para[:4] else para.split(')', 1)
+                if len(parts) > 1:
+                    heading_text = parts[0].strip() + '.'
+                    body_text = parts[1].strip()
+                    is_heading = True
+            elif para.startswith('【') and '】' in para:
+                heading_text = para
+                body_text = ""
+                is_heading = True
+            elif 'ঃ' in para[:60] or ':' in para[:60]:
+                parts = para.split('ঃ', 1) if 'ঃ' in para[:60] else para.split(':', 1)
+                if len(parts) > 1 and len(parts[0]) < 50:
+                    heading_text = parts[0].strip() + 'ঃ'
+                    body_text = parts[1].strip()
+                    is_heading = True
+            
+            if is_heading and heading_text:
+                ai_cards += f'<div class="ai-card"><div class="ai-card-head">{heading_text}</div>'
+                if body_text:
+                    ai_cards += f'<div class="ai-card-body">{body_text}</div>'
+                ai_cards += '</div>'
+            else:
+                ai_cards += f'<div class="ai-card"><div class="ai-card-body">{para}</div></div>'
+        
         ai_html = f"""
-        <h2 class="section-heading">🤖 AI বিশ্লেষণ আৰু পৰামৰ্শ</h2>
-        <div class="ai-content">{ai_lines}</div>"""
+        <div class="ai-section-wrapper">
+            <div class="ai-section-header">
+                <div class="ai-header-icon">🤖</div>
+                <div class="ai-header-text">
+                    <div class="ai-header-title">AI বিশ্লেষণ আৰু পৰামৰ্শ</div>
+                    <div class="ai-header-subtitle">কৃত্ৰিম বুদ্ধিমত্তাৰ দ্বাৰা বিশ্লেষিত জন্মকুণ্ডলীৰ সম্পূৰ্ণ ফলাফল</div>
+                </div>
+            </div>
+            <div class="ai-divider"></div>
+            <div class="ai-cards-container">{ai_cards}</div>
+        </div>"""
 
     # ── Top-Right Astrologer Header (Full Details - First Page) ──
     top_right_html = ""
@@ -555,6 +703,9 @@ def _build_html(
             tr_lines.append(f'<div class="trh-line trh-mob">📞 {mob}</div>')
         if len(tr_lines) > 1:  # more than just the title
             top_right_html = '<div class="top-right-header">' + ''.join(tr_lines) + '</div>'
+
+    ganesh_image_src = _get_ganesh_base64()
+    ganesh_image_html = f'<img src="{ganesh_image_src}" alt="Ganesh" />' if ganesh_image_src else ''
 
     html = f"""<!DOCTYPE html>
 <html lang="as">
@@ -592,6 +743,7 @@ def _build_html(
     h2.section-heading {{
         font-size: 13pt; color: {ORANGE}; margin: 18px 0 8px;
         padding-bottom: 3px; border-bottom: 1px solid #e8e0d5;
+        page-break-after: avoid;
     }}
 
     /* Info Grid */
@@ -665,6 +817,62 @@ def _build_html(
         font-size: 9pt; line-height: 1.8;
     }}
     .ai-content p {{ margin-bottom: 4px; }}
+
+    /* ─── AI Section New Design ─── */
+    .ai-section-wrapper {{
+        margin: 20px 0; page-break-inside: avoid;
+    }}
+    .ai-section-header {{
+        display: flex; align-items: center; gap: 14px;
+        background: linear-gradient(135deg, {DEEP_BLUE}, #283593);
+        border-radius: 10px 10px 0 0; padding: 16px 20px;
+    }}
+    .ai-header-icon {{
+        font-size: 28pt; flex-shrink: 0;
+        width: 52px; height: 52px; display: flex;
+        align-items: center; justify-content: center;
+        background: rgba(255,255,255,0.15); border-radius: 50%;
+    }}
+    .ai-header-text {{ flex: 1; }}
+    .ai-header-title {{
+        font-size: 14pt; font-weight: 800; color: white;
+        letter-spacing: 0.5px;
+    }}
+    .ai-header-subtitle {{
+        font-size: 8pt; color: rgba(255,255,255,0.75);
+        margin-top: 2px;
+    }}
+    .ai-divider {{
+        height: 3px; background: linear-gradient(90deg, {ORANGE}, {DEEP_BLUE}, {ORANGE});
+    }}
+    .ai-cards-container {{
+        background: white; border: 1px solid #e0e0e0;
+        border-top: none; border-radius: 0 0 10px 10px;
+        padding: 14px 18px;
+    }}
+    .ai-card {{
+        margin-bottom: 10px; page-break-inside: avoid;
+        border-radius: 8px; overflow: hidden;
+        border: 1px solid #e8e0d5;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }}
+    .ai-card:last-child {{ margin-bottom: 0; }}
+    .ai-card-head {{
+        background: linear-gradient(135deg, #FFF8F0, #FFE0B2);
+        padding: 8px 14px; font-weight: 700; font-size: 9.5pt;
+        color: {DEEP_BLUE}; border-bottom: 1px solid #f0e0c8;
+    }}
+    .ai-card-body {{
+        padding: 10px 14px; font-size: 9pt; line-height: 1.9;
+        color: #333; background: #fefefe;
+    }}
+    .ai-footer-note {{
+        margin-top: 10px; padding: 8px 14px;
+        background: #FFF3E0; border-left: 3px solid {ORANGE};
+        border-radius: 0 6px 6px 0; font-size: 7.5pt;
+        color: #E65100; display: flex; align-items: center; gap: 6px;
+    }}
+    .ai-note-icon {{ font-size: 10pt; flex-shrink: 0; }}
 
     .empty-msg {{ text-align: center; padding: 20px; color: #999; font-size: 10pt; }}
 
@@ -833,15 +1041,16 @@ def _build_html(
 
     /* ── Invocatory Shlokas ── */
     .shloka-section {{
-        margin: 10px 0 14px; page-break-inside: avoid; page-break-after: avoid;
+        margin: 6px 0 8px; page-break-inside: avoid; page-break-after: avoid;
     }}
     .shloka-outer-box {{
         background: linear-gradient(135deg, #FFF8E1 0%, #FFF3E0 30%, #FCE4EC 70%, #F3E5F5 100%);
         border: 2px solid {ORANGE};
-        border-radius: 12px;
-        padding: 14px 20px;
+        border-radius: 10px;
+        padding: 10px 16px;
         position: relative;
-        box-shadow: 0 3px 12px rgba(255,102,0,0.10);
+        box-shadow: 0 2px 8px rgba(255,102,0,0.08);
+        page-break-inside: avoid;
     }}
     .shloka-outer-box::before {{
         content: "🕉️";
@@ -854,44 +1063,54 @@ def _build_html(
         padding: 0 10px;
         border-radius: 50%;
     }}
+    .ganesh-image-container {{
+        text-align: center; margin-bottom: 4px;
+    }}
+    .ganesh-image-container img {{
+        display: inline-block;
+        max-width: 120px;
+        width: 100%;
+        height: auto;
+        margin: 0 auto;
+    }}
     .shloka-title {{
         text-align: center;
-        font-size: 10pt;
+        font-size: 9pt;
         font-weight: 800;
         color: {ORANGE};
-        margin: 6px 0 10px;
+        margin: 4px 0 8px;
         letter-spacing: 1px;
         text-transform: uppercase;
     }}
     .shloka-block {{
         text-align: center;
-        margin-bottom: 10px;
-        padding: 10px 14px;
+        margin-bottom: 6px;
+        padding: 6px 10px;
         background: rgba(255,255,255,0.55);
-        border-radius: 8px;
+        border-radius: 6px;
         border: 1px dashed #e0c8a0;
     }}
     .shloka-text {{
-        font-size: 9pt;
+        font-size: 7.5pt;
         font-weight: 600;
         color: {DEEP_BLUE};
-        line-height: 2.2;
-        letter-spacing: 0.3px;
+        line-height: 1.8;
+        letter-spacing: 0.2px;
         font-family: 'Noto Sans Bengali', 'Nirmala UI', 'Vrinda', sans-serif;
     }}
     .shloka-divider {{
         text-align: center;
-        margin: 6px 0;
-        font-size: 13pt;
+        margin: 4px 0;
+        font-size: 11pt;
         color: {ORANGE};
-        letter-spacing: 6px;
+        letter-spacing: 4px;
     }}
     .shloka-footer-text {{
         text-align: center;
-        font-size: 8pt;
+        font-size: 7pt;
         font-weight: 600;
         color: #888;
-        margin-top: 6px;
+        margin-top: 4px;
         font-style: italic;
     }}
 
@@ -995,19 +1214,96 @@ def _build_html(
         font-weight: 700;
     }}
 
+    /* Sare Sati Detailed Analysis */
+    .sare-sati-analysis {{
+        margin-top: 0;
+        page-break-inside: avoid;
+    }}
+    .ss-analysis-heading {{
+        font-size: 11pt;
+        font-weight: 800;
+        color: {DEEP_BLUE};
+        margin: 16px 0 10px;
+        padding-bottom: 4px;
+        border-bottom: 2px solid {ORANGE};
+    }}
+    .ss-analysis-intro {{
+        font-size: 9pt;
+        color: #444;
+        line-height: 1.7;
+        margin-bottom: 12px;
+        text-align: justify;
+    }}
+    .ss-phase-card {{
+        background: #FFFDF7;
+        border: 1px solid #FFE0B2;
+        border-left: 4px solid {ORANGE};
+        border-radius: 6px;
+        padding: 10px 14px;
+        margin-bottom: 10px;
+        page-break-inside: avoid;
+    }}
+    .ss-phase-title {{
+        font-size: 10pt;
+        font-weight: 800;
+        color: {ORANGE};
+        margin-bottom: 8px;
+        padding-bottom: 4px;
+        border-bottom: 1px dashed #e0c8a0;
+    }}
+    .ss-phase-body {{
+        font-size: 8.5pt;
+        color: #333;
+        line-height: 1.8;
+        text-align: justify;
+    }}
+    .ss-phase-body p {{
+        margin-bottom: 6px;
+    }}
+    .ss-sub-heading {{
+        font-size: 9pt;
+        font-weight: 700;
+        color: {DEEP_BLUE};
+        margin: 8px 0 4px;
+    }}
+    .ss-phase-body ul {{
+        margin: 4px 0 8px 16px;
+        list-style-type: disc;
+    }}
+    .ss-phase-body ul li {{
+        margin-bottom: 4px;
+        line-height: 1.7;
+    }}
+    .ss-note-box {{
+        background: #FFF3E0;
+        border: 2px solid #FFCC80;
+        border-radius: 8px;
+        padding: 10px 14px;
+        margin: 12px 0;
+        font-size: 8.5pt;
+        color: #5D4037;
+        line-height: 1.8;
+        text-align: justify;
+        page-break-inside: avoid;
+    }}
+
     /* Dwadash Bhab Phala */
     .dwadash-phala-container {{
-        margin-bottom: 10px; page-break-inside: avoid;
+        margin-bottom: 0;
     }}
     .dwadash-house-section {{
-        margin-bottom: 10px; padding: 12px 14px;
+        margin-bottom: 8px; padding: 10px 12px;
         background: #FFFDF7; border: 2px solid #FFE0B2;
-        border-radius: 6px; page-break-inside: avoid;
+        border-radius: 6px;
     }}
     .dwadash-house-title {{
         font-size: 10pt; font-weight: 800; color: {ORANGE};
-        margin-bottom: 8px; border-bottom: 2px solid {ORANGE};
-        padding-bottom: 6px;
+        margin-bottom: 6px; border-bottom: 2px solid {ORANGE};
+        padding-bottom: 4px;
+    }}
+    .dwadash-house-title h4 {{
+        margin: 0; padding: 0; font-size: 10pt; font-weight: 800;
+        display: inline; color: {ORANGE};
     }}
     .dwadash-house-title .dwadash-badge {{
         background: {ORANGE}; color: #fff;
@@ -1050,6 +1346,9 @@ def _build_html(
 <!-- ═══════════════ INVOCATORY SHLOKAS ═══════════════ -->
 <div class="shloka-section">
     <div class="shloka-outer-box">
+        <div class="ganesh-image-container">
+            {ganesh_image_html}
+        </div>
         <div class="shloka-title">॥ আৰম্ভণি ॥</div>
 
         <div class="shloka-block">
@@ -1148,9 +1447,11 @@ def _build_html(
 
     shani_sare_sati_html = _render_shani_sare_sati_html(moon_rasi, planets_data, user_dob)
     if _include('shani_sare_sati'):
+        html += '<div style="page-break-before: always;"></div>'
         html += '<h2 class="section-heading">🌑 শনি সাৰেসাতী আৰু ঢৈয়া (০-১০০ বছৰ)</h2>' + shani_sare_sati_html
 
     if _include('dosha'):
+        html += '<div style="page-break-before: always;"></div>'
         html += '<h2 class="section-heading">⚠️ দোষ বিশ্লেষণ</h2>' + dosha_html
 
     if _include('yoga'):
@@ -1163,6 +1464,7 @@ def _build_html(
         html += '<h2 class="section-heading">🌀 নৱতাৰা চক্ৰ</h2>' + navatara_html
 
     if _include('tripap'):
+        html += '<div style="page-break-before: always;"></div>'
         html += '<h2 class="section-heading">☠️ ত্ৰিপাপ ৰিষ্ট বিশ্লেষণ</h2>' + tripap_html
 
     if _include('nakshatra_phala'):
@@ -1178,6 +1480,7 @@ def _build_html(
         html += '<h2 class="section-heading">🪐 গ্ৰহ বিচাৰ (ভাব অনুসৰি)</h2>' + graha_bichar_html
 
     if _include('dwadash_bhab_phala'):
+        html += '<div style="page-break-before: always;"></div>'
         html += '<h2 class="section-heading">🏠 দ্বাদশ ভাব ফল (12 House Results)</h2>' + dwadash_html
 
     if vimsottari_summary and _include('dasha_summary'):
@@ -1200,8 +1503,6 @@ def _build_html(
 
     html += f"""
 <div class="footer">
-    <p>ধ্ৰুৱতৰা AI • বৈদিক জ্যোতিষ</p>
-    <p>এই ৰিপৰ্ট কেৱল জ্যোতিষীয় তথ্যৰ বাবে। ই কোনো চিকিৎসা, আইনী, বা বিত্তীয় পৰামৰ্শ নহয়।</p>
 </div>
 
 </body>
@@ -1296,7 +1597,7 @@ def generate_pdf_report(
             cmd.append(footer_path)
         result = subprocess.run(
             cmd,
-            capture_output=True, text=True, timeout=30
+            capture_output=True, text=True, timeout=120
         )
         if result.returncode != 0:
             raise RuntimeError(f"PDF worker failed: {result.stderr}")
