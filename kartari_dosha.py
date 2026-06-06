@@ -285,96 +285,122 @@ def get_complete_kartari_analysis(planet_house_map: dict) -> dict:
 def generate_kartari_report(planet_house_map: dict) -> str:
     """
     জন্মকুণ্ডলীৰ বাবে কৰ্তৰী যোগ ৰিপোৰ্ট প্ৰস্তুত কৰক।
-    ধুনীয়া ফৰ্মেটত প্ৰতিটো ঘৰৰ স্থিতি প্ৰদৰ্শন কৰে।
+    HTML ফৰ্মেটত প্ৰতিটো ঘৰৰ স্থিতি ৰঙীন কাৰ্ড হিচাপে প্ৰদৰ্শন কৰে।
     """
-    report = []
-    report.append("=" * 80)
-    report.append("কৰ্তৰী যোগ বিশ্লেষণ ৰিপোৰ্ট (Kartari Yoga Analysis Report)")
-    report.append("=" * 80)
-    report.append("")
-    
-    # সকলো ঘৰৰ বাবে বিশ্লেষণ
     all_analysis = get_complete_kartari_analysis(planet_house_map)
     pap_kartari = all_analysis["house_kartari"]["pap_kartari"]
     shubh_kartari = all_analysis["house_kartari"]["shubh_kartari"]
     mixed_kartari = all_analysis["house_kartari"]["mixed_kartari"]
-    
-    # প্ৰতিটো ঘৰ ১-১২ ৰ বাবে বিতং প্ৰদৰ্শন
-    report.append("\n📊 ঘৰৰ কৰ্তৰী যোগ বিশ্লেষণ:")
-    report.append("-" * 80)
-    
+
+    pap_houses_set = set(h["house"] for h in pap_kartari["affected_houses"])
+    shubh_houses_set = set(h["house"] for h in shubh_kartari["affected_houses"])
+    mixed_houses_set = set(h["house"] for h in mixed_kartari["affected_houses"])
+
+    # CSS styles
+    css = """
+    <style>
+        .kartari-container { font-family: 'Noto Sans Bengali', 'Arial', sans-serif; }
+        .kartari-title { text-align:center; font-size:1.2rem; font-weight:800; color:#5B3E96; margin-bottom:6px; }
+        .kartari-subtitle { text-align:center; font-size:0.8rem; color:#888; margin-bottom:16px; }
+        .kartari-summary { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-bottom:18px; }
+        .kartari-summary-item { padding:8px 16px; border-radius:20px; font-weight:700; font-size:0.82rem; display:flex; align-items:center; gap:6px; }
+        .kartari-summary-item.red { background:#FFEBEE; color:#C62828; border:1px solid #EF9A9A; }
+        .kartari-summary-item.green { background:#E8F5E9; color:#2E7D32; border:1px solid #A5D6A7; }
+        .kartari-summary-item.yellow { background:#FFF8E1; color:#F57F17; border:1px solid #FFE082; }
+        .kartari-summary-item.gray { background:#F5F5F5; color:#757575; border:1px solid #E0E0E0; }
+        .kartari-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; }
+        @media (max-width:600px) { .kartari-grid { grid-template-columns:repeat(2, 1fr); } }
+        @media (max-width:380px) { .kartari-grid { grid-template-columns:1fr; } }
+        .kartari-house-card { border-radius:12px; padding:12px; text-align:center; transition:all 0.2s ease; }
+        .kartari-house-card.red { background:linear-gradient(135deg, #FFEBEE, #FFCDD2); border:2px solid #EF9A9A; }
+        .kartari-house-card.green { background:linear-gradient(135deg, #E8F5E9, #C8E6C9); border:2px solid #A5D6A7; }
+        .kartari-house-card.yellow { background:linear-gradient(135deg, #FFF8E1, #FFECB3); border:2px solid #FFE082; }
+        .kartari-house-card.gray { background:linear-gradient(135deg, #FAFAFA, #F5F5F5); border:2px solid #E0E0E0; }
+        .kartari-house-num { font-size:0.7rem; font-weight:700; color:#888; margin-bottom:2px; }
+        .kartari-house-name { font-size:0.78rem; font-weight:700; color:#333; margin-bottom:4px; line-height:1.3; }
+        .kartari-house-planets { font-size:0.7rem; color:#666; margin-bottom:4px; }
+        .kartari-house-status { font-size:0.72rem; font-weight:700; padding:3px 10px; border-radius:12px; display:inline-block; }
+        .kartari-house-status.red { background:#C62828; color:white; }
+        .kartari-house-status.green { background:#2E7D32; color:white; }
+        .kartari-house-status.yellow { background:#F57F17; color:white; }
+        .kartari-house-status.gray { background:#9E9E9E; color:white; }
+    </style>
+    """
+
+    # Build HTML
+    html = [css]
+    html.append('<div class="kartari-container">')
+    html.append('<div class="kartari-title">🔮 কৰ্তৰী যোগ বিশ্লেষণ</div>')
+    html.append('<div class="kartari-subtitle">প্ৰতিটো ঘৰৰ কৰ্তৰী স্থিতি</div>')
+
+    # Summary badges
+    pap_count = len(pap_houses_set)
+    shubh_count = len(shubh_houses_set)
+    mixed_count = len(mixed_houses_set)
+    normal_count = 12 - pap_count - shubh_count + mixed_count  # mixed counted in both
+
+    html.append('<div class="kartari-summary">')
+    if pap_count > 0:
+        html.append(f'<div class="kartari-summary-item red">🔴 পাপ কৰ্তৰী: {pap_count} ঘৰ</div>')
+    else:
+        html.append('<div class="kartari-summary-item gray">🔴 পাপ কৰ্তৰী: 0</div>')
+    if shubh_count > 0:
+        html.append(f'<div class="kartari-summary-item green">🟢 শুভ কৰ্তৰী: {shubh_count} ঘৰ</div>')
+    else:
+        html.append('<div class="kartari-summary-item gray">🟢 শুভ কৰ্তৰী: 0</div>')
+    if mixed_count > 0:
+        html.append(f'<div class="kartari-summary-item yellow">🟡 মিশ্ৰিত: {mixed_count} ঘৰ</div>')
+    html.append('</div>')
+
+    # House cards grid
+    html.append('<div class="kartari-grid">')
     for house_num in range(12):
         planets_in_house = [p for p, h in planet_house_map.items() if h == house_num]
         prev_house = (house_num - 1) % 12
         next_house = (house_num + 1) % 12
-        
+
         prev_planets = [p for p, h in planet_house_map.items() if h == prev_house]
         next_planets = [p for p, h in planet_house_map.items() if h == next_house]
-        
-        # অশুভ গ্ৰহ চিহ্নিত কৰক
+
         prev_malefic = [p for p in prev_planets if p in MALEFIC_PLANETS]
         next_malefic = [p for p in next_planets if p in MALEFIC_PLANETS]
-        
-        # শুভ গ্ৰহ চিহ্নিত কৰক
         prev_benefic = [p for p in prev_planets if p in BENEFIC_PLANETS]
         next_benefic = [p for p in next_planets if p in BENEFIC_PLANETS]
-        
-        # ৰিপোৰ্ট প্ৰস্তুত কৰক
-        report.append(f"\n🏠 ঘৰ #{house_num + 1} ({HOUSE_CHARACTERISTICS.get(house_num, '')})")
-        report.append(f"   এই ঘৰত গ্ৰহ: {', '.join(planets_in_house) if planets_in_house else 'কোনো গ্ৰহ নাই'}")
-        
-        # আগৰ ঘৰৰ অৱস্থা
-        report.append(f"   ← আগৰ ঘৰ ({house_num}): {', '.join(prev_planets) if prev_planets else 'খালী'}")
-        
-        # পিছৰ ঘৰৰ অৱস্থা
-        report.append(f"   পিছৰ ঘৰ ({house_num + 2}) →: {', '.join(next_planets) if next_planets else 'খালী'}")
-        
-        # কৰ্তৰী অৱস্থা নিৰ্ণয়
-        if prev_malefic and next_malefic:
-            report.append(f"   ⚠️  পাপ কৰ্তৰী দোষ: হয় (অশুভ গ্ৰহ: {prev_malefic[0]} ← ঘৰ → {next_malefic[0]})")
-            report.append(f"       প্ৰভাৱ: এই ঘৰৰ বৈশিষ্ট্য নষ্ট হয় 🔴")
-        
-        if prev_benefic and next_benefic:
-            report.append(f"   ✅ শুভ কৰ্তৰী যোগ: হয় (শুভ গ্ৰহ: {prev_benefic[0]} ← ঘৰ → {next_benefic[0]})")
-            report.append(f"       প্ৰভাৱ: এই ঘৰৰ বৈশিষ্ট্য বৃদ্ধি পায় 🟢")
-        
+
+        # Determine card color class
         if prev_malefic and next_malefic and prev_benefic and next_benefic:
-            report.append(f"   🟡 মিশ্ৰিত কৰ্তৰী: প্ৰথমে বাধা কিন্তু পৰৱৰ্তী সময়ত ভাল ফল")
-        
-        if not (prev_malefic and next_malefic) and not (prev_benefic and next_benefic):
-            report.append(f"   ⚪ কোনো কৰ্তৰী নাই: এই ঘৰৰ স্বাভাৱিক ফল পোৱা যাব")
-    
-    # সাৰাংশ
-    report.append("\n" + "=" * 80)
-    report.append("📋 সাৰাংশ (Summary):")
-    report.append("=" * 80)
-    
-    pap_houses = len(pap_kartari["affected_houses"])
-    shubh_houses = len(shubh_kartari["affected_houses"])
-    mixed_houses = len(mixed_kartari["affected_houses"])
-    
-    if pap_houses > 0:
-        report.append(f"\n🔴 পাপ কৰ্তৰী দোষ আছে ({pap_houses}টা ঘৰত):")
-        for h in pap_kartari["affected_houses"]:
-            report.append(f"   • ঘৰ #{h['house'] + 1}: {h['house_name']}")
-    else:
-        report.append("\n✅ পাপ কৰ্তৰী দোষ নাই")
-    
-    if shubh_houses > 0:
-        report.append(f"\n🟢 শুভ কৰ্তৰী যোগ আছে ({shubh_houses}টা ঘৰত):")
-        for h in shubh_kartari["affected_houses"]:
-            report.append(f"   • ঘৰ #{h['house'] + 1}: {h['house_name']}")
-    else:
-        report.append("\n⚪ শুভ কৰ্তৰী যোগ নাই")
-    
-    if mixed_houses > 0:
-        report.append(f"\n🟡 মিশ্ৰিত কৰ্তৰী যোগ ({mixed_houses}টা ঘৰত) - প্ৰাথমিক প্ৰত্যাহ্বান তাৰ পিছত উন্নতি:")
-        for h in mixed_kartari["affected_houses"]:
-            report.append(f"   • ঘৰ #{h['house'] + 1}: {h['house_name']}")
-    
-    report.append("\n" + "=" * 80)
-    
-    return "\n".join(report)
+            color_class = "yellow"
+            status_text = "🟡 মিশ্ৰিত"
+        elif prev_malefic and next_malefic:
+            color_class = "red"
+            status_text = "🔴 পাপ কৰ্তৰী"
+        elif prev_benefic and next_benefic:
+            color_class = "green"
+            status_text = "🟢 শুভ কৰ্তৰী"
+        else:
+            color_class = "gray"
+            status_text = "⚪ সাধাৰণ"
+
+        house_name = HOUSE_CHARACTERISTICS.get(house_num, f"ঘৰ {house_num + 1}")
+        # Extract short name after the dash
+        if "—" in house_name:
+            house_name = house_name.split("—")[0].strip()
+        elif " - " in house_name:
+            house_name = house_name.split(" - ")[0].strip()
+
+        planets_str = ", ".join(planets_in_house) if planets_in_house else "খালী"
+
+        html.append(f'''<div class="kartari-house-card {color_class}">
+            <div class="kartari-house-num">ঘৰ #{house_num + 1}</div>
+            <div class="kartari-house-name">{house_name}</div>
+            <div class="kartari-house-planets">{planets_str}</div>
+            <div class="kartari-house-status {color_class}">{status_text}</div>
+        </div>''')
+
+    html.append('</div>')
+    html.append('</div>')
+
+    return "\n".join(html)
 
 
 def get_house_status_visual(planet_house_map: dict) -> dict:

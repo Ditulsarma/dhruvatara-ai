@@ -2642,7 +2642,7 @@
     function openKartariModal() {
         const reportContainer = document.getElementById('kartariReportContainer');
         const errorContainer = document.getElementById('kartariReportError');
-        reportContainer.textContent = 'লোড হৈছে... অনুগ্ৰহ কৰি অপেক্ষা কৰক।';
+        reportContainer.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">⏳ লোড হৈছে... অনুগ্ৰহ কৰি অপেক্ষা কৰক।</div>';
         errorContainer.style.display = 'none';
         document.getElementById('kartariModal').classList.add('show');
         document.body.style.overflow = 'hidden';
@@ -2657,15 +2657,15 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                reportContainer.textContent = data.report;
+                reportContainer.innerHTML = data.report;
             } else {
-                reportContainer.textContent = '';
+                reportContainer.innerHTML = '';
                 errorContainer.textContent = data.message || 'কৰ্তৰী বিশ্লেষণ লোড কৰিব পৰা নগল।';
                 errorContainer.style.display = 'block';
             }
         })
         .catch(err => {
-            reportContainer.textContent = '';
+            reportContainer.innerHTML = '';
             errorContainer.textContent = 'কৰ্তৰী বিশ্লেষণ লোড কৰাত ত্ৰুটি ঘটিল।';
             errorContainer.style.display = 'block';
             console.error(err);
