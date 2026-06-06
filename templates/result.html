@@ -649,7 +649,7 @@
             #tab-rashi_phala .section-body > div { max-width: 100% !important; }
             #tab-nakshatra_phala .section-body > div > div,
             #tab-lagna_phala .section-body > div > div,
-            #tab-rashi_phala .section-body > div > div { font-size: 0.78rem; line-height: 1.8; }
+            #tab-rashi_phala .section-body > div > div { font-size: 1.05rem; line-height: 2.2; }
 
             /* Graha bichar */
             #tab-graha_bichar .section-body > div { max-width: 100% !important; }
@@ -1690,8 +1690,15 @@
             {% if nakshatra_phala_text %}
             <div style="max-width:800px;margin:0 auto;">
                 <h4 style="color:var(--deep-blue);margin-bottom:16px;text-align:center;">🌟 {{ moon_nak_name }} নক্ষত্ৰৰ ফলাফল</h4>
-                <div style="font-size:0.9rem;line-height:2;text-align:justify;color:var(--text);white-space:pre-line;">
+                <div style="font-size:1.1rem;line-height:2.2;text-align:justify;color:var(--text);white-space:pre-line;">
                     {{ nakshatra_phala_text }}
+                </div>
+                <div style="text-align:center;margin-top:24px;">
+                    <button id="btnAdvNakshatra" class="btn-sm btn-fill" onclick="loadAdvNakshatra()" style="font-size:1rem;padding:12px 28px;border-radius:25px;">
+                        📖 নক্ষত্ৰ ফল বহলাই
+                    </button>
+                </div>
+                <div id="advNakshatraContent" style="display:none;margin-top:24px;padding:20px;background:linear-gradient(135deg,#FFF8F0,#FFF3E0);border-radius:12px;border:1px solid #f0e0c8;font-size:1.15rem;line-height:2.4;text-align:justify;color:var(--text);white-space:pre-line;">
                 </div>
             </div>
             {% else %}
@@ -1708,8 +1715,15 @@
             {% if lagna_phala_text %}
             <div style="max-width:800px;margin:0 auto;">
                 <h4 style="color:var(--deep-blue);margin-bottom:16px;text-align:center;">🌅 {{ asc_rasi }} লগ্নৰ ফলাফল</h4>
-                <div style="font-size:0.9rem;line-height:2;text-align:justify;color:var(--text);white-space:pre-line;">
+                <div style="font-size:1.1rem;line-height:2.2;text-align:justify;color:var(--text);white-space:pre-line;">
                     {{ lagna_phala_text }}
+                </div>
+                <div style="text-align:center;margin-top:24px;">
+                    <button id="btnAdvLagna" class="btn-sm btn-fill" onclick="loadAdvLagna()" style="font-size:1rem;padding:12px 28px;border-radius:25px;">
+                        📖 লগ্নফল বহলাই
+                    </button>
+                </div>
+                <div id="advLagnaContent" style="display:none;margin-top:24px;padding:20px;background:linear-gradient(135deg,#FFF8F0,#FFF3E0);border-radius:12px;border:1px solid #f0e0c8;font-size:1.1rem;line-height:2.2;text-align:justify;color:var(--text);white-space:pre-line;">
                 </div>
             </div>
             {% else %}
@@ -1726,7 +1740,7 @@
             {% if rashi_phala_text %}
             <div style="max-width:800px;margin:0 auto;">
                 <h4 style="color:var(--deep-blue);margin-bottom:16px;text-align:center;">🌙 {{ moon_rasi }} ৰাশিফল (চন্দ্ৰ ৰাশি)</h4>
-                <div style="font-size:0.9rem;line-height:2;text-align:justify;color:var(--text);white-space:pre-line;">
+                <div style="font-size:1.1rem;line-height:2.2;text-align:justify;color:var(--text);white-space:pre-line;">
                     {{ rashi_phala_text }}
                 </div>
             </div>
@@ -1979,6 +1993,7 @@
     const userTob = "{{ user_tob }}";
     const userPlace = "{{ user_place }}";
     const userSubscriptionId = {{ user_subscription_id }};
+    const moonNakIdx = {{ moon_nak_idx }};
     const allDashaPredictions = {{ all_dasha_predictions | tojson }};
     const housePositions = [
         { cx: 260, cy: 148, offsetXP: -22, offsetYP: 22, offsetXR: 0, offsetYR: -12 }, { cx: 130, cy: 68,  offsetXP: -15, offsetYP: 28, offsetXR: 0, offsetYR: -12 },
@@ -2448,6 +2463,112 @@
     }
 
     // Auto-load PIL chart when tab is opened (handled in switchTab above)
+
+    // ─── Adv Nakshatra (নক্ষত্ৰ ফল বহলাই) ───
+    function loadAdvNakshatra() {
+        const btn = document.getElementById('btnAdvNakshatra');
+        const contentDiv = document.getElementById('advNakshatraContent');
+
+        if (contentDiv.style.display === 'block') {
+            // Hide it
+            contentDiv.style.display = 'none';
+            btn.textContent = '📖 নক্ষত্ৰ ফল বহলাই';
+            return;
+        }
+
+        // If already loaded, just show
+        if (contentDiv.dataset.loaded === 'true') {
+            contentDiv.style.display = 'block';
+            btn.textContent = '📖 সংক্ষেপ কৰক';
+            return;
+        }
+
+        btn.textContent = '⏳ ল\'ড কৰি আছে...';
+        btn.disabled = true;
+
+        fetch('/api/adv-nakshatra/' + moonNakIdx)
+            .then(response => {
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    contentDiv.innerHTML = '<p style="color:#C62828;">❌ ' + data.error + '</p>';
+                } else {
+                    // Format the details text - replace \n with proper line breaks
+                    let details = data.details || '';
+                    // Clean up the text
+                    details = details.replace(/\\n/g, '\n');
+                    contentDiv.innerHTML = '<h5 style="color:var(--deep-blue);margin-bottom:12px;font-size:1.2rem;">📜 ' + (data.name || '') + 'ৰ বিতং ফলাফল</h5>' +
+                        '<div style="font-size:1.15rem;line-height:2.4;text-align:justify;">' +
+                        details.split('\n').filter(line => line.trim()).map(line =>
+                            '<p style="margin-bottom:12px;">' + line.trim() + '</p>'
+                        ).join('') +
+                        '</div>';
+                }
+                contentDiv.dataset.loaded = 'true';
+                contentDiv.style.display = 'block';
+                btn.textContent = '📖 সংক্ষেপ কৰক';
+                btn.disabled = false;
+            })
+            .catch(err => {
+                contentDiv.innerHTML = '<p style="color:#C62828;">❌ তথ্য ল\'ড কৰাত সমস্যা হৈছে: ' + err.message + '</p>';
+                contentDiv.style.display = 'block';
+                btn.textContent = '📖 নক্ষত্ৰ ফল বহলাই';
+                btn.disabled = false;
+            });
+    }
+
+    // ─── Adv Lagna (লগ্নফল বহলাই) ───
+    function loadAdvLagna() {
+        const btn = document.getElementById('btnAdvLagna');
+        const contentDiv = document.getElementById('advLagnaContent');
+
+        if (contentDiv.style.display === 'block') {
+            contentDiv.style.display = 'none';
+            btn.textContent = '📖 লগ্নফল বহলাই';
+            return;
+        }
+
+        if (contentDiv.dataset.loaded === 'true') {
+            contentDiv.style.display = 'block';
+            btn.textContent = '📖 সংক্ষেপ কৰক';
+            return;
+        }
+
+        btn.textContent = '⏳ ল\'ড কৰি আছে...';
+        btn.disabled = true;
+
+        fetch('/api/adv-lagna/' + ascRasiIndex)
+            .then(response => {
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    contentDiv.innerHTML = '<p style="color:#C62828;">❌ ' + data.error + '</p>';
+                } else {
+                    let details = data.details || '';
+                    details = details.replace(/\\n/g, '\n');
+                    contentDiv.innerHTML = '<h5 style="color:var(--deep-blue);margin-bottom:12px;">📜 ' + (data.name || '') + 'ৰ বিতং ফলাফল</h5>' +
+                        '<div style="font-size:1.1rem;line-height:2.2;text-align:justify;">' +
+                        details.split('\n').filter(line => line.trim()).map(line =>
+                            '<p style="margin-bottom:10px;">' + line.trim() + '</p>'
+                        ).join('') +
+                        '</div>';
+                }
+                contentDiv.dataset.loaded = 'true';
+                contentDiv.style.display = 'block';
+                btn.textContent = '📖 সংক্ষেপ কৰক';
+                btn.disabled = false;
+            })
+            .catch(err => {
+                contentDiv.innerHTML = '<p style="color:#C62828;">❌ তথ্য ল\'ড কৰাত সমস্যা হৈছে: ' + err.message + '</p>';
+                contentDiv.style.display = 'block';
+                btn.textContent = '📖 লগ্নফল বহলাই';
+                btn.disabled = false;
+            });
+    }
 
     // ─── Custom PDF Modal Functions ───
     function openCustomPdfModal() {

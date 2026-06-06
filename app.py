@@ -1098,6 +1098,7 @@ def calculate():
                            current_dasha_prediction=current_dasha_prediction,
                            sannari_data=sannari_data, sannari_svg=sannari_svg,
                            moon_nak_name=nakshatras[moon_nak_idx - 1],
+                           moon_nak_idx=moon_nak_idx,
                            navatara_data=navatara_data, navatara_svg=navatara_svg,
                            nakshatra_phala_text=nakshatra_phala_text,
                            lagna_phala_text=lagna_phala_text,
@@ -2789,6 +2790,38 @@ def api_images_by_placement(placement):
     """Get images metadata for a placement."""
     images = get_images_by_placement(placement)
     return jsonify(images)
+
+
+# ─── Adv_Nakshatra API ───
+
+@app.route("/api/adv-nakshatra/<int:nak_id>")
+def api_adv_nakshatra(nak_id):
+    """Return detailed nakshatra data from Adv_Nakshatra.json for a given nakshatra ID (1-27)."""
+    try:
+        json_path = os.path.join(os.path.dirname(__file__), "Adv_Nakshatra.json")
+        with open(json_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        for entry in data:
+            if entry.get("nakshatra_id") == nak_id:
+                return jsonify(entry)
+        return jsonify({"error": "নক্ষত্ৰ পোৱা নগ'ল"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/adv-lagna/<int:lagna_id>")
+def api_adv_lagna(lagna_id):
+    """Return detailed lagna data from Adv_Lagna.json for a given lagna ID (0-11)."""
+    try:
+        json_path = os.path.join(os.path.dirname(__file__), "Adv_Lagna.json")
+        with open(json_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        for entry in data:
+            if entry.get("lagna_id") == lagna_id:
+                return jsonify(entry)
+        return jsonify({"error": "লগ্ন পোৱা নগ'ল"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # ─── Admin: Subscription Plan Management APIs ───
