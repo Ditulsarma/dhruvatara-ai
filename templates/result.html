@@ -1787,17 +1787,17 @@
 
 <!-- ─── Kartari Yoga Modal ─── -->
 <div class="modal-overlay" id="kartariModal">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h3>🔮 কৰ্তৰী যোগ বিশ্লেষণ</h3>
-            <button class="modal-close" onclick="closeKartariModal()">&times;</button>
+    <div class="modal-box" style="max-width:650px;border-radius:16px;overflow:hidden;">
+        <div class="modal-header" style="background:linear-gradient(135deg, #5B3E96, #7B5EA7);padding:18px 24px;">
+            <h3 style="color:white;font-size:1.1rem;display:flex;align-items:center;gap:10px;">🔮 কৰ্তৰী যোগ বিশ্লেষণ</h3>
+            <button class="modal-close" onclick="closeKartariModal()" style="color:white;font-size:1.5rem;">&times;</button>
         </div>
-        <div class="modal-body">
-            <div id="kartariReportContainer" style="min-height:240px; max-height:420px; overflow:auto; white-space:pre-wrap; font-size:0.95rem; line-height:1.75; color:var(--text);"></div>
-            <div id="kartariReportError" style="display:none; color:#c62828; margin-top:12px;"></div>
+        <div class="modal-body" style="padding:24px;background:linear-gradient(180deg, #FAF8FF 0%, #FFF8F0 100%);">
+            <div id="kartariReportContainer" style="font-size:0.95rem;line-height:1.85;color:var(--text);word-break:break-word;"></div>
+            <div id="kartariReportError" style="display:none;color:#c62828;margin-top:12px;text-align:center;font-weight:600;"></div>
         </div>
-        <div class="modal-footer">
-            <button class="btn-modal btn-modal-cancel" onclick="closeKartariModal()">বন্ধ কৰক</button>
+        <div class="modal-footer" style="background:#FAF8FF;border-top:1px solid #E8E0F0;padding:14px 24px;display:flex;justify-content:flex-end;">
+            <button class="btn-modal btn-modal-cancel" onclick="closeKartariModal()" style="background:linear-gradient(135deg, #5B3E96, #7B5EA7);color:white;border:none;padding:10px 28px;border-radius:25px;font-weight:700;font-size:0.9rem;cursor:pointer;transition:all 0.25s ease;box-shadow:0 4px 12px rgba(91,62,150,0.25);">বন্ধ কৰক</button>
         </div>
     </div>
 </div>
