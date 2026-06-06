@@ -920,9 +920,13 @@
             <input type="hidden" name="timezone" value="{{ timezone }}">
             <button type="submit" class="btn-sm btn-fill" onclick="populatePatrikaHiddenFields()">📥 PDF ডাউনলোড</button>
         </form>
+        {% else %}
+        <button class="btn-sm btn-fill" onclick="openUpgradePlansModal()">📥 PDF ডাউনলোড</button>
         {% endif %}
         {% if user_features and user_features.get('custom_pdf', False) %}
         <button class="btn-sm btn-fill" onclick="openCustomPdfModal()" style="background:var(--deep-blue);">⚙️ নিজৰ মতে PDF</button>
+        {% else %}
+        <button class="btn-sm btn-fill" onclick="openUpgradePlansModal()" style="background:var(--deep-blue);">⚙️ নিজৰ মতে PDF</button>
         {% endif %}
         <button class="btn-sm btn-fill" onclick="toggleBirthDetails()" id="btnBirthDetails" style="background:var(--deep-blue);">📋 জন্মৰ সবিশেষ</button>
         <button class="btn-sm btn-fill" onclick="togglePatrika()" id="btnPatrika" style="background:var(--green);">📜 জন্মপত্ৰিকা বনাওক</button>
