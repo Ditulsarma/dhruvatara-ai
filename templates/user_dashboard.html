@@ -155,6 +155,16 @@
             {% endif %}
         </div>
 
+        <!-- Quick Actions -->
+        <div style="text-align:center;margin-bottom:20px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+            <a href="/kundli" class="btn btn-fill" style="font-size:1rem;padding:14px 32px;">✨ কুণ্ডলী প্ৰস্তুত কৰক</a>
+            <a href="/jotok-milan" class="btn btn-fill" style="font-size:1rem;padding:14px 32px;background:linear-gradient(135deg, #E91E63, #C2185B);">💍 যোটক মিলন</a>
+            <a href="/rashifal" class="btn btn-fill" style="font-size:1rem;padding:14px 32px;background:linear-gradient(135deg, #FF6600, #D4A017);">⭐ ৰাশিফল</a>
+            {% if user_features.get('numerology') %}
+            <a href="/numerology" class="btn btn-fill" style="font-size:1rem;padding:14px 32px;background:var(--purple);">🔢 অংক জ্যোতিষ</a>
+            {% endif %}
+        </div>
+
         <!-- Verification Status -->
         {% if not user.is_verified_email or not user.is_verified_mobile %}
         <div class="alert alert-warning">
@@ -221,17 +231,6 @@
                 {% endif %}
             {% endfor %}
         </div>
-
-        <!-- Quick Actions -->
-        <div style="text-align:center;margin-top:8px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-            <a href="/kundli" class="btn btn-fill" style="font-size:1rem;padding:14px 32px;">✨ কুণ্ডলী প্ৰস্তুত কৰক</a>
-            <a href="/jotok-milan" class="btn btn-fill" style="font-size:1rem;padding:14px 32px;background:linear-gradient(135deg, #E91E63, #C2185B);">💍 যোটক মিলন</a>
-            <a href="/rashifal" class="btn btn-fill" style="font-size:1rem;padding:14px 32px;background:linear-gradient(135deg, #FF6600, #D4A017);">⭐ ৰাশিফল</a>
-            {% if user_features.get('numerology') %}
-            <a href="/numerology" class="btn btn-fill" style="font-size:1rem;padding:14px 32px;background:var(--purple);">🔢 অংক জ্যোতিষ</a>
-            {% endif %}
-        </div>
-    </div>
 
     <div style="text-align:center;padding:16px;background:white;border-top:1px solid var(--border);margin-top:20px;">
         {% for img in all_footer_images %}
