@@ -924,6 +924,8 @@
         {% if user_features and user_features.get('custom_pdf', False) %}
         <button class="btn-sm btn-fill" onclick="openCustomPdfModal()" style="background:var(--deep-blue);">⚙️ নিজৰ মতে PDF</button>
         {% endif %}
+        <button class="btn-sm btn-fill" onclick="toggleBirthDetails()" id="btnBirthDetails" style="background:var(--deep-blue);">📋 জন্মৰ সবিশেষ</button>
+        <button class="btn-sm btn-fill" onclick="togglePatrika()" id="btnPatrika" style="background:var(--green);">📜 জন্মপত্ৰিকা বনাওক</button>
         <button class="btn-sm btn-fill" onclick="openKartariModal()" style="background:#5B3E96;">🔮 কৰ্তৰী যোগ</button>
         <button class="btn-sm btn-fill" onclick="openChatFromResult()" style="background:var(--purple);">💬 AI চেট</button>
     </div>
@@ -931,7 +933,9 @@
 
 <div class="container">
 
-    <div class="info-card">
+    <!-- জন্মৰ সবিশেষ - Collapsible Card (hidden by default) -->
+    <div id="birthDetailsWrapper" style="max-height:0;overflow:hidden;transition:max-height 0.5s ease, margin 0.3s ease;margin-bottom:0;">
+    <div class="info-card" id="birthDetailsCard" style="margin-bottom:0;border-radius:var(--radius);">
         <div class="info-item">
             <span class="i-icon">👤</span>
             <div><div class="i-label">নাম</div><div class="i-value">{{ user_name }}</div></div>
@@ -997,9 +1001,12 @@
             <div><div class="i-label">ৰাত্ৰিমান</div><div class="i-value">{{ panchanga.ratriman }}</div></div>
         </div>
     </div>
+    </div>
+    <!-- END জন্মৰ সবিশেষ Collapsible -->
 
-    <!-- পত্ৰিকা ফৰ্ম -->
-    <div class="info-card" id="patrika-card" style="margin-bottom:20px;">
+    <!-- পত্ৰিকা ফৰ্ম - Collapsible (hidden by default) -->
+    <div id="patrikaWrapper" style="max-height:0;overflow:hidden;transition:max-height 0.5s ease, margin 0.3s ease;margin-bottom:0;">
+    <div class="info-card" id="patrika-card" style="margin-bottom:0;border-radius:var(--radius);">
         <h3 style="color:var(--orange);margin-bottom:12px;font-size:1.1rem;">📜 পত্ৰিকা (জন্ম পত্ৰ)</h3>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
             <div>
@@ -1056,6 +1063,8 @@
         </div>
         <div id="patrika-result" style="margin-top:12px;padding:12px;background:#FFF8E1;border:1px solid #FFCC80;border-radius:8px;font-size:0.85rem;line-height:2;white-space:pre-wrap;display:none;"></div>
     </div>
+    </div>
+    <!-- END পত্ৰিকা Collapsible -->
 
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('planets')">🪐 গ্ৰহ অৱস্থান</button>
@@ -2558,6 +2567,70 @@
         };
         sessionStorage.setItem('chatKundliData', JSON.stringify(kundliData));
         window.location.href = '/chat';
+    }
+
+    // ─── Birth Details Toggle ───
+    let birthDetailsVisible = false;
+    function toggleBirthDetails() {
+        const wrapper = document.getElementById('birthDetailsWrapper');
+        const btn = document.getElementById('btnBirthDetails');
+        if (!wrapper || !btn) return;
+        birthDetailsVisible = !birthDetailsVisible;
+        if (birthDetailsVisible) {
+            wrapper.style.maxHeight = wrapper.scrollHeight + 'px';
+            wrapper.style.marginBottom = '20px';
+            btn.textContent = '📋 জন্মৰ সবিশেষ ▲';
+            btn.style.background = '#283593';
+            // After transition, set to auto so it adapts if content changes
+            setTimeout(() => {
+                if (birthDetailsVisible) wrapper.style.maxHeight = 'none';
+            }, 500);
+        } else {
+            wrapper.style.maxHeight = wrapper.scrollHeight + 'px';
+            // Force reflow
+            wrapper.offsetHeight;
+            wrapper.style.maxHeight = '0';
+            wrapper.style.marginBottom = '0';
+            btn.textContent = '📋 জন্মৰ সবিশেষ';
+            btn.style.background = 'var(--deep-blue)';
+        }
+    }
+
+    // ─── Patrika Toggle ───
+    let patrikaVisible = false;
+    function togglePatrika() {
+        const wrapper = document.getElementById('patrikaWrapper');
+        const btn = document.getElementById('btnPatrika');
+        if (!wrapper || !btn) return;
+        patrikaVisible = !patrikaVisible;
+        if (patrikaVisible) {
+            wrapper.style.maxHeight = wrapper.scrollHeight + 'px';
+            wrapper.style.marginBottom = '20px';
+            btn.textContent = '📜 জন্মপত্ৰিকা বনাওক ▲';
+            btn.style.background = '#1B5E20';
+            // Auto-fill public name if empty
+            const publicNameInput = document.getElementById('patrika_public_name');
+            if (publicNameInput && !publicNameInput.value.trim()) {
+                const gender = '{{ gender }}';
+                const prefix = (gender === 'female') ? 'শ্ৰীমতী' : 'শ্ৰীমান';
+                publicNameInput.value = prefix + ' {{ user_name }}';
+            }
+            // Auto-generate patrika
+            setTimeout(() => {
+                if (patrikaVisible) {
+                    wrapper.style.maxHeight = 'none';
+                    generatePatrika();
+                }
+            }, 500);
+        } else {
+            wrapper.style.maxHeight = wrapper.scrollHeight + 'px';
+            // Force reflow
+            wrapper.offsetHeight;
+            wrapper.style.maxHeight = '0';
+            wrapper.style.marginBottom = '0';
+            btn.textContent = '📜 জন্মপত্ৰিকা বনাওক';
+            btn.style.background = 'var(--green)';
+        }
     }
 
     const planetHouses = {{ planet_houses | tojson }};
