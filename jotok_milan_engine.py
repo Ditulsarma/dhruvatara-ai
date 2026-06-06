@@ -4,6 +4,7 @@ Ashtakoot Guna Milan (অষ্টকূট গুণ মিলন) - 36 Points 
 Plus Mangalik Dosha (মাংগলিক দোষ) Analysis for Marriage Compatibility
 
 Based on traditional Assamese Vedic Jyotish principles.
+All scoring tables are exact as per classical Ashtakoot system.
 """
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -25,97 +26,119 @@ NAKSHATRAS = [
 # ─── Varna (বৰ্ণ) by Rashi ───
 # Brahmin=1, Kshatriya=2, Vaishya=3, Shudra=4
 VARNA_BY_RASHI = {
-    "মেষ": 2, "বৃষ": 3, "মিথুন": 3, "কৰ্কট": 1,
-    "সিংহ": 2, "কন্যা": 3, "তুলা": 3, "বৃশ্চিক": 1,
-    "ধনু": 2, "মকৰ": 3, "কুম্ভ": 3, "মীন": 1
+    "মেষ": 2, "বৃষ": 3, "মিথুন": 4, "কৰ্কট": 1,
+    "সিংহ": 2, "কন্যা": 3, "তুলা": 4, "বৃশ্চিক": 1,
+    "ধনু": 2, "মকৰ": 3, "কুম্ভ": 4, "মীন": 1
 }
 
 VARNA_NAMES = {1: "ব্ৰাহ্মণ", 2: "ক্ষত্ৰিয়", 3: "বৈশ্য", 4: "শূদ্ৰ"}
 
 # ─── Vashya (বশ্য) by Rashi ───
-# 1=Chatushpad (চতুষ্পদ), 2=Manava (মনুষ্য), 3=Jalachar (জলচৰ), 4=Banachar (বনচৰ), 5=Keet (কীট)
+# 1=Chatushpad (চতুষ্পদ), 2=Manava (মানৱ/দ্বিপদ), 3=Jalachar (জলচৰ), 4=Banachar (বনচৰ), 5=Keet (কীট)
 VASHYA_BY_RASHI = {
     "মেষ": 1, "বৃষ": 1, "মিথুন": 2, "কৰ্কট": 3,
     "সিংহ": 4, "কন্যা": 2, "তুলা": 2, "বৃশ্চিক": 5,
     "ধনু": 2, "মকৰ": 3, "কুম্ভ": 2, "মীন": 3
 }
 
-VASHYA_NAMES = {1: "চতুষ্পদ", 2: "মনুষ্য", 3: "জলচৰ", 4: "বনচৰ", 5: "কীট"}
+VASHYA_NAMES = {1: "চতুষ্পদ", 2: "মানৱ", 3: "জলচৰ", 4: "বনচৰ", 5: "কীট"}
 
-# Vashya compatibility matrix (1-indexed)
-VASHYA_COMPAT = {
-    1: [1, 2, 3, 4],  # Chatushpad compatible with Chatushpad, Manava, Jalachar, Banachar
-    2: [1, 2, 3, 4, 5],  # Manava compatible with all
-    3: [1, 2, 3, 5],  # Jalachar
-    4: [1, 2, 4],  # Banachar
-    5: [2, 3, 5],  # Keet
+# Vashya compatibility matrix (girl_row x boy_col)
+# Index: 1=Chatushpad, 2=Manava, 3=Jalachar, 4=Banachar, 5=Keet
+VASHYA_MATRIX = {
+    1: {1: 2, 2: 1, 3: 1, 4: 0, 5: 1},  # Chatushpad
+    2: {1: 1, 2: 2, 3: 0, 4: 0, 5: 1},  # Manava
+    3: {1: 1, 2: 0, 3: 2, 4: 1, 5: 1},  # Jalachar
+    4: {1: 0, 2: 0, 3: 1, 4: 2, 5: 0},  # Banachar
+    5: {1: 1, 2: 0, 3: 1, 4: 0, 5: 2},  # Keet
+}
+
+# ─── Tara (তাৰা) by Nakshatra ───
+# 9 tara groups
+TARA_GROUP = {
+    "অশ্বিনী": 1, "মঘা": 1, "মূল": 1,           # জন্ম
+    "ভৰণী": 2, "পূৰ্বফাল্গুনী": 2, "পূৰ্বাষাঢ়া": 2,  # সম্পদ
+    "কৃত্তিকা": 3, "উত্তৰফাল্গুনী": 3, "উত্তৰাষাঢ়া": 3, # বিপদ
+    "ৰোহিণী": 4, "হস্তা": 4, "শ্ৰৱণা": 4,        # ক্ষেম
+    "মৃগশিৰা": 5, "চিত্ৰা": 5, "ধনিষ্ঠা": 5,      # প্ৰত্যৰি
+    "আৰ্দ্ৰা": 6, "স্বাতী": 6, "শতভিষা": 6,       # সাধক
+    "পুনৰ্বসু": 7, "বিশাখা": 7, "পূৰ্বভাদ্ৰপদ": 7,  # বধ
+    "পুষ্যা": 8, "অনুৰাধা": 8, "উত্তৰভাদ্ৰপদ": 8,   # মিত্ৰ
+    "অশ্লেষা": 9, "জ্যেষ্ঠা": 9, "ৰেৱতী": 9,      # অতি মিত্ৰ
+}
+
+TARA_NAMES = {
+    1: "জন্ম", 2: "সম্পদ", 3: "বিপদ", 4: "ক্ষেম", 5: "প্ৰত্যৰি",
+    6: "সাধক", 7: "বধ", 8: "মিত্ৰ", 9: "অতি মিত্ৰ"
+}
+
+# Tara compatibility matrix (girl_row x boy_col)
+TARA_MATRIX = {
+    1: {1: 3, 2: 3, 3: 1.5, 4: 3, 5: 1.5, 6: 3, 7: 1.5, 8: 3, 9: 3},  # জন্ম
+    2: {1: 3, 2: 3, 3: 1.5, 4: 3, 5: 1.5, 6: 3, 7: 1.5, 8: 3, 9: 3},  # সম্পদ
+    3: {1: 1.5, 2: 1.5, 3: 0, 4: 1.5, 5: 0, 6: 1.5, 7: 0, 8: 1.5, 9: 1.5},  # বিপদ
+    4: {1: 3, 2: 3, 3: 1.5, 4: 3, 5: 1.5, 6: 3, 7: 1.5, 8: 3, 9: 3},  # ক্ষেম
+    5: {1: 1.5, 2: 1.5, 3: 0, 4: 1.5, 5: 0, 6: 1.5, 7: 0, 8: 1.5, 9: 1.5},  # প্ৰত্যৰি
+    6: {1: 3, 2: 3, 3: 1.5, 4: 3, 5: 1.5, 6: 3, 7: 1.5, 8: 3, 9: 3},  # সাধক
+    7: {1: 1.5, 2: 1.5, 3: 0, 4: 1.5, 5: 0, 6: 1.5, 7: 0, 8: 1.5, 9: 1.5},  # বধ
+    8: {1: 3, 2: 3, 3: 1.5, 4: 3, 5: 1.5, 6: 3, 7: 1.5, 8: 3, 9: 3},  # মিত্ৰ
+    9: {1: 3, 2: 3, 3: 1.5, 4: 3, 5: 1.5, 6: 3, 7: 1.5, 8: 3, 9: 3},  # অতি মিত্ৰ
 }
 
 # ─── Yoni (যোনি) by Nakshatra ───
-# Each nakshatra has an animal yoni
 YONI_BY_NAKSHATRA = {
-    "অশ্বিনী": "অশ্ব", "ভৰণী": "গজ", "কৃত্তিকা": "মেষ", "ৰোহিণী": "সৰ্প",
-    "মৃগশিৰা": "সৰ্প", "আৰ্দ্ৰা": "শ্বান", "পুনৰ্বসু": "মাৰ্জাৰ", "পুষ্যা": "মেষ",
-    "অশ্লেষা": "মাৰ্জাৰ", "মঘা": "মূষিক", "পূৰ্বফাল্গুনী": "মূষিক", "উত্তৰফাল্গুনী": "গো",
-    "হস্তা": "মহিষ", "চিত্ৰা": "ব্যাঘ্ৰ", "স্বাতী": "মহিষ", "বিশাখা": "ব্যাঘ্ৰ",
-    "অনুৰাধা": "মৃগ", "জ্যেষ্ঠা": "মৃগ", "মূল": "শ্বান", "পূৰ্বাষাঢ়া": "বানৰ",
-    "উত্তৰাষাঢ়া": "নকুল", "শ্ৰৱণা": "বানৰ", "ধনিষ্ঠা": "সিংহ", "শতভিষা": "অশ্ব",
-    "পূৰ্বভাদ্ৰপদ": "সিংহ", "উত্তৰভাদ্ৰপদ": "গো", "ৰেৱতী": "গজ"
+    "অশ্বিনী": "অশ্ব", "শতভিষা": "অশ্ব",
+    "ভৰণী": "গজ", "ৰেৱতী": "গজ",
+    "কৃত্তিকা": "মেষ", "পুষ্যা": "মেষ",
+    "ৰোহিণী": "সৰ্প", "মৃগশিৰা": "সৰ্প",
+    "আৰ্দ্ৰা": "শ্বান", "মূল": "শ্বান",
+    "পুনৰ্বসু": "মাৰ্জাৰ", "অশ্লেষা": "মাৰ্জাৰ",
+    "মঘা": "মূষিক", "পূৰ্বফাল্গুনী": "মূষিক",
+    "উত্তৰফাল্গুনী": "গো", "উত্তৰভাদ্ৰপদ": "গো",
+    "হস্তা": "মহিষ", "স্বাতী": "মহিষ",
+    "চিত্ৰা": "ব্যাঘ্ৰ", "বিশাখা": "ব্যাঘ্ৰ",
+    "অনুৰাধা": "মৃগ", "জ্যেষ্ঠা": "মৃগ",
+    "পূৰ্বাষাঢ়া": "বানৰ", "শ্ৰৱণা": "বানৰ",
+    "উত্তৰাষাঢ়া": "নকুল",
+    "ধনিষ্ঠা": "সিংহ", "পূৰ্বভাদ্ৰপদ": "সিংহ",
 }
 
-# Yoni compatibility: some animals are natural friends/enemies
-YONI_FRIENDLY = {
-    "অশ্ব": ["অশ্ব", "গজ", "মেষ", "সৰ্প", "মাৰ্জাৰ", "মূষিক", "গো", "মহিষ", "মৃগ", "বানৰ", "নকুল", "সিংহ"],
-    "গজ": ["অশ্ব", "গজ", "মেষ", "সৰ্প", "মাৰ্জাৰ", "মূষিক", "গো", "মহিষ", "মৃগ", "বানৰ", "নকুল", "সিংহ"],
-    "মেষ": ["অশ্ব", "গজ", "মেষ", "সৰ্প", "মাৰ্জাৰ", "মূষিক", "গো", "মহিষ", "মৃগ", "বানৰ", "নকুল", "সিংহ"],
-    "সৰ্প": ["অশ্ব", "গজ", "মেষ", "সৰ্প", "মাৰ্জাৰ", "মূষিক", "গো", "মহিষ", "মৃগ", "বানৰ", "নকুল", "সিংহ"],
-    "মাৰ্জাৰ": ["অশ্ব", "গজ", "মেষ", "সৰ্প", "মাৰ্জাৰ", "মূষিক", "গো", "মহিষ", "মৃগ", "বানৰ", "নকুল", "সিংহ"],
-    "মূষিক": ["অশ্ব", "গজ", "মেষ", "সৰ্প", "মাৰ্জাৰ", "মূষিক", "গো", "মহিষ", "মৃগ", "বানৰ", "নকুল", "সিংহ"],
-    "গো": ["অশ্ব", "গজ", "মেষ", "সৰ্প", "মাৰ্জাৰ", "মূষিক", "গো", "মহিষ", "মৃগ", "বানৰ", "নকুল", "সিংহ"],
-    "মহিষ": ["অশ্ব", "গজ", "মেষ", "সৰ্প", "মাৰ্জাৰ", "মূষিক", "গো", "মহিষ", "মৃগ", "বানৰ", "নকুল", "সিংহ"],
-    "মৃগ": ["অশ্ব", "গজ", "মেষ", "সৰ্প", "মাৰ্জাৰ", "মূষিক", "গো", "মহিষ", "মৃগ", "বানৰ", "নকুল", "সিংহ"],
-    "বানৰ": ["অশ্ব", "গজ", "মেষ", "সৰ্প", "মাৰ্জাৰ", "মূষিক", "গো", "মহিষ", "মৃগ", "বানৰ", "নকুল", "সিংহ"],
-    "নকুল": ["অশ্ব", "গজ", "মেষ", "সৰ্প", "মাৰ্জাৰ", "মূষিক", "গো", "মহিষ", "মৃগ", "বানৰ", "নকুল", "সিংহ"],
-    "সিংহ": ["অশ্ব", "গজ", "মেষ", "সৰ্প", "মাৰ্জাৰ", "মূষিক", "গো", "মহিষ", "মৃগ", "বানৰ", "নকুল", "সিংহ"],
-    "শ্বান": ["শ্বান", "মাৰ্জাৰ", "সিংহ", "ব্যাঘ্ৰ", "মৃগ"],
-    "ব্যাঘ্ৰ": ["ব্যাঘ্ৰ", "শ্বান", "মাৰ্জাৰ", "সিংহ", "মৃগ"],
-}
+YONI_LIST = ["অশ্ব", "গজ", "মেষ", "সৰ্প", "শ্বান", "মাৰ্জাৰ", "মূষিক", "গো", "মহিষ", "ব্যাঘ্ৰ", "মৃগ", "বানৰ", "নকুল", "সিংহ"]
 
-# Yoni enemy pairs
-YONI_ENEMY = {
-    "অশ্ব": ["মহিষ"],
-    "মহিষ": ["অশ্ব"],
-    "সৰ্প": ["নকুল"],
-    "নকুল": ["সৰ্প"],
-    "মূষিক": ["মাৰ্জাৰ"],
-    "মাৰ্জাৰ": ["মূষিক"],
-    "সিংহ": ["গজ"],
-    "গজ": ["সিংহ"],
-    "শ্বান": ["মৃগ"],
-    "মৃগ": ["শ্বান"],
-    "ব্যাঘ্ৰ": ["গো"],
-    "গো": ["ব্যাঘ্ৰ"],
-    "বানৰ": ["মেষ"],
-    "মেষ": ["বানৰ"],
+# Yoni compatibility matrix (girl_row x boy_col)
+YONI_MATRIX = {
+    "অশ্ব":    {"অশ্ব": 4, "গজ": 2, "মেষ": 2, "সৰ্প": 3, "শ্বান": 2, "মাৰ্জাৰ": 2, "মূষিক": 2, "গো": 1, "মহিষ": 0, "ব্যাঘ্ৰ": 1, "মৃগ": 3, "বানৰ": 3, "নকুল": 2, "সিংহ": 1},
+    "গজ":     {"অশ্ব": 2, "গজ": 4, "মেষ": 3, "সৰ্প": 3, "শ্বান": 2, "মাৰ্জাৰ": 2, "মূষিক": 2, "গো": 2, "মহিষ": 3, "ব্যাঘ্ৰ": 1, "মৃগ": 2, "বানৰ": 3, "নকুল": 2, "সিংহ": 0},
+    "মেষ":    {"অশ্ব": 2, "গজ": 3, "মেষ": 4, "সৰ্প": 2, "শ্বান": 1, "মাৰ্জাৰ": 2, "মূষিক": 1, "গো": 3, "মহিষ": 3, "ব্যাঘ্ৰ": 1, "মৃগ": 2, "বানৰ": 0, "নকুল": 3, "সিংহ": 1},
+    "সৰ্প":   {"অশ্ব": 3, "গজ": 3, "মেষ": 2, "সৰ্প": 4, "শ্বান": 2, "মাৰ্জাৰ": 1, "মূষিক": 1, "গো": 1, "মহিষ": 1, "ব্যাঘ্ৰ": 2, "মৃগ": 2, "বানৰ": 2, "নকুল": 0, "সিংহ": 2},
+    "শ্বান":  {"অশ্ব": 2, "গজ": 2, "মেষ": 1, "সৰ্প": 2, "শ্বান": 4, "মাৰ্জাৰ": 2, "মূষিক": 1, "গো": 2, "মহিষ": 2, "ব্যাঘ্ৰ": 1, "মৃগ": 0, "বানৰ": 2, "নকুল": 1, "সিংহ": 1},
+    "মাৰ্জাৰ": {"অশ্ব": 2, "গজ": 2, "মেষ": 2, "সৰ্প": 1, "শ্বান": 2, "মাৰ্জাৰ": 4, "মূষিক": 0, "গো": 2, "মহিষ": 2, "ব্যাঘ্ৰ": 1, "মৃগ": 3, "বানৰ": 3, "নকুল": 2, "সিংহ": 1},
+    "মূষিক":  {"অশ্ব": 2, "গজ": 2, "মেষ": 1, "সৰ্প": 1, "শ্বান": 1, "মাৰ্জাৰ": 0, "মূষিক": 4, "গো": 2, "মহিষ": 2, "ব্যাঘ্ৰ": 2, "মৃগ": 2, "বানৰ": 2, "নকুল": 1, "সিংহ": 2},
+    "গো":     {"অশ্ব": 1, "গজ": 2, "মেষ": 3, "সৰ্প": 1, "শ্বান": 2, "মাৰ্জাৰ": 2, "মূষিক": 2, "গো": 4, "মহিষ": 3, "ব্যাঘ্ৰ": 0, "মৃগ": 3, "বানৰ": 2, "নকুল": 2, "সিংহ": 1},
+    "মহিষ":  {"অশ্ব": 0, "গজ": 3, "মেষ": 3, "সৰ্প": 1, "শ্বান": 2, "মাৰ্জাৰ": 2, "মূষিক": 2, "গো": 3, "মহিষ": 4, "ব্যাঘ্ৰ": 1, "মৃগ": 2, "বানৰ": 2, "নকুল": 2, "সিংহ": 1},
+    "ব্যাঘ্ৰ": {"অশ্ব": 1, "গজ": 1, "মেষ": 1, "সৰ্প": 2, "শ্বান": 1, "মাৰ্জাৰ": 1, "মূষিক": 2, "গো": 0, "মহিষ": 1, "ব্যাঘ্ৰ": 4, "মৃগ": 1, "বানৰ": 1, "নকুল": 2, "সিংহ": 1},
+    "মৃগ":    {"অশ্ব": 3, "গজ": 2, "মেষ": 2, "সৰ্প": 2, "শ্বান": 0, "মাৰ্জাৰ": 3, "মূষিক": 2, "গো": 3, "মহিষ": 2, "ব্যাঘ্ৰ": 1, "মৃগ": 4, "বানৰ": 2, "নকুল": 2, "সিংহ": 1},
+    "বানৰ":  {"অশ্ব": 3, "গজ": 3, "মেষ": 0, "সৰ্প": 2, "শ্বান": 2, "মাৰ্জাৰ": 3, "মূষিক": 2, "গো": 2, "মহিষ": 2, "ব্যাঘ্ৰ": 1, "মৃগ": 2, "বানৰ": 4, "নকুল": 3, "সিংহ": 2},
+    "নকুল":  {"অশ্ব": 2, "গজ": 2, "মেষ": 3, "সৰ্প": 0, "শ্বান": 1, "মাৰ্জাৰ": 2, "মূষিক": 1, "গো": 2, "মহিষ": 2, "ব্যাঘ্ৰ": 2, "মৃগ": 2, "বানৰ": 3, "নকুল": 4, "সিংহ": 2},
+    "সিংহ":  {"অশ্ব": 1, "গজ": 0, "মেষ": 1, "সৰ্প": 2, "শ্বান": 1, "মাৰ্জাৰ": 1, "মূষিক": 2, "গো": 1, "মহিষ": 1, "ব্যাঘ্ৰ": 1, "মৃগ": 1, "বানৰ": 2, "নকুল": 2, "সিংহ": 4},
 }
 
 # ─── Graha Maitri (গ্ৰহ মৈত্ৰী) - Rashi Lords ───
 RASHI_LORDS = {
-    "মেষ": "মংগল", "বৃষ": "শুক্ৰ", "মিথুন": "বুধ", "কৰ্কট": "চন্দ্ৰ",
-    "সিংহ": "ৰবি", "কন্যা": "বুধ", "তুলা": "শুক্ৰ", "বৃশ্চিক": "মংগল",
+    "মেষ": "সূৰ্য", "বৃষ": "শুক্ৰ", "মিথুন": "বুধ", "কৰ্কট": "চন্দ্ৰ",
+    "সিংহ": "সূৰ্য", "কন্যা": "বুধ", "তুলা": "শুক্ৰ", "বৃশ্চিক": "মংগল",
     "ধনু": "বৃহস্পতি", "মকৰ": "শনি", "কুম্ভ": "শনি", "মীন": "বৃহস্পতি"
 }
 
-# Planetary friendship matrix
-# 5=Adhi Mitra (best friend), 4=Mitra (friend), 3=Sama (neutral), 2=Shatru (enemy), 1=Adhi Shatru (worst enemy)
-PLANET_FRIENDSHIP = {
-    "ৰবি":     {"ৰবি": 3, "চন্দ্ৰ": 4, "মংগল": 4, "বুধ": 3, "বৃহস্পতি": 4, "শুক্ৰ": 2, "শনি": 2},
-    "চন্দ্ৰ":   {"ৰবি": 4, "চন্দ্ৰ": 3, "মংগল": 3, "বুধ": 4, "বৃহস্পতি": 3, "শুক্ৰ": 3, "শনি": 3},
-    "মংগল":    {"ৰবি": 4, "চন্দ্ৰ": 4, "মংগল": 3, "বুধ": 2, "বৃহস্পতি": 4, "শুক্ৰ": 2, "শনি": 2},
-    "বুধ":     {"ৰবি": 4, "চন্দ্ৰ": 3, "মংগল": 3, "বুধ": 3, "বৃহস্পতি": 3, "শুক্ৰ": 4, "শনি": 3},
-    "বৃহস্পতি": {"ৰবি": 4, "চন্দ্ৰ": 4, "মংগল": 4, "বুধ": 2, "বৃহস্পতি": 3, "শুক্ৰ": 2, "শনি": 2},
-    "শুক্ৰ":    {"ৰবি": 2, "চন্দ্ৰ": 3, "মংগল": 2, "বুধ": 4, "বৃহস্পতি": 2, "শুক্ৰ": 3, "শনি": 4},
-    "শনি":     {"ৰবি": 2, "চন্দ্ৰ": 3, "মংগল": 2, "বুধ": 4, "বৃহস্পতি": 2, "শুক্ৰ": 4, "শনি": 3},
+# Graha Maitri compatibility matrix (girl_row x boy_col)
+GRAHA_MAITRI_MATRIX = {
+    "সূৰ্য":     {"সূৰ্য": 5, "চন্দ্ৰ": 5, "মংগল": 5, "বুধ": 4, "বৃহস্পতি": 5, "শুক্ৰ": 0, "শনি": 0},
+    "চন্দ্ৰ":   {"সূৰ্য": 5, "চন্দ্ৰ": 5, "মংগল": 4, "বুধ": 1, "বৃহস্পতি": 4, "শুক্ৰ": 0.5, "শনি": 0.5},
+    "মংগল":    {"সূৰ্য": 5, "চন্দ্ৰ": 4, "মংগল": 5, "বুধ": 0.5, "বৃহস্পতি": 5, "শুক্ৰ": 3, "শনি": 0.5},
+    "বুধ":     {"সূৰ্য": 4, "চন্দ্ৰ": 1, "মংগল": 0.5, "বুধ": 5, "বৃহস্পতি": 0.5, "শুক্ৰ": 5, "শনি": 4},
+    "বৃহস্পতি": {"সূৰ্য": 5, "চন্দ্ৰ": 4, "মংগল": 5, "বুধ": 0.5, "বৃহস্পতি": 5, "শুক্ৰ": 0.5, "শনি": 3},
+    "শুক্ৰ":    {"সূৰ্য": 0, "চন্দ্ৰ": 0.5, "মংগল": 3, "বুধ": 5, "বৃহস্পতি": 0.5, "শুক্ৰ": 5, "শনি": 5},
+    "শনি":     {"সূৰ্য": 0, "চন্দ্ৰ": 0.5, "মংগল": 0.5, "বুধ": 4, "বৃহস্পতি": 3, "শুক্ৰ": 5, "শনি": 5},
 }
 
 # ─── Gana (গণ) by Nakshatra ───
@@ -129,6 +152,30 @@ GANA_BY_NAKSHATRA = {
 }
 
 GANA_NAMES = {1: "দেৱ", 2: "মনুষ্য", 3: "ৰাক্ষস"}
+
+# Gana compatibility matrix (girl_row x boy_col)
+GANA_MATRIX = {
+    1: {1: 6, 2: 5, 3: 1},  # Deva
+    2: {1: 6, 2: 6, 3: 0},  # Manushya
+    3: {1: 0, 2: 0, 3: 6},  # Rakshasa
+}
+
+# ─── Bhakoot (ভকূট) by Rashi ───
+# Bhakoot compatibility matrix (girl_row x boy_col)
+BHAKOOT_MATRIX = {
+    "মেষ":     {"মেষ": 7, "বৃষ": 0, "মিথুন": 7, "কৰ্কট": 7, "সিংহ": 0, "কন্যা": 0, "তুলা": 7, "বৃশ্চিক": 0, "ধনু": 0, "মকৰ": 7, "কুম্ভ": 7, "মীন": 0},
+    "বৃষ":     {"মেষ": 0, "বৃষ": 7, "মিথুন": 0, "কৰ্কট": 7, "সিংহ": 7, "কন্যা": 0, "তুলা": 0, "বৃশ্চিক": 7, "ধনু": 0, "মকৰ": 0, "কুম্ভ": 7, "মীন": 7},
+    "মিথুন":   {"মেষ": 7, "বৃষ": 0, "মিথুন": 7, "কৰ্কট": 0, "সিংহ": 7, "কন্যা": 7, "তুলা": 0, "বৃশ্চিক": 0, "ধনু": 7, "মকৰ": 0, "কুম্ভ": 0, "মীন": 7},
+    "কৰ্কট":   {"মেষ": 7, "বৃষ": 7, "মিথুন": 0, "কৰ্কট": 7, "সিংহ": 0, "কন্যা": 7, "তুলা": 7, "বৃশ্চিক": 0, "ধনু": 0, "মকৰ": 7, "কুম্ভ": 0, "মীন": 0},
+    "সিংহ":    {"মেষ": 0, "বৃষ": 0, "মিথুন": 7, "কৰ্কট": 0, "সিংহ": 7, "কন্যা": 0, "তুলা": 7, "বৃশ্চিক": 7, "ধনু": 0, "মকৰ": 0, "কুম্ভ": 7, "মীন": 0},
+    "কন্যা":   {"মেষ": 0, "বৃষ": 0, "মিথুন": 7, "কৰ্কট": 7, "সিংহ": 0, "কন্যা": 7, "তুলা": 0, "বৃশ্চিক": 7, "ধনু": 7, "মকৰ": 0, "কুম্ভ": 0, "মীন": 7},
+    "তুলা":    {"মেষ": 7, "বৃষ": 0, "মিথুন": 0, "কৰ্কট": 7, "সিংহ": 7, "কন্যা": 0, "তুলা": 7, "বৃশ্চিক": 0, "ধনু": 7, "মকৰ": 7, "কুম্ভ": 0, "মীন": 0},
+    "বৃশ্চিক": {"মেষ": 0, "বৃষ": 7, "মিথুন": 0, "কৰ্কট": 0, "সিংহ": 7, "কন্যা": 7, "তুলা": 0, "বৃশ্চিক": 7, "ধনু": 0, "মকৰ": 7, "কুম্ভ": 7, "মীন": 0},
+    "ধনু":     {"মেষ": 0, "বৃষ": 0, "মিথুন": 7, "কৰ্কট": 0, "সিংহ": 0, "কন্যা": 7, "তুলা": 7, "বৃশ্চিক": 0, "ধনু": 7, "মকৰ": 0, "কুম্ভ": 7, "মীন": 7},
+    "মকৰ":     {"মেষ": 7, "বৃষ": 0, "মিথুন": 0, "কৰ্কট": 7, "সিংহ": 0, "কন্যা": 0, "তুলা": 7, "বৃশ্চিক": 7, "ধনু": 0, "মকৰ": 7, "কুম্ভ": 0, "মীন": 7},
+    "কুম্ভ":    {"মেষ": 7, "বৃষ": 7, "মিথুন": 0, "কৰ্কট": 0, "সিংহ": 7, "কন্যা": 0, "তুলা": 0, "বৃশ্চিক": 7, "ধনু": 7, "মকৰ": 0, "কুম্ভ": 7, "মীন": 0},
+    "মীন":     {"মেষ": 0, "বৃষ": 7, "মিথুন": 7, "কৰ্কট": 0, "সিংহ": 0, "কন্যা": 7, "তুলা": 0, "বৃশ্চিক": 0, "ধনু": 7, "মকৰ": 7, "কুম্ভ": 0, "মীন": 7},
+}
 
 # ─── Nadi (নাড়ী) by Nakshatra ───
 # 1=Adi (আদি), 2=Madhya (মধ্য), 3=Antya (অন্ত্য)
@@ -172,11 +219,13 @@ def calculate_varna(boy_rashi, girl_rashi):
     ১. বৰ্ণ কূট (Varna Koota) - Max 1 Point
     Spiritual and mental compatibility based on caste/varna of rashis.
     Boy's varna should be equal to or higher than girl's varna.
+    Lower number = higher varna (1=Brahmin highest, 4=Shudra lowest).
     """
     boy_varna = VARNA_BY_RASHI.get(boy_rashi, 3)
     girl_varna = VARNA_BY_RASHI.get(girl_rashi, 3)
 
-    if boy_varna <= girl_varna:  # Lower number = higher varna (1=Brahmin highest)
+    # Boy's varna number should be <= girl's varna number (boy higher or equal)
+    if boy_varna <= girl_varna:
         score = 1
         result = "উত্তম"
     else:
@@ -197,19 +246,18 @@ def calculate_vashya(boy_rashi, girl_rashi):
     """
     ২. বশ্য কূট (Vashya Koota) - Max 2 Points
     Mutual control, attraction, and influence between partners.
+    Uses exact matrix: girl's vashya (row) x boy's vashya (col).
     """
     boy_vashya = VASHYA_BY_RASHI.get(boy_rashi, 2)
     girl_vashya = VASHYA_BY_RASHI.get(girl_rashi, 2)
 
-    # Check if girl's vashya type is compatible with boy's
-    if girl_vashya in VASHYA_COMPAT.get(boy_vashya, []):
-        score = 2
+    score = VASHYA_MATRIX.get(girl_vashya, {}).get(boy_vashya, 0)
+
+    if score == 2:
         result = "উত্তম"
-    elif boy_vashya in VASHYA_COMPAT.get(girl_vashya, []):
-        score = 1
+    elif score == 1:
         result = "মধ্যম"
     else:
-        score = 0
         result = "অমিল"
 
     return {
@@ -226,43 +274,57 @@ def calculate_tara(boy_nakshatra, girl_nakshatra):
     """
     ৩. তাৰা কূট (Tara Koota) - Max 3 Points
     Destiny, health, and well-being compatibility.
-    Based on nakshatra distance (Tara Bala).
+
+    Traditional method:
+    1. Count from girl's nakshatra to boy's nakshatra, divide by 9, remainder = tara
+    2. Count from boy's nakshatra to girl's nakshatra, divide by 9, remainder = tara
+    3. Tara 3 (Vipat), 5 (Pratyari), 7 (Badha/Naidhana) are considered bad/ashubh
+    4. Compare both directions:
+       - Both good = 3 points (Uttam)
+       - One good, one bad = 1.5 points (Madhyam)
+       - Both bad = 0 points (Ashubh)
     """
     boy_idx = NAKSHATRAS.index(boy_nakshatra)
     girl_idx = NAKSHATRAS.index(girl_nakshatra)
 
-    # Count from BOY to GIRL (traditional Ashtakoot rule)
-    distance = (girl_idx - boy_idx) % 27
-    tara = (distance % 9) + 1  # 1-9
+    # Direction 1: Girl → Boy (count from girl to boy)
+    dist_girl_to_boy = (boy_idx - girl_idx) % 27
+    tara_girl_to_boy = (dist_girl_to_boy % 9) + 1  # 1-9
 
-    # Tara classification:
-    # 1=Janma (birth), 2=Sampat (wealth), 3=Vipat (danger), 4=Kshem (wellbeing),
-    # 5=Pratyari (obstacle), 6=Sadhak (achiever), 7=Naidhana (death),
-    # 8=Mitra (friend), 9=Parama Mitra (best friend)
-    tara_names = {
-        1: "জন্ম", 2: "সম্পৎ", 3: "বিপৎ", 4: "ক্ষেম", 5: "প্ৰত্যৰি",
-        6: "সাধক", 7: "নৈধন", 8: "মিত্ৰ", 9: "পৰম মিত্ৰ"
-    }
+    # Direction 2: Boy → Girl (count from boy to girl)
+    dist_boy_to_girl = (girl_idx - boy_idx) % 27
+    tara_boy_to_girl = (dist_boy_to_girl % 9) + 1  # 1-9
 
-    # Scoring
-    if tara in [2, 4, 6, 8, 9]:  # Auspicious taras
+    # Bad taras: 3=Vipat, 5=Pratyari, 7=Badha/Naidhana
+    BAD_TARAS = [3, 5, 7]
+
+    girl_to_boy_bad = tara_girl_to_boy in BAD_TARAS
+    boy_to_girl_bad = tara_boy_to_girl in BAD_TARAS
+
+    if not girl_to_boy_bad and not boy_to_girl_bad:
+        # Both directions good
         score = 3
         result = "উত্তম"
-    elif tara in [1, 5]:  # Neutral
-        score = 1.5
-        result = "মধ্যম"
-    else:  # 3=Vipat, 7=Naidhana - inauspicious
+    elif girl_to_boy_bad and boy_to_girl_bad:
+        # Both directions bad
         score = 0
         result = "অশুভ"
+    else:
+        # One good, one bad
+        score = 1.5
+        result = "মধ্যম"
 
     return {
         "score": score,
         "max_score": 3,
         "result": result,
-        "tara_number": tara,
-        "tara_name": tara_names.get(tara, ""),
-        "distance": distance,
-        "description": f"পাত্ৰীৰ নক্ষত্ৰৰ পৰা পাত্ৰৰ নক্ষত্ৰলৈ {distance} নক্ষত্ৰৰ ব্যৱধান, তাৰা: {tara_names.get(tara, '')} ({tara})।"
+        "tara_girl_to_boy": tara_girl_to_boy,
+        "tara_girl_to_boy_name": TARA_NAMES.get(tara_girl_to_boy, ""),
+        "tara_boy_to_girl": tara_boy_to_girl,
+        "tara_boy_to_girl_name": TARA_NAMES.get(tara_boy_to_girl, ""),
+        "girl_to_boy_bad": girl_to_boy_bad,
+        "boy_to_girl_bad": boy_to_girl_bad,
+        "description": f"পাত্ৰীৰ নক্ষত্ৰৰ পৰা পাত্ৰৰ নক্ষত্ৰলৈ তাৰা: {TARA_NAMES.get(tara_girl_to_boy, '')} ({tara_girl_to_boy}), পাত্ৰৰ পৰা পাত্ৰীলৈ তাৰা: {TARA_NAMES.get(tara_boy_to_girl, '')} ({tara_boy_to_girl})।"
     }
 
 
@@ -270,23 +332,23 @@ def calculate_yoni(boy_nakshatra, girl_nakshatra):
     """
     ৪. যোনি কূট (Yoni Koota) - Max 4 Points
     Physical compatibility, intimacy, and biological harmony.
-    Based on animal yoni of nakshatras.
+    Uses exact matrix: girl's yoni (row) x boy's yoni (col).
     """
     boy_yoni = YONI_BY_NAKSHATRA.get(boy_nakshatra, "")
     girl_yoni = YONI_BY_NAKSHATRA.get(girl_nakshatra, "")
 
-    if boy_yoni == girl_yoni:
-        score = 4
+    score = YONI_MATRIX.get(girl_yoni, {}).get(boy_yoni, 0)
+
+    if score == 4:
         result = "উত্তম (একে যোনি)"
-    elif girl_yoni in YONI_FRIENDLY.get(boy_yoni, []):
-        score = 3
+    elif score == 3:
         result = "উত্তম (মিত্ৰ যোনি)"
-    elif boy_yoni in YONI_ENEMY.get(girl_yoni, []):
-        score = 0
-        result = "অশুভ (শত্ৰু যোনি)"
-    else:
-        score = 2
+    elif score == 2:
         result = "মধ্যম (সাধাৰণ)"
+    elif score == 1:
+        result = "মধ্যম (সামান্য)"
+    else:
+        result = "অশুভ (শত্ৰু যোনি)"
 
     return {
         "score": score,
@@ -302,30 +364,25 @@ def calculate_graha_maitri(boy_rashi, girl_rashi):
     """
     ৫. গ্ৰহ মৈত্ৰী কূট (Graha Maitri) - Max 5 Points
     Psychological disposition and friendship between Moon sign lords.
+    Uses exact matrix: girl's graha (row) x boy's graha (col).
     """
     boy_lord = RASHI_LORDS.get(boy_rashi, "")
     girl_lord = RASHI_LORDS.get(girl_rashi, "")
 
-    if boy_lord == girl_lord:
-        score = 5
-        result = "উত্তম (একে গ্ৰহ)"
+    score = GRAHA_MAITRI_MATRIX.get(girl_lord, {}).get(boy_lord, 0)
+
+    if score == 5:
+        result = "উত্তম (অধি মিত্ৰ)"
+    elif score == 4:
+        result = "উত্তম (মিত্ৰ)"
+    elif score == 3:
+        result = "মধ্যম (সম)"
+    elif score == 1:
+        result = "অমিল (শত্ৰু)"
+    elif score == 0.5:
+        result = "অমিল (অধি শত্ৰু)"
     else:
-        friendship = PLANET_FRIENDSHIP.get(boy_lord, {}).get(girl_lord, 3)
-        if friendship == 5:  # Adhi Mitra
-            score = 5
-            result = "উত্তম (অধি মিত্ৰ)"
-        elif friendship == 4:  # Mitra
-            score = 4
-            result = "উত্তম (মিত্ৰ)"
-        elif friendship == 3:  # Sama
-            score = 3
-            result = "মধ্যম (সম)"
-        elif friendship == 2:  # Shatru
-            score = 1
-            result = "অমিল (শত্ৰু)"
-        else:  # Adhi Shatru
-            score = 0
-            result = "অশুভ (অধি শত্ৰু)"
+        result = "অশুভ (অধি শত্ৰু)"
 
     return {
         "score": score,
@@ -341,28 +398,21 @@ def calculate_gana(boy_nakshatra, girl_nakshatra):
     """
     ৬. গণ কূট (Gana Koota) - Max 6 Points
     Behavioral temperament compatibility (Deva, Manushya, Rakshasa).
+    Uses exact matrix: girl's gana (row) x boy's gana (col).
     """
     boy_gana = GANA_BY_NAKSHATRA.get(boy_nakshatra, 2)
     girl_gana = GANA_BY_NAKSHATRA.get(girl_nakshatra, 2)
 
-    if boy_gana == girl_gana:
-        score = 6
+    score = GANA_MATRIX.get(girl_gana, {}).get(boy_gana, 0)
+
+    if score == 6:
         result = "উত্তম (একে গণ)"
-    elif (boy_gana == 1 and girl_gana == 2) or (boy_gana == 2 and girl_gana == 1):
-        # Deva + Manushya
-        score = 5
+    elif score == 5:
         result = "উত্তম"
-    elif (boy_gana == 1 and girl_gana == 3) or (boy_gana == 3 and girl_gana == 1):
-        # Deva + Rakshasa
-        score = 1
+    elif score == 1:
         result = "অমিল (দেৱ-ৰাক্ষস)"
-    elif (boy_gana == 2 and girl_gana == 3) or (boy_gana == 3 and girl_gana == 2):
-        # Manushya + Rakshasa
-        score = 0
-        result = "অমিল (মনুষ্য-ৰাক্ষস)"
     else:
-        score = 0
-        result = "অমিল"
+        result = "অমিল (মনুষ্য-ৰাক্ষস)"
 
     return {
         "score": score,
@@ -378,38 +428,34 @@ def calculate_bhakoot(boy_rashi, girl_rashi):
     """
     ৭. ভকূট কূট (Bhakoot Koota) - Max 7 Points
     Family welfare, prosperity, and emotional longevity.
-    Based on relative rashi positions (2-12, 5-9, 6-8 dosha checks).
+    Uses exact matrix: girl's rashi (row) x boy's rashi (col).
     """
-    boy_idx = RASHIS.index(boy_rashi)
-    girl_idx = RASHIS.index(girl_rashi)
+    score = BHAKOOT_MATRIX.get(girl_rashi, {}).get(boy_rashi, 0)
 
-    # Count from girl to boy
-    distance = (boy_idx - girl_idx) % 12
-
-    # Bhakoot dosha: 2-12, 5-9, 6-8 positions
-    if distance in [2, 5, 6]:
-        # Inauspicious: 2-12, 5-9, 6-8
-        score = 0
+    if score == 7:
+        result = "উত্তম"
+    elif score == 4:
+        result = "মধ্যম"
+    else:
+        # Determine which dosha
+        boy_idx = RASHIS.index(boy_rashi)
+        girl_idx = RASHIS.index(girl_rashi)
+        distance = (boy_idx - girl_idx) % 12
         if distance == 2:
             dosha_name = "২-১২ দোষ (দ্বি-দ্বাদশ)"
         elif distance == 5:
             dosha_name = "৫-৯ দোষ (পঞ্চ-নৱম)"
-        else:
+        elif distance == 6:
             dosha_name = "৬-৮ দোষ (ষষ্ঠ-অষ্টম)"
+        else:
+            dosha_name = "অমিল"
         result = f"অশুভ ({dosha_name})"
-    elif distance in [1, 3, 4, 7, 9, 10]:
-        score = 7
-        result = "উত্তম"
-    else:  # 0, 8, 11
-        score = 4
-        result = "মধ্যম"
 
     return {
         "score": score,
         "max_score": 7,
         "result": result,
-        "distance": distance,
-        "description": f"পাত্ৰীৰ ৰাশিৰ পৰা পাত্ৰৰ ৰাশি {distance} ঘৰ দূৰত্বত অৱস্থিত।"
+        "description": f"পাত্ৰীৰ ৰাশি '{girl_rashi}' আৰু পাত্ৰৰ ৰাশি '{boy_rashi}'ৰ ভকূট মিলন।"
     }
 
 
@@ -417,7 +463,8 @@ def calculate_nadi(boy_nakshatra, girl_nakshatra):
     """
     ৮. নাড়ী কূট (Nadi Koota) - Max 8 Points
     Genetic health, progeny (সন্তান সুখ), and physiological compatibility.
-    Same nadi = Nadi Dosha (নাড়ী দোষ).
+    Same nadi = Nadi Dosha (নাড়ী দোষ) = 0 points.
+    Different nadi = 8 points.
     """
     boy_nadi = NADI_BY_NAKSHATRA.get(boy_nakshatra, 1)
     girl_nadi = NADI_BY_NAKSHATRA.get(girl_nakshatra, 1)

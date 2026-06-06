@@ -1005,9 +1005,15 @@
             {% if user_features and user_features.get('patrika_pdf', False) %}
             <button class="btn-sm btn-fill" onclick="generatePatrika()" style="background:var(--deep-blue);">📜 পত্ৰিকা বনাওক</button>
             <button class="btn-sm btn-outline" onclick="downloadPatrikaPDF()">📥 পত্ৰিকা PDF ডাউনলোড</button>
+            {% if user_features and user_features.get('pratyantar_dasha_pdf', False) %}
+            <button class="btn-sm btn-fill" onclick="downloadPratyantarPDF()" style="background:#6A1B9A;">🔮 প্ৰত্যন্তৰ দশা ফল PDF</button>
+            {% else %}
+            <button class="btn-sm btn-fill" disabled style="background:#6A1B9A;opacity:0.5;cursor:not-allowed;" title="প্ৰ' ভাৰ্চনলৈ আপগ্ৰেড কৰক">🔮 প্ৰত্যন্তৰ দশা ফল PDF</button>
+            {% endif %}
             {% else %}
             <button class="btn-sm btn-fill" disabled style="background:var(--deep-blue);opacity:0.5;cursor:not-allowed;" title="প্ৰ' ভাৰ্চনলৈ আপগ্ৰেড কৰক">📜 পত্ৰিকা বনাওক</button>
             <button class="btn-sm btn-outline" disabled style="opacity:0.5;cursor:not-allowed;" title="প্ৰ' ভাৰ্চনলৈ আপগ্ৰেড কৰক">📥 পত্ৰিকা PDF ডাউনলোড</button>
+            <button class="btn-sm btn-fill" disabled style="background:#6A1B9A;opacity:0.5;cursor:not-allowed;" title="প্ৰ' ভাৰ্চনলৈ আপগ্ৰেড কৰক">🔮 প্ৰত্যন্তৰ দশা ফল PDF</button>
             <button class="btn-upgrade" onclick="openUpgradePlansModal()" style="padding:8px 18px;font-size:0.78rem;">💳 Upgrade to Pro Version</button>
             {% endif %}
         </div>
@@ -1818,6 +1824,7 @@
                 <div class="cb-row"><input type="checkbox" name="sections" value="dasha_full" id="sec_dasha_full" checked><label for="sec_dasha_full">সম্পূৰ্ণ মহাদশা-অন্তৰ্দশা তালিকা</label></div>
                 <div class="cb-row"><input type="checkbox" name="sections" value="dasha_predictions" id="sec_dasha_predictions" checked><label for="sec_dasha_predictions">মহাদশা-অন্তৰ্দশাৰ ফলাফল</label></div>
                 <div class="cb-row"><input type="checkbox" name="sections" value="antardasha_phala" id="sec_antardasha_phala"><label for="sec_antardasha_phala">📖 অন্তৰদশা ফলাফল (small_antardasaphal)</label></div>
+                <div class="cb-row"><input type="checkbox" name="sections" value="pratyantar_dasha" id="sec_pratyantar_dasha"><label for="sec_pratyantar_dasha">🔮 প্ৰত্যন্তৰ দশা ফলাফল (আজিৰ পৰা চলি থকা)</label></div>
                 <div class="dasha-select-row" id="antardashaModeRow" style="display:none;">
                     <label for="antardasha_mode" style="font-size:0.85rem;">অন্তৰ্দশাৰ ধৰণ:</label>
                     <select name="antardasha_mode" id="antardasha_mode">
@@ -2675,6 +2682,48 @@
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = '/download-patrika-pdf';
+        for (const [key, value] of Object.entries(data)) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value;
+            form.appendChild(input);
+        }
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+    }
+
+    function downloadPratyantarPDF() {
+        const data = {
+            name: '{{ user_name }}',
+            place: '{{ user_place }}',
+            public_name: document.getElementById('patrika_public_name').value,
+            secret_name: document.getElementById('patrika_secret_name').value,
+            father_name: document.getElementById('patrika_father_name').value,
+            mother_name: document.getElementById('patrika_mother_name').value,
+            birth_district: document.getElementById('patrika_birth_district').value,
+            residence_district: document.getElementById('patrika_residence_district').value,
+            residence: document.getElementById('patrika_residence').value,
+            blessing: document.getElementById('patrika_blessing').value,
+            dob: '{{ user_dob }}',
+            tob: '{{ user_tob }}',
+            asc_rasi: '{{ asc_rasi }}',
+            asc_rasi_idx: {{ asc_rasi_index }},
+            moon_rasi: '{{ moon_rasi }}',
+            moon_rasi_idx: {{ panchanga.get('moon_rasi_idx', 0) if panchanga else 0 }},
+            nakshatra_name: '{{ panchanga.nakshatra.name if panchanga and panchanga.nakshatra else "" }}',
+            nakshatra_idx: {{ panchanga.nakshatra.index if panchanga and panchanga.nakshatra else 0 }},
+            nakshatra_pada: {{ panchanga.nakshatra.pada if panchanga and panchanga.nakshatra else 1 }},
+            gender: '{{ gender }}',
+            lat: '{{ lat }}',
+            lon: '{{ lon }}',
+            timezone: '{{ timezone }}'
+        };
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/download-pratyantar-pdf';
         for (const [key, value] of Object.entries(data)) {
             const input = document.createElement('input');
             input.type = 'hidden';

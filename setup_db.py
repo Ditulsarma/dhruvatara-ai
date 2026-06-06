@@ -293,6 +293,7 @@ def setup_database():
         ("numerology_pdf", "Numerology PDF", "অংক জ্যোতিষ PDF", "অংক জ্যোতিষ PDF ৰিপৰ্ট ডাউনলোড", "numerology", 18),
         ("numerology_varsha", "Numerology Varsha Phal", "অংক জ্যোতিষ বৰ্ষফল", "১০ বছৰৰ বৰ্ষফল", "numerology", 19),
         ("numerology_chat", "Numerology AI Chat", "অংক জ্যোতিষ AI চেট", "অংক জ্যোতিষ AI চেট", "numerology", 20),
+        ("pratyantar_dasha_pdf", "Pratyantar Dasha PDF", "প্ৰত্যন্তৰ দশা PDF", "প্ৰত্যন্তৰ দশা ফলসহ PDF ডাউনলোড", "export", 21),
     ]
 
     for f_key, f_name, f_name_asm, f_desc, f_cat, f_order in features:
@@ -324,7 +325,7 @@ def setup_database():
         "tripap_rista"
     ]
     # PDF features are disabled by default for all plans
-    pdf_features = ["pdf_report", "custom_pdf", "patrika_pdf"]
+    pdf_features = ["pdf_report", "custom_pdf", "patrika_pdf", "pratyantar_dasha_pdf"]
 
     # All subscriptions get all non-PDF features enabled
     for sub_id in [1, 2, 3, 4]:

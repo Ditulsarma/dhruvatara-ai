@@ -362,7 +362,8 @@ def _build_html(
     moon_rasi: str = "",
     gender: str = "male",
     astrologer_profile: dict = None,
-    patrika_text: str = ""
+    patrika_text: str = "",
+    pratyantar_dasha_html: str = ""
 ) -> str:
     """Build complete HTML for the PDF report.
     selected_sections: list of section keys to include. If None, include all.
@@ -1498,6 +1499,10 @@ def _build_html(
     if _include('antardasha_phala'):
         html += '<h2 class="section-heading">📖 অন্তৰদশা ফলাফল (বিস্তৃত)</h2>' + antardasha_phala_html
 
+    if _include('pratyantar_dasha'):
+        html += '<div style="page-break-before: always;"></div>'
+        html += '<h2 class="section-heading">🔮 প্ৰত্যন্তৰ দশা ফলাফল</h2>' + pratyantar_dasha_html
+
     if _include('ai'):
         html += ai_html
 
@@ -1546,7 +1551,8 @@ def generate_pdf_report(
     moon_rasi: str = "",
     gender: str = "male",
     astrologer_profile: dict = None,
-    patrika_text: str = ""
+    patrika_text: str = "",
+    pratyantar_dasha_html: str = ""
 ) -> bytes:
     """
     Generate a complete professional PDF astrology report in Assamese.
@@ -1570,7 +1576,8 @@ def generate_pdf_report(
         moon_rasi=moon_rasi,
         gender=gender,
         astrologer_profile=astrologer_profile,
-        patrika_text=patrika_text
+        patrika_text=patrika_text,
+        pratyantar_dasha_html=pratyantar_dasha_html
     )
 
     # Write HTML to temp file, call pdf_worker.py in subprocess, read PDF back

@@ -419,6 +419,95 @@ def build_important_antardasha_html(dasa_hierarchy, gender='male'):
     html += '</div>'
     return html
 
+def build_pratyantar_dasha_html(dasa_hierarchy, planet_degrees, lagna_sign_index, gender='male'):
+    """
+    Build HTML for pratyantar dasha phala (3rd level dasha).
+    Shows ALL pratyantar dashas from today onward across ALL antardashas
+    (not just the currently running one). Each pratyantar gets phala from small_antardasaphal.py.
+    Returns HTML string.
+    """
+    today = datetime.now()
+    html = '<div style="font-size:0.85rem;line-height:1.8;">'
+
+    # Convert planet_degrees keys from Assamese to English for get_planet_details
+    planet_degrees_en = convert_planet_degrees_to_en(planet_degrees)
+
+    for md in dasa_hierarchy:
+        maha_name = md.get('md_lord', '')
+        for ad in md.get('sub_dasas', []):
+            # parse antardasha dates
+            try:
+                ad_end = parse_dasha_date(ad.get('end', ''))
+                ad_start = parse_dasha_date(ad.get('start', ''))
+            except Exception:
+                ad_end = datetime(1900, 1, 1)
+                ad_start = datetime(1900, 1, 1)
+
+            # Skip antardashas that have already ended
+            if ad_end < today:
+                continue
+
+            antar_lord = ad.get('ad_lord', '')
+
+            # Header for this antardasha
+            html += f'<div style="margin-bottom:16px;padding:10px 14px;background:linear-gradient(135deg,#1a237e,#283593);color:white;border-radius:6px;">'
+            html += f'<strong style="font-size:1rem;">{maha_name} মহাদশা → {antar_lord} অন্তৰ্দশা</strong> '
+            html += f'<span style="font-size:0.8rem;opacity:0.85;">({ad.get("start","")} — {ad.get("end","")})</span>'
+            html += '</div>'
+
+            # Now iterate pratyantar dashas within this antardasha
+            pd_list = ad.get('pratyantar', [])
+            if not pd_list:
+                html += '<div style="padding:8px;color:#888;">প্ৰত্যন্তৰ দশাৰ তথ্য উপলব্ধ নহয়।</div>'
+                continue
+
+            has_any_pd = False
+            for pd in pd_list:
+                pd_lord = pd.get('lord', '')
+                pd_start = pd.get('start', '')
+                pd_end = pd.get('end', '')
+
+                # Parse pratyantar dates
+                try:
+                    pd_end_dt = parse_dasha_date(pd_end)
+                    pd_start_dt = parse_dasha_date(pd_start)
+                except Exception:
+                    pd_end_dt = datetime(1900, 1, 1)
+                    pd_start_dt = datetime(1900, 1, 1)
+
+                # Only include pratyantar that ends today or later
+                if pd_end_dt < today:
+                    continue
+
+                has_any_pd = True
+
+                # Get phala for this pratyantar lord
+                pd_eng = get_eng_planet(pd_lord)
+                pd_detail = get_planet_details(pd_eng, planet_degrees_en, lagna_sign_index)
+                phala_text = ''
+                if pd_detail:
+                    graha_asm = pd_detail.get('name_asm', pd_lord)
+                    rasi = pd_detail.get('rasi', '')
+                    house = pd_detail.get('house', '')
+                    try:
+                        phala_text = get_antardasha_phala(graha_asm, rasi, house)
+                    except Exception:
+                        phala_text = ''
+
+                # Format HTML block
+                html += f'<div style="margin-bottom:10px;padding:8px 12px;background:#f3e5f5;border-left:3px solid #6A1B9A;border-radius:4px;">'
+                html += f'<strong style="color:#6A1B9A;">└ {pd_lord} প্ৰত্যন্তৰ দশা</strong> '
+                html += f'<span style="font-size:0.8rem;color:#888;">({pd_start} — {pd_end})</span>'
+                if phala_text:
+                    html += f'<div style="margin-top:6px;color:#333;">{apply_gender(phala_text, gender)}</div>'
+                html += '</div>'
+
+            if not has_any_pd:
+                html += '<div style="padding:8px;color:#888;">এই অন্তৰ্দশাত আজিৰ পৰা কোনো প্ৰত্যন্তৰ দশা বাকী নাই।</div>'
+
+    html += '</div>'
+    return html
+
 def build_vimsottari_summary(dasa_hierarchy):
     """
     Build a complete Vimsottari Dasha Summary showing ALL 9 Mahadashas
@@ -1506,6 +1595,214 @@ def download_patrika_pdf():
     except Exception as e:
         return f"<div style='padding:40px;font-family:Arial;text-align:center;'><h2 style='color:#c62828;'>পত্ৰিকা PDF নিৰ্মাণ ত্ৰুটি</h2><p>{str(e)}</p><a href='/'>আকৌ চেষ্টা কৰক</a></div>"
 
+@app.route("/download-pratyantar-pdf", methods=["POST"])
+def download_pratyantar_pdf():
+    """Generate PDF with Pratyantar Dasha phala (3rd level dasha results)."""
+    # Check feature access - only paid users can download pratyantar PDF
+    if session.get('user_id'):
+        if not check_feature_access(session['user_id'], 'pratyantar_dasha_pdf'):
+            return "<div style='padding:40px;font-family:Arial;text-align:center;'><h2 style='color:#c62828;'>🔒 প্ৰৱেশ নিষেধ</h2><p>প্ৰত্যন্তৰ দশা ফল PDF ডাউনলোড কৰিবলৈ প্ৰ' ভাৰ্চনলৈ আপগ্ৰেড কৰক।</p><a href='/'>আকৌ চেষ্টা কৰক</a></div>"
+
+    name = request.form.get("name", request.form.get("public_name", ""))
+    dob = request.form.get("dob")
+    tob = request.form.get("tob")
+    place = request.form.get("place", "")
+    gender = request.form.get("gender", "male")
+
+    patrika_public_name = request.form.get("public_name", "").strip()
+    if patrika_public_name:
+        name = patrika_public_name
+
+    patrika_birth_district = request.form.get("birth_district", "").strip()
+    if patrika_birth_district:
+        place = patrika_birth_district
+
+    lat_str = request.form.get("lat", "")
+    lon_str = request.form.get("lon", "")
+    tz_str = request.form.get("timezone", "5.5")
+
+    try:
+        lat = float(lat_str) if lat_str else None
+        lon = float(lon_str) if lon_str else None
+    except (ValueError, TypeError):
+        lat, lon = None, None
+
+    if lat is None or lon is None:
+        if place:
+            coords = get_coordinates(place)
+            if coords:
+                lat, lon = coords
+            else:
+                lat, lon = 26.1445, 91.7362
+        else:
+            lat, lon = 26.1445, 91.7362
+
+    try:
+        tz_offset = float(tz_str)
+    except (ValueError, TypeError):
+        tz_offset = 5.5
+
+    try:
+        ist_time = datetime.strptime(f"{dob} {tob}", "%Y-%m-%d %H:%M")
+        jd = swe.julday(ist_time.year, ist_time.month, ist_time.day,
+                        (ist_time.hour + ist_time.minute / 60.0) - tz_offset)
+        swe.set_sid_mode(swe.SIDM_LAHIRI)
+        ayanamsa = swe.get_ayanamsa(jd)
+
+        planets_dict = {
+            "ৰবি": swe.SUN, "চন্দ্ৰ": swe.MOON, "মংগল": swe.MARS,
+            "বুধ": swe.MERCURY, "বৃহস্পতি": swe.JUPITER, "শুক্ৰ": swe.VENUS,
+            "শনি": swe.SATURN, "ৰাহু": swe.MEAN_NODE
+        }
+
+        planets_data = []
+        p_sidereal_longitudes = {}
+        planet_signs = {}
+        planet_houses = {}
+
+        for p_name, p_id in planets_dict.items():
+            pos, _ = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
+            p_sidereal_longitudes[p_name] = pos[0]
+            r_idx, rasi, deg = get_rasi_and_degree(pos[0])
+            _, nak, lord = get_nakshatra_details(pos[0])
+            planets_data.append({"name": p_name, "rasi": rasi, "degree": deg,
+                                 "nakshatra": nak, "lord": lord})
+            planet_signs[p_name] = r_idx
+
+        p_sidereal_longitudes["কেতু"] = (p_sidereal_longitudes["ৰাহু"] + 180) % 360
+        r_idx_k, ketu_rasi, ketu_deg = get_rasi_and_degree(p_sidereal_longitudes["কেতু"])
+        _, ketu_nak, ketu_lord = get_nakshatra_details(p_sidereal_longitudes["কেতু"])
+        planets_data.append({"name": "কেতু", "rasi": ketu_rasi, "degree": ketu_deg,
+                             "nakshatra": ketu_nak, "lord": ketu_lord})
+        planet_signs["কেতু"] = r_idx_k
+
+        cusps, ascmc = swe.houses(jd, lat, lon, b'P')
+        asc_sidereal = (ascmc[0] - ayanamsa) % 360
+        p_sidereal_longitudes["লগ্ন"] = asc_sidereal
+        asc_rasi_idx, asc_rasi, asc_deg = get_rasi_and_degree(asc_sidereal)
+        _, asc_nak, asc_nak_lord = get_nakshatra_details(asc_sidereal)
+        planets_data.append({"name": "লগ্ন", "rasi": asc_rasi, "degree": asc_deg,
+                             "nakshatra": asc_nak, "lord": asc_nak_lord})
+        planet_signs["লগ্ন"] = asc_rasi_idx
+
+        for p_name, p_lon in p_sidereal_longitudes.items():
+            house_idx = (int(p_lon / 30) - asc_rasi_idx) % 12
+            planet_houses[p_name] = house_idx
+
+        dasa_hierarchy = get_full_dasa_hierarchy(p_sidereal_longitudes["চন্দ্ৰ"], ist_time)
+        panchanga = get_full_panchanga(ist_time, lat, lon, tz_offset)
+        dosha_results = get_complete_dosha_analysis(planet_houses, p_sidereal_longitudes)
+        yoga_results = get_complete_yoga_analysis(planet_houses, planet_signs, asc_rasi_idx)
+
+        moon_nak_idx = get_nakshatra_details(p_sidereal_longitudes["চন্দ্ৰ"])[0] + 1
+        moon_rasi_idx = get_rasi_and_degree(p_sidereal_longitudes["চন্দ্ৰ"])[0]
+        navatara_data = get_navatara_data(moon_nak_idx)
+        sannari_data = get_sannari_data(moon_nak_idx)
+
+        ai_interpretation = generate_ai_interpretation(
+            name, planets_data, asc_rasi, dosha_results, yoga_results, dasa_hierarchy,
+            asc_rasi_idx=asc_rasi_idx, planet_signs=planet_signs,
+            moon_nak_name=nakshatras[moon_nak_idx - 1],
+            moon_rasi=rasis[moon_rasi_idx],
+            tripap_ages=TRIPAP_AGES.get(moon_nak_idx, []),
+            navatara_data=navatara_data, sannari_data=sannari_data
+        )
+
+        vargas = {"D1": 1, "D2": 2, "D3": 3, "D4": 4, "D7": 7, "D9": 9,
+                  "D10": 10, "D12": 12, "D16": 16, "D20": 20, "D24": 24,
+                  "D27": 27, "D30": 30, "D40": 40, "D45": 45, "D60": 60}
+        all_vargas = {}
+        for v_code, v_num in vargas.items():
+            all_vargas[v_code] = {}
+            for p_key, p_lon in p_sidereal_longitudes.items():
+                v_idx = calculate_varga(p_lon, v_num)
+                if v_idx not in all_vargas[v_code]:
+                    all_vargas[v_code][v_idx] = []
+                all_vargas[v_code][v_idx].append(PLANET_SHORT.get(p_key, p_key[:2]))
+
+        tripap_data = get_tripap_rista(moon_nak_idx)
+        tripap_ages = TRIPAP_AGES.get(moon_nak_idx, [])
+        sannari_html = generate_sannari_html_table(moon_nak_idx, nakshatras[moon_nak_idx - 1])
+        navatara_html = generate_navatara_html(moon_nak_idx)
+        nakshatra_phala_html = apply_gender(get_nakshatra_phala_html(moon_nak_idx), gender)
+        lagna_phala_html = apply_gender(get_lagna_phala_html(asc_rasi_idx), gender)
+        rashi_phala_html = apply_gender(get_rashi_phala_html(moon_rasi_idx), gender)
+        lagna_lord = get_rashi_lord(asc_rasi_idx)
+        moon_rashi_lord = get_rashi_lord(moon_rasi_idx)
+        moon_rasi = rasis[moon_rasi_idx]
+        graha_bichar_html = get_graha_bichar_html(planet_houses)
+
+        all_dasha_predictions = get_all_maha_antar_predictions(
+            dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx
+        )
+        for dp in all_dasha_predictions:
+            dp["prediction"] = apply_gender(dp["prediction"], gender)
+        all_dasha_predictions = filter_future_dasha_predictions(all_dasha_predictions)
+        ai_interpretation = apply_gender(ai_interpretation, gender)
+
+        # Build antardasha phala HTML
+        antardasha_phala_html = build_important_antardasha_html(
+            dasa_hierarchy, gender=gender
+        )
+
+        # Build pratyantar dasha phala HTML (today onward, current antardasha only)
+        pratyantar_dasha_html = build_pratyantar_dasha_html(
+            dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx, gender=gender
+        )
+
+        # Generate patrika text
+        patrika_text = generate_patrika_text(
+            public_name=name,
+            secret_name=request.form.get('secret_name', ''),
+            father_name=request.form.get('father_name', ''),
+            mother_name=request.form.get('mother_name', ''),
+            birth_district=patrika_birth_district if patrika_birth_district else place,
+            residence_district=request.form.get('residence_district', ''),
+            residence=request.form.get('residence', ''),
+            gender=gender,
+            dob=dob, tob=tob,
+            asc_rasi=asc_rasi, asc_rasi_idx=asc_rasi_idx, asc_degree=asc_deg,
+            moon_rasi=moon_rasi, moon_rasi_idx=moon_rasi_idx,
+            nakshatra_name=nakshatras[moon_nak_idx - 1],
+            nakshatra_idx=moon_nak_idx - 1,
+            nakshatra_pada=panchanga.get('nakshatra', {}).get('pada', 1),
+            panchanga=panchanga,
+        )
+
+        astrologer_profile = get_astrologer_profile(session.get('user_id', 0))
+
+        # Dwadash Bhab Phala
+        dwadash_html = get_dwadash_html(planet_houses=planet_houses, asc_rasi_idx=asc_rasi_idx)
+
+        # Vimsottari Dasha Summary
+        vimsottari_summary = build_vimsottari_summary(dasa_hierarchy)
+
+        pdf_bytes = generate_pdf_report(
+            name, dob, tob, place, planets_data, panchanga,
+            dosha_results, yoga_results, dasa_hierarchy, ai_interpretation,
+            all_vargas, tripap_data, tripap_ages, asc_rasi,
+            [], sannari_html, navatara_html,
+            nakshatra_phala_html, lagna_phala_html, rashi_phala_html,
+            graha_bichar_html=graha_bichar_html,
+            antardasha_phala_html=antardasha_phala_html,
+            dwadash_html=dwadash_html,
+            vimsottari_summary=vimsottari_summary,
+            lagna_lord=lagna_lord, moon_rashi_lord=moon_rashi_lord,
+            moon_rasi=moon_rasi, gender=gender,
+            astrologer_profile=astrologer_profile,
+            patrika_text=patrika_text,
+            pratyantar_dasha_html=pratyantar_dasha_html
+        )
+
+        return send_file(
+            io.BytesIO(pdf_bytes),
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f'Dhruvatara_AI_Pratyantar_{name.replace(" ", "_")}.pdf'
+        )
+    except Exception as e:
+        return f"<div style='padding:40px;font-family:Arial;text-align:center;'><h2 style='color:#c62828;'>প্ৰত্যন্তৰ দশা PDF নিৰ্মাণ ত্ৰুটি</h2><p>{str(e)}</p><a href='/'>আকৌ চেষ্টা কৰক</a></div>"
+
 @app.route("/custom-pdf", methods=["POST"])
 def custom_pdf():
     """Generate custom PDF with user-selected sections."""
@@ -1735,6 +2032,13 @@ def custom_pdf():
                     selected_maha=None, include_current_and_future_only=True, gender=gender
                 )
 
+        # Build pratyantar dasha phala HTML for custom PDF (only if selected)
+        pratyantar_dasha_html = ""
+        if 'pratyantar_dasha' in selected_sections:
+            pratyantar_dasha_html = build_pratyantar_dasha_html(
+                dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx, gender=gender
+            )
+
         # Dwadash Bhab Phala for PDF (only if selected, only actual placements)
         dwadash_html = ""
         if 'dwadash_bhab_phala' in selected_sections:
@@ -1759,7 +2063,8 @@ def custom_pdf():
             lagna_lord=lagna_lord, moon_rashi_lord=moon_rashi_lord,
             moon_rasi=moon_rasi, gender=gender,
             astrologer_profile=astrologer_profile,
-            patrika_text=patrika_text
+            patrika_text=patrika_text,
+            pratyantar_dasha_html=pratyantar_dasha_html
         )
 
         return send_file(
