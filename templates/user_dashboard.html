@@ -42,6 +42,20 @@
         .btn-fill { background: var(--orange); color: white; }
         .btn-fill:hover { background: var(--orange-dark); transform: translateY(-1px); }
 
+        /* Free/Pro Badge */
+        .user-plan-badge {
+            display: inline-block; padding: 4px 12px; border-radius: 14px;
+            font-size: 0.72rem; font-weight: 700; letter-spacing: 0.5px;
+        }
+        .user-plan-badge.pro {
+            background: linear-gradient(135deg, var(--orange), var(--gold));
+            color: white; box-shadow: 0 2px 8px rgba(255,102,0,0.3);
+        }
+        .user-plan-badge.free {
+            background: #E0E0E0; color: #666;
+            border: 1px solid #ccc;
+        }
+
         .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
 
         .welcome-card {
@@ -139,6 +153,11 @@
     <nav class="top-nav">
         <div class="brand">🌟 ধ্ৰুৱতৰা <span>AI</span></div>
         <div class="nav-actions">
+            {% if user_sub_info %}
+            <span class="user-plan-badge {% if user_sub_info.is_pro %}pro{% else %}free{% endif %}">
+                {% if user_sub_info.is_pro %}⭐ PRO{% else %}🆓 FREE{% endif %}
+            </span>
+            {% endif %}
             <span style="font-size:0.85rem;color:var(--text-light);">👤 {{ user.name }}</span>
             <a href="/logout" class="btn btn-outline">🚪 লগআউট</a>
         </div>
@@ -232,10 +251,65 @@
             {% endfor %}
         </div>
 
+        <!-- Upgrade Banner for Free Users -->
+        {% if subscription.id == 1 %}
+        <div style="text-align:center;margin:20px 0;">
+            <a href="/subscription" class="btn btn-fill" style="font-size:1.1rem;padding:16px 40px;background:linear-gradient(135deg, #FF6600, #D4A017);">
+                ⭐ প্ৰ' ভাৰ্চনলৈ আপগ্ৰেড কৰক
+            </a>
+            <p style="font-size:0.8rem;color:var(--text-light);margin-top:8px;">
+                বিনামূলীয়া প্লেন: দৈনিক ৩ বাৰ লগইন, ১ টা ৰাশিফল। প্ৰ'ৰ সৈতে সকলো সুবিধা আনলক কৰক!
+            </p>
+        </div>
+        {% endif %}
+
     <div style="text-align:center;padding:16px;background:white;border-top:1px solid var(--border);margin-top:20px;">
         {% for img in all_footer_images %}
         <img src="/api/images/{{ img.id }}" alt="{{ img.alt_text }}" style="width:{{ img.width }}px;height:{{ img.height }}px;object-fit:contain;margin:4px 8px;border-radius:4px;display:inline-block;">
         {% endfor %}
     </div>
+
+    <script>
+        // ─── Inactivity Auto-Logout (Free users: 1 minute) ────────
+        const isFreeUser = {{ 'true' if subscription.id == 1 else 'false' }};
+        let lastActivityTime = Date.now();
+        let inactivityCheckInterval = null;
+
+        if (isFreeUser) {
+            function resetActivityTimer() {
+                lastActivityTime = Date.now();
+            }
+
+            ['click', 'mousemove', 'keydown', 'scroll', 'touchstart', 'touchend'].forEach(evt => {
+                document.addEventListener(evt, resetActivityTimer, { passive: true });
+            });
+
+            inactivityCheckInterval = setInterval(async () => {
+                const inactiveSeconds = Math.floor((Date.now() - lastActivityTime) / 1000);
+
+                try {
+                    const response = await fetch('/api/heartbeat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ last_activity: inactiveSeconds })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.auto_logout) {
+                        clearInterval(inactivityCheckInterval);
+                        alert(data.message || 'আপুনি বেছি সময় নিষ্ক্ৰিয় আছিল। চেচন বন্ধ কৰা হ\'ল।');
+                        window.location.href = '/login';
+                    }
+                } catch (err) {
+                    // ignore network errors
+                }
+            }, 10000);
+
+            window.addEventListener('beforeunload', () => {
+                if (inactivityCheckInterval) clearInterval(inactivityCheckInterval);
+            });
+        }
+    </script>
 </body>
 </html>

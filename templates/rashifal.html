@@ -65,6 +65,18 @@
         .nav-bar a:hover, .nav-bar a.active {
             background: var(--orange); color: white; border-color: var(--orange);
         }
+        .nav-plan-badge {
+            display: inline-flex; align-items: center; padding: 6px 14px;
+            border-radius: 20px; font-size: 0.75rem; font-weight: 700;
+            letter-spacing: 0.5px; border: 2px solid transparent;
+        }
+        .nav-plan-badge.pro {
+            background: linear-gradient(135deg, var(--orange), var(--gold));
+            color: white; box-shadow: 0 2px 8px rgba(255,102,0,0.3);
+        }
+        .nav-plan-badge.free {
+            background: #E8E8E8; color: #777; border-color: #ddd;
+        }
 
         /* ─── Main Container ─── */
         .container {
@@ -204,7 +216,75 @@
             border-color: var(--orange); background: linear-gradient(135deg, #FFF8F0, #FFE0B2);
             color: var(--orange-dark);
         }
+        .quick-chip.used-today {
+            border-color: var(--green); background: #E8F5E9;
+            position: relative;
+        }
+        .quick-chip.used-today::after {
+            content: '✓'; position: absolute; top: 2px; right: 4px;
+            font-size: 0.65rem; color: var(--green); font-weight: 800;
+        }
+        .quick-chip.locked {
+            border-color: #ddd; background: #f5f5f5;
+            cursor: pointer; position: relative; overflow: hidden;
+        }
+        .quick-chip.locked::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.03); z-index: 1;
+        }
+        .quick-chip.locked .lock-badge {
+            position: absolute; top: -1px; right: -1px;
+            background: linear-gradient(135deg, var(--orange), var(--gold));
+            color: white; font-size: 0.55rem; font-weight: 800;
+            padding: 2px 6px; border-radius: 0 8px 0 8px;
+            z-index: 2; letter-spacing: 0.5px;
+        }
+        .quick-chip.locked:hover {
+            border-color: var(--orange); background: #FFF8F0;
+            transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,102,0,0.15);
+        }
         .quick-chip .qc-emoji { font-size: 1.3rem; display: block; }
+
+        /* ─── Upgrade Overlay ─── */
+        .upgrade-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 1000;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .upgrade-modal {
+            background: white; border-radius: 20px; padding: 32px 28px;
+            max-width: 420px; width: 90%; text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .upgrade-close {
+            position: absolute; top: 12px; right: 16px;
+            background: none; border: none; font-size: 1.3rem;
+            cursor: pointer; color: #999;
+        }
+        .upgrade-icon { font-size: 56px; margin-bottom: 12px; }
+        .upgrade-modal h3 {
+            font-size: 1.3rem; color: var(--deep-blue); margin-bottom: 12px;
+        }
+        .upgrade-modal p {
+            font-size: 0.9rem; color: var(--text-light); margin-bottom: 8px;
+            line-height: 1.6;
+        }
+        .btn-upgrade {
+            display: block; width: 100%; padding: 14px;
+            background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+            color: white; border: none; border-radius: 12px;
+            font-size: 1rem; font-weight: 700; font-family: inherit;
+            cursor: pointer; margin-top: 16px;
+            box-shadow: 0 4px 16px rgba(255,102,0,0.3);
+            transition: var(--transition);
+        }
+        .btn-upgrade:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,102,0,0.4); }
+        .btn-skip {
+            display: block; width: 100%; padding: 10px; margin-top: 8px;
+            background: none; border: none; color: var(--text-light);
+            font-size: 0.85rem; cursor: pointer; font-family: inherit;
+        }
 
         /* ─── Responsive ─── */
         @media (max-width: 768px) {
@@ -238,11 +318,30 @@
     <a href="/dashboard">🏠 ডেশ্বব'ৰ্ড</a>
     <a href="/kundli">🔮 কুণ্ডলী</a>
     <a href="/rashifal" class="active">⭐ ৰাশিফল</a>
+    {% if user_sub_info %}
+    <span class="nav-plan-badge {% if user_sub_info.is_pro %}pro{% else %}free{% endif %}">
+        {% if user_sub_info.is_pro %}⭐ PRO{% else %}🆓 FREE{% endif %}
+    </span>
+    {% endif %}
     <a href="/logout">🚪 লগআউট</a>
 </div>
 
 <!-- ─── Main Container ─── -->
 <div class="container">
+
+    <!-- Free User Limit Warning -->
+    <div id="freeLimitBanner" style="display:none;background:linear-gradient(135deg,#1a237e,#283593);color:white;border-radius:14px;padding:16px 20px;margin-bottom:16px;text-align:center;box-shadow:0 4px 16px rgba(26,35,126,0.2);">
+        <p style="margin:0;font-size:0.9rem;">
+            {% if not has_full_access %}
+            ⚡ <strong>বিনামূলীয়া সীমা:</strong> আপুনি আজি <span id="rashifalCount">{{ today_count }}</span>/১ টা ৰাশিফল চাইছে।
+            {% if today_count >= 1 %}
+            <br><span style="font-size:0.8rem;">আৰু ৰাশিফল চাবলৈ প্ৰ' ভাৰ্চনলৈ আপগ্ৰেড কৰক।</span>
+            {% endif %}
+            {% else %}
+            ✅ <strong>প্ৰ' ভাৰ্চন:</strong> আপুনি সকলো ৰাশিৰ ৰাশিফল চাব পাৰে।
+            {% endif %}
+        </p>
+    </div>
 
     <!-- Selector Card -->
     <div class="selector-card">
@@ -253,9 +352,14 @@
             {% set rashi_list = ["মেষ", "বৃষ", "মিথুন", "কৰ্কট", "সিংহ", "কন্যা", "তুলা", "বৃশ্চিক", "ধনু", "মকৰ", "কুম্ভ", "মীন"] %}
             {% set rashi_emojis = {"মেষ":"♈","বৃষ":"♉","মিথুন":"♊","কৰ্কট":"♋","সিংহ":"♌","কন্যা":"♍","তুলা":"♎","বৃশ্চিক":"♏","ধনু":"♐","মকৰ":"♑","কুম্ভ":"♒","মীন":"♓"} %}
             {% for r in rashi_list %}
-            <div class="quick-chip" data-rashi="{{ r }}" onclick="selectRashi('{{ r }}')">
+            <div class="quick-chip {% if not has_full_access and today_count >= 1 and r not in today_used_rashis %}locked{% endif %}"
+                 data-rashi="{{ r }}" onclick="selectRashi('{{ r }}')"
+                 id="chip_{{ r }}">
                 <span class="qc-emoji">{{ rashi_emojis[r] }}</span>
                 {{ r }}
+                {% if not has_full_access and today_count >= 1 and r not in today_used_rashis %}
+                <span class="lock-badge">PRO</span>
+                {% endif %}
             </div>
             {% endfor %}
         </div>
@@ -307,6 +411,11 @@
 </div>
 
 <script>
+    // ─── Server-side data ──────────────────────────────────────
+    const hasFullAccess = {{ 'true' if has_full_access else 'false' }};
+    const todayUsedRashis = {{ today_used_rashis | tojson }};
+    let todayCount = {{ today_count }};
+
     // ─── Copy Protection ───────────────────────────────────────
     document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; });
     document.addEventListener('copy', function(e) { e.preventDefault(); return false; });
@@ -338,7 +447,44 @@
         "yearly": "বছেৰেকীয়া ৰাশিফল"
     };
 
+    // Show free limit banner
+    document.getElementById('freeLimitBanner').style.display = 'block';
+
+    // Mark already-used rashis for free users
+    if (!hasFullAccess) {
+        todayUsedRashis.forEach(r => {
+            const chip = document.getElementById('chip_' + r);
+            if (chip) {
+                chip.classList.add('used-today');
+                chip.title = 'আজি এই ৰাশি চোৱা হৈছে';
+            }
+        });
+    }
+
+    function lockRemainingChips() {
+        // Lock all chips except the already-used one
+        document.querySelectorAll('.quick-chip').forEach(chip => {
+            const rashi = chip.dataset.rashi;
+            if (!todayUsedRashis.includes(rashi)) {
+                chip.classList.add('locked');
+                // Add PRO badge if not already present
+                if (!chip.querySelector('.lock-badge')) {
+                    const badge = document.createElement('span');
+                    badge.className = 'lock-badge';
+                    badge.textContent = 'PRO';
+                    chip.appendChild(badge);
+                }
+            }
+        });
+    }
+
     function selectRashi(rashi) {
+        // For free users: if limit reached and this rashi not already viewed, show upgrade prompt
+        if (!hasFullAccess && todayCount >= 1 && !todayUsedRashis.includes(rashi)) {
+            showUpgradePrompt(rashi);
+            return;
+        }
+
         document.getElementById('rashiSelect').value = rashi;
         // Update quick grid selection
         document.querySelectorAll('.quick-chip').forEach(chip => {
@@ -346,9 +492,41 @@
         });
     }
 
+    function showUpgradePrompt(rashi) {
+        // Show upgrade overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'upgrade-overlay';
+        overlay.innerHTML = `
+            <div class="upgrade-modal">
+                <span class="upgrade-close" onclick="this.parentElement.parentElement.remove()">✕</span>
+                <div class="upgrade-icon">⭐</div>
+                <h3>প্ৰ\' ভাৰ্চনলৈ আপগ্ৰেড কৰক</h3>
+                <p>বিনামূলীয়া ব্যৱহাৰকাৰীয়ে দৈনিক মাত্ৰ <strong>এটা</strong> ৰাশিফলহে চাব পাৰে।</p>
+                <p>আপুনি আজিৰ বাবে আপোনাৰ সীমা শেষ কৰিছে।</p>
+                <p style="font-size:0.9rem;color:var(--orange);">সকলো ১২ ৰাশিৰ ৰাশিফল, দৈনিক-মাহেকীয়া-বছেৰেকীয়া, যিকোনো সময়ত চাওক!</p>
+                <button class="btn-upgrade" onclick="window.location.href='/subscription'">
+                    💳 প্ৰ\' ভাৰ্চনলৈ আপগ্ৰেড কৰক
+                </button>
+                <button class="btn-skip" onclick="this.parentElement.parentElement.remove()">
+                    পিছত সিদ্ধান্ত লম
+                </button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+    }
+
     // Sync dropdown with quick grid
     document.getElementById('rashiSelect').addEventListener('change', function() {
         const rashi = this.value;
+        if (!rashi) return;
+
+        // For free users: if limit reached and this rashi not already viewed, show upgrade prompt
+        if (!hasFullAccess && todayCount >= 1 && !todayUsedRashis.includes(rashi)) {
+            showUpgradePrompt(rashi);
+            this.value = '';
+            return;
+        }
+
         document.querySelectorAll('.quick-chip').forEach(chip => {
             chip.classList.toggle('selected', chip.dataset.rashi === rashi);
         });
@@ -360,6 +538,12 @@
 
         if (!rashi) {
             showError('অনুগ্ৰহ কৰি এটা ৰাশি বাছনি কৰক।');
+            return;
+        }
+
+        // For free users: if limit reached and this rashi not already viewed, show upgrade prompt
+        if (!hasFullAccess && todayCount >= 1 && !todayUsedRashis.includes(rashi)) {
+            showUpgradePrompt(rashi);
             return;
         }
 
@@ -384,8 +568,32 @@
                 document.getElementById('resultPeriod').textContent = periodLabels[period] || '';
                 document.getElementById('resultContent').innerHTML = formatRashifal(data.rashifal);
                 document.getElementById('resultCard').classList.add('show');
+
+                // Update tracking
+                if (!hasFullAccess) {
+                    todayCount = data.today_count || (todayCount + 1);
+                    if (!todayUsedRashis.includes(rashi)) {
+                        todayUsedRashis.push(rashi);
+                    }
+                    document.getElementById('rashifalCount').textContent = todayCount;
+                    // Mark chip as used
+                    const chip = document.getElementById('chip_' + rashi);
+                    if (chip) {
+                        chip.classList.add('used-today');
+                        chip.classList.remove('locked');
+                        const lockBadge = chip.querySelector('.lock-badge');
+                        if (lockBadge) lockBadge.remove();
+                    }
+                    // Lock all remaining chips
+                    lockRemainingChips();
+                }
+
                 // Scroll to result
                 document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else if (data.limit_reached || data.upgrade_needed) {
+                showUpgradePrompt(rashi);
+            } else if (data.require_login) {
+                window.location.href = '/login';
             } else {
                 showError(data.error || 'ৰাশিফল প্ৰস্তুত কৰিব নোৱাৰিলে। পুনৰ চেষ্টা কৰক।');
             }
@@ -411,6 +619,47 @@
         box.classList.add('show');
         box.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
+
+    // ─── Inactivity Auto-Logout (Free users: 1 minute) ────────
+    let lastActivityTime = Date.now();
+    let inactivityCheckInterval = null;
+
+    function resetActivityTimer() {
+        lastActivityTime = Date.now();
+    }
+
+    // Track all user interactions
+    ['click', 'mousemove', 'keydown', 'scroll', 'touchstart', 'touchend'].forEach(evt => {
+        document.addEventListener(evt, resetActivityTimer, { passive: true });
+    });
+
+    // Check inactivity every 10 seconds
+    inactivityCheckInterval = setInterval(async () => {
+        const inactiveSeconds = Math.floor((Date.now() - lastActivityTime) / 1000);
+
+        try {
+            const response = await fetch('/api/heartbeat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ last_activity: inactiveSeconds })
+            });
+
+            const data = await response.json();
+
+            if (data.auto_logout) {
+                clearInterval(inactivityCheckInterval);
+                alert(data.message || 'আপুনি বেছি সময় নিষ্ক্ৰিয় আছিল। চেচন বন্ধ কৰা হ\'ল।');
+                window.location.href = '/login';
+            }
+        } catch (err) {
+            // Network error - ignore
+        }
+    }, 10000);
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+        if (inactivityCheckInterval) clearInterval(inactivityCheckInterval);
+    });
 </script>
 
 </body>

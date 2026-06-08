@@ -56,10 +56,40 @@ from auth_module import (
     get_subscription_by_id
 )
 
+# ─── Activity Tracking imports ───
+from activity_tracker import (
+    log_page_visit, log_feature_usage, log_rashifal_usage,
+    get_user_rashifal_usage_today, get_user_rashifal_used_rashis_today,
+    get_admin_dashboard_stats, get_user_activity_detail,
+    get_all_users_activity_summary, get_special_topic_usage,
+    start_user_session, end_user_session, end_all_user_sessions,
+    can_free_user_login, get_today_session_count
+)
+
 # ─── Numerology imports ───
 from numerology_engine import get_full_numerology_report
 from numerology_pdf import generate_numerology_pdf
 from numerology_chat import chat_numerology, NUMEROLOGY_QUESTIONS
+
+# ─── Helper: Get user subscription badge info ───
+def get_user_sub_info(user_id=None):
+    """Get subscription name and is_pro flag for displaying Free/Pro badge."""
+    if user_id is None:
+        user_id = session.get('user_id', 0)
+    if not user_id:
+        return {'name_asm': 'অতিথি', 'is_pro': False, 'id': 0}
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    try:
+        row = conn.execute(
+            "SELECT s.name_asm, s.id FROM users u JOIN subscriptions s ON u.subscription_id = s.id WHERE u.id = ?",
+            (user_id,)
+        ).fetchone()
+        if row:
+            return {'name_asm': row['name_asm'], 'is_pro': row['id'] > 1, 'id': row['id']}
+        return {'name_asm': 'বিনামূলীয়া', 'is_pro': False, 'id': 1}
+    finally:
+        conn.close()
 
 app = Flask(__name__)
 app.secret_key = 'DhruvataraAI_2026_Secure_Secret_Key_8x7k9m2p'
@@ -1113,7 +1143,8 @@ def calculate():
                            user_features=get_user_features(session.get('user_id', 0)),
                            user_subscription_name=user_subscription_name,
                            user_subscription_id=user_subscription_id,
-                           all_subscriptions=all_subscriptions)
+                           all_subscriptions=all_subscriptions,
+                           user_sub_info=get_user_sub_info(session.get('user_id', 0)))
 
 @app.route("/download-pdf", methods=["POST"])
 def download_pdf():
@@ -2268,9 +2299,24 @@ def login_post():
     success, message, user_data = login_user(email, password, ip)
 
     if success:
+        # Check free user session limit (max 3 sessions/day)
+        sub_id = user_data.get('subscription_id', 1)
+        can_login, limit_msg = can_free_user_login(user_data['id'], sub_id)
+        if not can_login:
+            flash(limit_msg, 'error')
+            return redirect(url_for('login_page'))
+
         session['user_id'] = user_data['id']
         session['user_name'] = user_data['name']
         session['user_email'] = user_data['email']
+        session['subscription_id'] = sub_id
+        session['login_time'] = datetime.now().isoformat()
+
+        # Start session tracking
+        start_user_session(user_data['id'])
+
+        # Log login activity
+        log_page_visit(user_data['id'], 'login', 'লগইন', '/login', ip)
         flash(message, 'success')
         return redirect(url_for('user_dashboard'))
     else:
@@ -2369,9 +2415,87 @@ def resend_otp_post():
 @app.route("/logout")
 def logout():
     """Logout user or admin."""
+    if 'user_id' in session:
+        end_all_user_sessions(session['user_id'])
     session.clear()
     flash("আপুনি লগআউট কৰিছে।", 'info')
     return redirect(url_for('login_page'))
+
+
+# ═══════════════════════════════════════════
+#  HEARTBEAT & INACTIVITY TRACKING
+# ═══════════════════════════════════════════
+
+@app.route("/api/heartbeat", methods=["POST"])
+def api_heartbeat():
+    """Heartbeat endpoint to track user activity. Returns auto-logout signal if inactive > 1 min."""
+    if 'user_id' not in session:
+        return jsonify({"logged_in": False, "auto_logout": True}), 401
+
+    user_id = session['user_id']
+    data = request.get_json(silent=True) or {}
+    last_activity = data.get('last_activity', 0)  # seconds since last activity
+
+    # If inactive for more than 60 seconds, signal auto-logout for free users
+    sub_id = session.get('subscription_id', 1)
+    if sub_id == 1 and last_activity > 60:
+        end_all_user_sessions(user_id)
+        session.clear()
+        return jsonify({
+            "logged_in": False,
+            "auto_logout": True,
+            "message": "আপুনি ১ মিনিটতকৈ বেছি সময় নিষ্ক্ৰিয় আছিল। বিনামূলীয়া ব্যৱহাৰকাৰীৰ বাবে চেচন স্বয়ংক্ৰিয়ভাৱে বন্ধ কৰা হ'ল।"
+        })
+
+    return jsonify({"logged_in": True, "auto_logout": False})
+
+
+# ═══════════════════════════════════════════
+#  SUBSCRIPTION / UPGRADE PAGE
+# ═══════════════════════════════════════════
+
+@app.route("/subscription")
+def subscription_page():
+    """Subscription/upgrade page showing all plans."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+
+    # Get all subscriptions
+    subs = conn.execute("SELECT * FROM subscriptions WHERE is_active = 1 ORDER BY id").fetchall()
+    all_subscriptions = [dict(s) for s in subs]
+
+    # Get user info if logged in
+    user_subscription_name = "বিনামূলীয়া"
+    user_subscription_id = 1
+    if session.get('user_id'):
+        row = conn.execute(
+            "SELECT s.name_asm, s.id FROM users u JOIN subscriptions s ON u.subscription_id = s.id WHERE u.id = ?",
+            (session['user_id'],)
+        ).fetchone()
+        if row:
+            user_subscription_name = row['name_asm']
+            user_subscription_id = row['id']
+
+    # Get subscription features for each plan
+    sub_features = {}
+    for sub in all_subscriptions:
+        features = conn.execute('''
+            SELECT fd.feature_name_asm, fd.feature_key
+            FROM subscription_features sf
+            JOIN feature_definitions fd ON sf.feature_key = fd.feature_key
+            WHERE sf.subscription_id = ? AND sf.enabled = 1
+            ORDER BY fd.display_order
+        ''', (sub['id'],)).fetchall()
+        sub_features[sub['id']] = [dict(f) for f in features]
+
+    conn.close()
+
+    return render_template("subscription.html",
+                           all_subscriptions=all_subscriptions,
+                           user_subscription_name=user_subscription_name,
+                           user_subscription_id=user_subscription_id,
+                           sub_features=sub_features,
+                           user_sub_info=get_user_sub_info(session.get('user_id', 0)))
 
 
 # ═══════════════════════════════════════════
@@ -2403,6 +2527,9 @@ def user_dashboard():
 
     conn.close()
 
+    # Log dashboard visit
+    log_page_visit(session['user_id'], 'dashboard', 'ডেশ্ববৰ্ড', '/dashboard')
+
     feature_icons = {
         "kundli_calculate": "🔮", "varga_charts": "📊", "panchanga": "🕉️",
         "dosha_analysis": "⚠️", "yoga_analysis": "✨", "dasha": "⏳",
@@ -2416,7 +2543,8 @@ def user_dashboard():
     return render_template("user_dashboard.html",
                            user=dict(user), subscription=subscription,
                            user_features=user_features, feature_defs=feature_defs,
-                           feature_icons=feature_icons)
+                           feature_icons=feature_icons,
+                           user_sub_info=get_user_sub_info(session['user_id']))
 
 
 @app.route("/kundli")
@@ -2443,7 +2571,8 @@ def kundli_page():
 
     return render_template("index.html", places=places, timezones=timezones,
                            user_features=user_features, feature_defs=feature_defs,
-                           panchanga=panchanga)
+                           panchanga=panchanga,
+                           user_sub_info=get_user_sub_info(session['user_id']))
 
 
 # ═══════════════════════════════════════════
@@ -2452,13 +2581,35 @@ def kundli_page():
 
 @app.route("/rashifal")
 def rashifal_page():
-    """Rashifal (horoscope) page — daily, monthly, yearly. Public access."""
-    return render_template("rashifal.html")
+    """Rashifal (horoscope) page — login required. Free users get 1 per day."""
+    if 'user_id' not in session:
+        flash("ৰাশিফল চাবলৈ প্ৰথমে লগইন কৰক।", 'error')
+        return redirect(url_for('login_page'))
+
+    user_id = session['user_id']
+    # Check if user has rashi_phala feature access (paid users)
+    has_full_access = check_feature_access(user_id, 'rashi_phala')
+
+    # Get today's usage for free users
+    today_used_rashis = []
+    today_count = 0
+    if not has_full_access:
+        today_count = get_user_rashifal_usage_today(user_id)
+        today_used_rashis = get_user_rashifal_used_rashis_today(user_id)
+
+    # Log page visit
+    log_page_visit(user_id, 'rashifal', 'ৰাশিফল', '/rashifal')
+
+    return render_template("rashifal.html",
+                           has_full_access=has_full_access,
+                           today_count=today_count,
+                           today_used_rashis=today_used_rashis,
+                           user_sub_info=get_user_sub_info(user_id))
 
 
 @app.route("/api/rashifal", methods=["POST"])
 def api_rashifal():
-    """API endpoint to generate rashifal using Ollama AI."""
+    """API endpoint to generate rashifal using Ollama AI. With access control."""
     data = request.get_json()
     rashi = data.get("rashi", "").strip()
     period = data.get("period", "daily").strip()
@@ -2469,9 +2620,40 @@ def api_rashifal():
     if period not in ("daily", "monthly", "yearly"):
         return jsonify({"success": False, "error": "অবৈধ সময়সীমা।"}), 400
 
+    # Access control: login required
+    if 'user_id' not in session:
+        return jsonify({"success": False, "error": "ৰাশিফল চাবলৈ প্ৰথমে লগইন কৰক।", "require_login": True}), 401
+
+    user_id = session['user_id']
+    has_full_access = check_feature_access(user_id, 'rashi_phala')
+
+    # Free user: only 1 rashi per day
+    if not has_full_access:
+        today_count = get_user_rashifal_usage_today(user_id)
+        today_used = get_user_rashifal_used_rashis_today(user_id)
+
+        if today_count >= 1 and rashi not in today_used:
+            return jsonify({
+                "success": False,
+                "error": "বিনামূলীয়া ব্যৱহাৰকাৰীয়ে দৈনিক মাত্ৰ এটা ৰাশিফলহে চাব পাৰে। অধিক ৰাশিফলৰ বাবে প্ৰ' ভাৰ্চনলৈ আপগ্ৰেড কৰক।",
+                "limit_reached": True,
+                "upgrade_needed": True
+            }), 403
+
     try:
         rashifal_text = generate_rashifal(rashi, period)
-        return jsonify({"success": True, "rashifal": rashifal_text})
+
+        # Log usage
+        log_rashifal_usage(user_id, rashi, period)
+        log_feature_usage(user_id, 'rashifal_view', f'{rashi} ৰাশিফল ({period})',
+                          f'Viewed {rashi} rashifal ({period})')
+
+        return jsonify({
+            "success": True,
+            "rashifal": rashifal_text,
+            "has_full_access": has_full_access,
+            "today_count": get_user_rashifal_usage_today(user_id) if not has_full_access else 0
+        })
     except Exception as e:
         logger.error(f"Rashifal generation error: {e}")
         return jsonify({"success": False, "error": "ৰাশিফল প্ৰস্তুত কৰিব নোৱাৰিলে। পিছত পুনৰ চেষ্টা কৰক।"}), 500
@@ -2622,7 +2804,7 @@ def admin_api_toggle_active(user_id):
 @app.route("/admin/api/user/<int:user_id>/subscription", methods=["POST"])
 @admin_required
 def admin_api_set_subscription(user_id):
-    """API: Set user subscription."""
+    """API: Set user subscription. Auto-manages feature overrides."""
     data = request.get_json()
     sub_id = data.get("subscription_id", 1)
 
@@ -2633,6 +2815,26 @@ def admin_api_set_subscription(user_id):
 
     duration = sub['duration_days'] if sub else None
     success, message = admin_set_user_subscription(user_id, sub_id, duration)
+
+    if success:
+        # Auto-manage feature overrides based on new subscription
+        if sub_id == 1:
+            # Free user: remove rashi_phala and PDF feature overrides
+            admin_remove_user_feature_override(user_id, 'rashi_phala')
+            for feat in ['pdf_report', 'custom_pdf', 'patrika_pdf', 'pratyantar_dasha_pdf']:
+                admin_remove_user_feature_override(user_id, feat)
+        else:
+            # Pro user: remove ALL overrides so they get full subscription features
+            conn2 = sqlite3.connect(DB_PATH)
+            try:
+                conn2.execute(
+                    "DELETE FROM user_feature_overrides WHERE user_id = ?",
+                    (user_id,)
+                )
+                conn2.commit()
+            finally:
+                conn2.close()
+
     return jsonify({"success": success, "message": message})
 
 
@@ -2872,6 +3074,46 @@ def admin_api_toggle_sub_feature(sub_id):
 
 
 # ═══════════════════════════════════════════
+#  ADMIN ANALYTICS & ACTIVITY TRACKING ROUTES
+# ═══════════════════════════════════════════
+
+@app.route("/admin/api/analytics/dashboard")
+@admin_required
+def admin_api_analytics_dashboard():
+    """API: Get comprehensive analytics dashboard data."""
+    stats = get_admin_dashboard_stats()
+    special_topics = get_special_topic_usage()
+    stats['special_topics'] = special_topics
+    return jsonify(stats)
+
+
+@app.route("/admin/api/analytics/users-summary")
+@admin_required
+def admin_api_users_summary():
+    """API: Get activity summary for all users."""
+    users = get_all_users_activity_summary()
+    return jsonify(users)
+
+
+@app.route("/admin/api/analytics/user/<int:user_id>")
+@admin_required
+def admin_api_user_analytics(user_id):
+    """API: Get detailed analytics for a specific user."""
+    detail = get_user_activity_detail(user_id)
+    if not detail:
+        return jsonify({"error": "ব্যৱহাৰকাৰী পোৱা নগল"}), 404
+    return jsonify(detail)
+
+
+@app.route("/admin/api/analytics/special-topics")
+@admin_required
+def admin_api_special_topics():
+    """API: Get special topic usage stats."""
+    topics = get_special_topic_usage()
+    return jsonify(topics)
+
+
+# ═══════════════════════════════════════════
 #  SAVED KUNDLIS ROUTES (Save & Search)
 # ═══════════════════════════════════════════
 
@@ -3087,7 +3329,8 @@ def chat_page():
     return render_template("chat.html",
                            predefined_questions=PREDEFINED_QUESTIONS,
                            kundli_data=kundli_data,
-                           user_features=get_user_features(session.get('user_id', 0)))
+                           user_features=get_user_features(session.get('user_id', 0)),
+                           user_sub_info=get_user_sub_info(session.get('user_id', 0)))
 
 
 @app.route("/api/chat", methods=["POST"])
@@ -3196,7 +3439,8 @@ def numerology_page():
                            user_features=user_features,
                            feature_defs=feature_defs,
                            admin_toggles=admin_toggles,
-                           user_name=session.get('user_name', ''))
+                           user_name=session.get('user_name', ''),
+                           user_sub_info=get_user_sub_info(session['user_id']))
 
 
 @app.route("/numerology/calculate", methods=["POST"])
@@ -3289,7 +3533,8 @@ def numerology_chat_page():
 
     return render_template("numerology_chat.html",
                            questions=NUMEROLOGY_QUESTIONS,
-                           user_features=get_user_features(session.get('user_id', 0)))
+                           user_features=get_user_features(session.get('user_id', 0)),
+                           user_sub_info=get_user_sub_info(session.get('user_id', 0)))
 
 
 @app.route("/api/numerology/chat", methods=["POST"])
@@ -3576,7 +3821,8 @@ def jotok_milan_page():
                            user_features=user_features,
                            feature_defs=feature_defs,
                            rashis=RASHIS,
-                           nakshatras=NAKSHATRAS)
+                           nakshatras=NAKSHATRAS,
+                           user_sub_info=get_user_sub_info(session.get('user_id', 0)))
 
 
 @app.route("/jotok-milan/calculate", methods=["POST"])
@@ -3666,7 +3912,8 @@ def jotok_milan_calculate():
                                user_subscription_name=user_subscription_name,
                                user_subscription_id=user_subscription_id,
                                all_subscriptions=all_subscriptions,
-                               can_download_pdf=can_download_pdf)
+                               can_download_pdf=can_download_pdf,
+                               user_sub_info=get_user_sub_info(session.get('user_id', 0)))
 
     except Exception as e:
         logger.error(f"Jotok Milan calculation error: {e}")

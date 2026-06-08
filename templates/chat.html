@@ -46,6 +46,20 @@
         }
         .btn-outline { background: white; color: var(--orange); border: 2px solid var(--orange); }
         .btn-outline:hover { background: var(--orange); color: white; }
+
+        /* Free/Pro Badge */
+        .user-plan-badge {
+            display: inline-block; padding: 4px 12px; border-radius: 14px;
+            font-size: 0.72rem; font-weight: 700; letter-spacing: 0.5px;
+        }
+        .user-plan-badge.pro {
+            background: linear-gradient(135deg, var(--orange), var(--gold));
+            color: white; box-shadow: 0 2px 8px rgba(255,102,0,0.3);
+        }
+        .user-plan-badge.free {
+            background: #E0E0E0; color: #666;
+            border: 1px solid #ccc;
+        }
         .btn-fill { background: var(--orange); color: white; }
         .btn-fill:hover { background: var(--orange-dark); transform: translateY(-1px); }
 
@@ -174,6 +188,11 @@
 <nav class="top-nav">
     <div class="brand">🌟 ধ্ৰুৱতৰা<span> AI</span></div>
     <div class="nav-actions">
+        {% if user_sub_info %}
+        <span class="user-plan-badge {% if user_sub_info.is_pro %}pro{% else %}free{% endif %}">
+            {% if user_sub_info.is_pro %}⭐ PRO{% else %}🆓 FREE{% endif %}
+        </span>
+        {% endif %}
         <a href="/" class="btn-sm btn-outline">🏠 হোম</a>
         <a href="/dashboard" class="btn-sm btn-outline">📊 ডেশ্ববৰ্ড</a>
     </div>

@@ -228,6 +228,9 @@
         <button class="nav-item" onclick="showSection('numerology')">
             <span class="icon">🔢</span> অংক জ্যোতিষ
         </button>
+        <button class="nav-item" onclick="showSection('analytics')">
+            <span class="icon">📈</span> এনালাইটিক্স
+        </button>
         <a href="/admin/logout" class="nav-item">
             <span class="icon">🚪</span> লগআউট
         </a>
@@ -565,6 +568,81 @@
                 </div>
             </div>
         </div>
+
+        <!-- Analytics Section -->
+        <div id="section-analytics" class="section">
+            <!-- Stats Cards -->
+            <div class="stats-row" id="analyticsStats">
+                <div class="stat-card">
+                    <div class="stat-num" id="statTodayLogins">-</div>
+                    <div class="stat-label">আজিৰ লগইন</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num" id="statTodayActive">-</div>
+                    <div class="stat-label">আজি সক্ৰিয় ব্যৱহাৰকাৰী</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num" id="statTodayVisits">-</div>
+                    <div class="stat-label">আজিৰ পেজ ভিজিট</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num" id="statTodayRashifal">-</div>
+                    <div class="stat-label">আজিৰ ৰাশিফল ভিউ</div>
+                </div>
+            </div>
+
+            <!-- Special Topics Usage -->
+            <div class="card">
+                <h3>🎯 বিশেষ টপিক ব্যৱহাৰ</h3>
+                <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:16px;">
+                    ৰাশিফল, জ্যোতিষ বিচাৰ, অংক জ্যোতিষ, বৈদিক জ্যোতিষ, AI চেটিং আদিৰ ব্যৱহাৰৰ পৰিসংখ্যা।
+                </p>
+                <div id="specialTopicsContainer" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
+                    <p>লোড হৈ আছে...</p>
+                </div>
+            </div>
+
+            <!-- Feature Usage -->
+            <div class="card">
+                <h3>⚡ ফিচাৰ ব্যৱহাৰ (শীৰ্ষ ১০)</h3>
+                <div id="featureUsageContainer">
+                    <p>লোড হৈ আছে...</p>
+                </div>
+            </div>
+
+            <!-- Page Visits -->
+            <div class="card">
+                <h3>📄 পেজ ভিজিট</h3>
+                <div id="pageVisitsContainer">
+                    <p>লোড হৈ আছে...</p>
+                </div>
+            </div>
+
+            <!-- All Users Activity Summary -->
+            <div class="card">
+                <h3>👥 সকলো ব্যৱহাৰকাৰীৰ কাৰ্যকলাপ</h3>
+                <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:16px;">
+                    প্ৰতিজন ব্যৱহাৰকাৰীৰ লগইন, পেজ ভিজিট, ফিচাৰ ব্যৱহাৰ, আৰু ৰাশিফল ভিউৰ সাৰাংশ।
+                </p>
+                <input type="text" class="search-box" id="analyticsUserSearch" placeholder="🔍 নাম বা ইমেইলেৰে সন্ধান কৰক..." oninput="filterAnalyticsUsers()">
+                <div style="overflow-x:auto;">
+                    <table id="analyticsUsersTable">
+                        <thead>
+                            <tr>
+                                <th>নাম</th><th>ইমেইল</th><th>চাবস্ক্ৰিপশ্যন</th>
+                                <th>মুঠ লগইন</th><th>শেষ লগইন</th>
+                                <th>পেজ ভিজিট</th><th>ফিচাৰ ব্যৱহাৰ</th>
+                                <th>ৰাশিফল ভিউ</th><th>আজিৰ ৰাশিফল</th>
+                                <th>একচন</th>
+                            </tr>
+                        </thead>
+                        <tbody id="analyticsUsersBody">
+                            <tr><td colspan="10">লোড হৈ আছে...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </main>
 </div>
 
@@ -605,8 +683,9 @@
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         document.getElementById('section-' + name).classList.add('active');
         document.querySelector(`[onclick="showSection('${name}')"]`).classList.add('active');
-        const titles = {dashboard:'📊 ডেশ্ববৰ্ড', users:'👥 ব্যৱহাৰকাৰীসকল', subscriptions:'💳 চাবস্ক্ৰিপশ্যন', features:'⚙️ ফিচাৰ ব্যৱস্থাপনা', images:'🖼️ ফটো ব্যৱস্থাপনা', astrologer:'🔮 জ্যোতিষীৰ বিৱৰণ', numerology:'🔢 অংক জ্যোতিষ'};
+        const titles = {dashboard:'📊 ডেশ্ববৰ্ড', users:'👥 ব্যৱহাৰকাৰীসকল', subscriptions:'💳 চাবস্ক্ৰিপশ্যন', features:'⚙️ ফিচাৰ ব্যৱস্থাপনা', images:'🖼️ ফটো ব্যৱস্থাপনা', astrologer:'🔮 জ্যোতিষীৰ বিৱৰণ', numerology:'🔢 অংক জ্যোতিষ', analytics:'📈 এনালাইটিক্স'};
         document.getElementById('pageTitle').textContent = titles[name] || '';
+        if (name === 'analytics') loadAnalytics();
     }
 
     function filterUsers() {
@@ -1179,6 +1258,222 @@
             if (!data.success) alert(data.message);
         })
         .catch(err => alert('ত্ৰুটি: ' + err));
+    }
+
+    // ─── Analytics Functions ───
+
+    function loadAnalytics() {
+        loadAnalyticsDashboard();
+        loadUsersSummary();
+    }
+
+    function loadAnalyticsDashboard() {
+        fetch('/admin/api/analytics/dashboard')
+            .then(r => r.json())
+            .then(data => {
+                // Update stat cards
+                document.getElementById('statTodayLogins').textContent = data.today_logins || 0;
+                document.getElementById('statTodayActive').textContent = data.today_active || 0;
+                document.getElementById('statTodayVisits').textContent = data.today_visits || 0;
+                document.getElementById('statTodayRashifal').textContent = data.today_rashifal || 0;
+
+                // Special topics
+                if (data.special_topics) {
+                    let topicsHtml = '';
+                    const topicIcons = {
+                        'rashifal': '⭐', 'kundli': '🔮', 'numerology': '🔢',
+                        'vedic': '🕉️', 'ai_chat': '🤖'
+                    };
+                    for (const [key, val] of Object.entries(data.special_topics)) {
+                        topicsHtml += `
+                        <div style="background:white;border-radius:10px;padding:16px;border:1px solid var(--border);text-align:center;">
+                            <div style="font-size:2rem;">${topicIcons[key] || '📊'}</div>
+                            <div style="font-weight:700;font-size:0.9rem;margin-top:4px;">${val.name}</div>
+                            <div style="font-size:1.5rem;font-weight:800;color:var(--orange);">${val.total_uses}</div>
+                            <div style="font-size:0.7rem;color:var(--text-light);">মুঠ ব্যৱহাৰ</div>
+                        </div>`;
+                    }
+                    document.getElementById('specialTopicsContainer').innerHTML = topicsHtml;
+                }
+
+                // Feature usage
+                if (data.feature_usage && data.feature_usage.length > 0) {
+                    let html = '<table><thead><tr><th>ফিচাৰ</th><th>ব্যৱহাৰ সংখ্যা</th></tr></thead><tbody>';
+                    data.feature_usage.forEach(f => {
+                        html += `<tr><td>${f.activity_name_asm}</td><td><strong>${f.cnt}</strong></td></tr>`;
+                    });
+                    html += '</tbody></table>';
+                    document.getElementById('featureUsageContainer').innerHTML = html;
+                } else {
+                    document.getElementById('featureUsageContainer').innerHTML = '<p style="color:var(--text-light);">কোনো ফিচাৰ ব্যৱহাৰৰ তথ্য নাই।</p>';
+                }
+
+                // Page visits
+                if (data.page_visits && data.page_visits.length > 0) {
+                    let html = '<table><thead><tr><th>পেজ</th><th>ভিজিট সংখ্যা</th></tr></thead><tbody>';
+                    data.page_visits.forEach(p => {
+                        html += `<tr><td>${p.activity_name_asm}</td><td><strong>${p.cnt}</strong></td></tr>`;
+                    });
+                    html += '</tbody></table>';
+                    document.getElementById('pageVisitsContainer').innerHTML = html;
+                } else {
+                    document.getElementById('pageVisitsContainer').innerHTML = '<p style="color:var(--text-light);">কোনো পেজ ভিজিটৰ তথ্য নাই।</p>';
+                }
+            })
+            .catch(e => {
+                console.error('Analytics load error:', e);
+            });
+    }
+
+    function loadUsersSummary() {
+        fetch('/admin/api/analytics/users-summary')
+            .then(r => r.json())
+            .then(users => {
+                let html = '';
+                users.forEach(u => {
+                    const lastLogin = u.last_login ? u.last_login.substring(0, 16) : 'কেতিয়াও নহয়';
+                    html += `
+                    <tr data-search="${u.name} ${u.email}">
+                        <td><strong>${u.name}</strong></td>
+                        <td>${u.email}</td>
+                        <td>${u.subscription_name || 'বিনামূলীয়া'}</td>
+                        <td>${u.total_logins || 0}</td>
+                        <td style="font-size:0.75rem;">${lastLogin}</td>
+                        <td>${u.total_page_visits || 0}</td>
+                        <td>${u.total_feature_uses || 0}</td>
+                        <td>${u.total_rashifal_views || 0}</td>
+                        <td><strong style="color:var(--orange);">${u.today_rashifal_views || 0}</strong></td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="openUserAnalytics(${u.id})">📊 সবিশেষ</button>
+                        </td>
+                    </tr>`;
+                });
+                document.getElementById('analyticsUsersBody').innerHTML = html || '<tr><td colspan="10">কোনো ব্যৱহাৰকাৰী নাই।</td></tr>';
+            })
+            .catch(e => {
+                document.getElementById('analyticsUsersBody').innerHTML = '<tr><td colspan="10">লোড কৰাত বিফল।</td></tr>';
+            });
+    }
+
+    function filterAnalyticsUsers() {
+        const q = document.getElementById('analyticsUserSearch').value.toLowerCase();
+        document.querySelectorAll('#analyticsUsersBody tr').forEach(row => {
+            if (row.dataset.search) {
+                row.style.display = row.dataset.search.toLowerCase().includes(q) ? '' : 'none';
+            }
+        });
+    }
+
+    function openUserAnalytics(userId) {
+        document.getElementById('userModal').classList.add('show');
+        document.getElementById('userModalContent').innerHTML = '<p style="text-align:center;padding:20px;">লোড হৈ আছে...</p>';
+
+        fetch('/admin/api/analytics/user/' + userId)
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('userModalContent').innerHTML = '<p style="color:red;">' + data.error + '</p>';
+                    return;
+                }
+                renderUserAnalytics(data);
+            })
+            .catch(e => {
+                document.getElementById('userModalContent').innerHTML = '<p style="color:red;">ত্ৰুটি: ' + e + '</p>';
+            });
+    }
+
+    function renderUserAnalytics(data) {
+        const u = data.user;
+        let html = `
+            <div style="margin-bottom:16px;">
+                <strong>নাম:</strong> ${u.name}<br>
+                <strong>ইমেইল:</strong> ${u.email}<br>
+                <strong>চাবস্ক্ৰিপশ্যন:</strong> ${u.subscription_name || 'বিনামূলীয়া'}<br>
+                <strong>স্থিতি:</strong> ${u.is_active ? '✅ সক্ৰিয়' : '❌ নিষ্ক্ৰিয়'}<br>
+                <strong>যোগদান:</strong> ${(u.created_at || '').substring(0, 10)}<br>
+            </div>
+
+            <h4 style="margin-bottom:8px;">📊 দৈনিক কাৰ্যকলাপ (শেষ ৩০ দিন)</h4>
+            <div style="overflow-x:auto;margin-bottom:16px;">
+                <table style="font-size:0.75rem;">
+                    <thead><tr><th>তাৰিখ</th><th>পেজ ভিজিট</th><th>ফিচাৰ ব্যৱহাৰ</th></tr></thead>
+                    <tbody>`;
+
+        if (data.daily_summary && data.daily_summary.length > 0) {
+            data.daily_summary.forEach(d => {
+                html += `<tr><td>${d.day}</td><td>${d.page_visits}</td><td>${d.feature_uses}</td></tr>`;
+            });
+        } else {
+            html += '<tr><td colspan="3">কোনো তথ্য নাই।</td></tr>';
+        }
+
+        html += `</tbody></table></div>
+
+            <h4 style="margin-bottom:8px;">⭐ ৰাশিফল ব্যৱহাৰ</h4>
+            <div style="overflow-x:auto;margin-bottom:16px;">
+                <table style="font-size:0.75rem;">
+                    <thead><tr><th>ৰাশি</th><th>সময়সীমা</th><th>তাৰিখ</th></tr></thead>
+                    <tbody>`;
+
+        if (data.rashifal_usage && data.rashifal_usage.length > 0) {
+            data.rashifal_usage.forEach(r => {
+                html += `<tr><td>${r.rashi_name}</td><td>${r.period}</td><td>${r.usage_date}</td></tr>`;
+            });
+        } else {
+            html += '<tr><td colspan="3">কোনো ৰাশিফল ব্যৱহাৰ নাই।</td></tr>';
+        }
+
+        html += `</tbody></table></div>
+
+            <h4 style="margin-bottom:8px;">📄 পেজ ভিজিট</h4>
+            <div style="overflow-x:auto;margin-bottom:16px;">
+                <table style="font-size:0.75rem;">
+                    <thead><tr><th>পেজ</th><th>ভিজিট</th><th>শেষ ভিজিট</th></tr></thead>
+                    <tbody>`;
+
+        if (data.page_visits && data.page_visits.length > 0) {
+            data.page_visits.forEach(p => {
+                html += `<tr><td>${p.activity_name_asm}</td><td>${p.visit_count}</td><td>${(p.last_visit || '').substring(0, 16)}</td></tr>`;
+            });
+        } else {
+            html += '<tr><td colspan="3">কোনো পেজ ভিজিট নাই।</td></tr>';
+        }
+
+        html += `</tbody></table></div>
+
+            <h4 style="margin-bottom:8px;">⚡ ফিচাৰ ব্যৱহাৰ</h4>
+            <div style="overflow-x:auto;margin-bottom:16px;">
+                <table style="font-size:0.75rem;">
+                    <thead><tr><th>ফিচাৰ</th><th>ব্যৱহাৰ</th><th>শেষ ব্যৱহাৰ</th></tr></thead>
+                    <tbody>`;
+
+        if (data.features_used && data.features_used.length > 0) {
+            data.features_used.forEach(f => {
+                html += `<tr><td>${f.activity_name_asm}</td><td>${f.usage_count}</td><td>${(f.last_used || '').substring(0, 16)}</td></tr>`;
+            });
+        } else {
+            html += '<tr><td colspan="3">কোনো ফিচাৰ ব্যৱহাৰ নাই।</td></tr>';
+        }
+
+        html += `</tbody></table></div>
+
+            <h4 style="margin-bottom:8px;">🔑 লগইন ইতিহাস (শেষ ৫০)</h4>
+            <div style="overflow-x:auto;">
+                <table style="font-size:0.7rem;">
+                    <thead><tr><th>সময়</th><th>IP</th><th>সফল</th></tr></thead>
+                    <tbody>`;
+
+        if (data.logins && data.logins.length > 0) {
+            data.logins.slice(0, 20).forEach(l => {
+                html += `<tr><td>${(l.login_time || '').substring(0, 16)}</td><td>${l.ip_address || '-'}</td><td>${l.success ? '✅' : '❌'}</td></tr>`;
+            });
+        } else {
+            html += '<tr><td colspan="3">কোনো লগইন তথ্য নাই।</td></tr>';
+        }
+
+        html += '</tbody></table></div>';
+
+        document.getElementById('userModalContent').innerHTML = html;
     }
 </script>
 </body>

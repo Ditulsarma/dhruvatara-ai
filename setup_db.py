@@ -227,6 +227,52 @@ def setup_database():
         )
     ''')
 
+    # ─── User Activity Tracking ───
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_activity (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            activity_type TEXT NOT NULL,
+            activity_name TEXT NOT NULL,
+            activity_name_asm TEXT NOT NULL,
+            page_url TEXT,
+            ip_address TEXT,
+            session_start TIMESTAMP,
+            session_end TIMESTAMP,
+            duration_seconds INTEGER DEFAULT 0,
+            details TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+
+    # ─── User Daily RashiPhal Tracking ───
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_rashifal_usage (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            rashi_name TEXT NOT NULL,
+            period TEXT NOT NULL,
+            usage_date DATE NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            UNIQUE(user_id, rashi_name, usage_date)
+        )
+    ''')
+
+    # ─── User Daily Session Tracking (free users: max 3 sessions/day) ───
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            session_date DATE NOT NULL,
+            login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            logout_time TIMESTAMP,
+            is_active INTEGER DEFAULT 1,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+
     # ─── Insert default admin astrologer profile (user_id=0 for admin fallback) ───
     cursor.execute('''
         INSERT OR IGNORE INTO astrologer_profiles (user_id, institution_name, astrologer_name, astrologer_bio, address, mobile)
@@ -321,10 +367,12 @@ def setup_database():
     all_features = [
         "kundli_calculate", "varga_charts", "panchanga", "dosha_analysis",
         "yoga_analysis", "dasha", "ai_interpretation", "nakshatra_phala",
-        "lagna_phala", "rashi_phala", "sannari_chakra", "navatara_chakra",
+        "lagna_phala", "sannari_chakra", "navatara_chakra",
         "tripap_rista"
     ]
-    # PDF features are disabled by default for all plans
+    # rashi_phala is separate: disabled for free, enabled for paid
+    rashi_phala_feature = "rashi_phala"
+    # PDF features: disabled for free, enabled for paid plans
     pdf_features = ["pdf_report", "custom_pdf", "patrika_pdf", "pratyantar_dasha_pdf"]
 
     # All subscriptions get all non-PDF features enabled
@@ -334,12 +382,19 @@ def setup_database():
                 INSERT OR IGNORE INTO subscription_features (subscription_id, feature_key, enabled)
                 VALUES (?, ?, 1)
             ''', (sub_id, feat_key))
-        # PDF features are disabled by default
+        # PDF features: enabled for paid plans (2,3,4), disabled for free (1)
         for feat_key in pdf_features:
+            pdf_enabled = 0 if sub_id == 1 else 1
             cursor.execute('''
                 INSERT OR IGNORE INTO subscription_features (subscription_id, feature_key, enabled)
-                VALUES (?, ?, 0)
-            ''', (sub_id, feat_key))
+                VALUES (?, ?, ?)
+            ''', (sub_id, feat_key, pdf_enabled))
+        # rashi_phala: enabled for paid plans (2,3,4), disabled for free (1)
+        rashi_enabled = 0 if sub_id == 1 else 1
+        cursor.execute('''
+            INSERT OR IGNORE INTO subscription_features (subscription_id, feature_key, enabled)
+            VALUES (?, ?, ?)
+        ''', (sub_id, rashi_phala_feature, rashi_enabled))
 
     # ─── Numerology features: all plans get basic access ───
     numer_features = ["numerology", "numerology_chat"]
@@ -379,11 +434,56 @@ def setup_database():
 
     conn.commit()
     conn.close()
+
+    # ─── Cleanup: Remove rashi_phala overrides for free users ───
+    _cleanup_free_user_rashifal()
+
     print("✅ Database setup complete!")
     print(f"   Admin: DitulSarma")
     print(f"   4 Subscription plans created")
     print(f"   15 Feature definitions created")
     print(f"   {location_count} Locations added")
+
+
+def _cleanup_free_user_rashifal():
+    """Remove any rashi_phala feature overrides from free users (subscription_id=1).
+    Also remove ALL overrides from Pro users so they get full subscription features.
+    Also fix subscription_features table for rashi_phala and PDF features."""
+    conn = sqlite3.connect(DB_PATH)
+    try:
+        # Fix subscription_features: ensure rashi_phala is OFF for free, ON for paid
+        conn.execute("UPDATE subscription_features SET enabled = 0 WHERE subscription_id = 1 AND feature_key = 'rashi_phala'")
+        conn.execute("UPDATE subscription_features SET enabled = 1 WHERE subscription_id IN (2,3,4) AND feature_key = 'rashi_phala'")
+
+        # Fix PDF features: OFF for free, ON for paid
+        pdf_features = ["pdf_report", "custom_pdf", "patrika_pdf", "pratyantar_dasha_pdf"]
+        for feat in pdf_features:
+            conn.execute(f"UPDATE subscription_features SET enabled = 0 WHERE subscription_id = 1 AND feature_key = '{feat}'")
+            conn.execute(f"UPDATE subscription_features SET enabled = 1 WHERE subscription_id IN (2,3,4) AND feature_key = '{feat}'")
+
+        # Remove rashi_phala overrides from free users
+        conn.execute('''
+            DELETE FROM user_feature_overrides
+            WHERE feature_key = 'rashi_phala'
+            AND user_id IN (SELECT id FROM users WHERE subscription_id = 1)
+        ''')
+        free_cleaned = conn.total_changes
+
+        # Remove ALL overrides from Pro users (subscription_id > 1)
+        # so they automatically get all features from their subscription plan
+        conn.execute('''
+            DELETE FROM user_feature_overrides
+            WHERE user_id IN (SELECT id FROM users WHERE subscription_id > 1)
+        ''')
+        pro_cleaned = conn.total_changes - free_cleaned
+
+        conn.commit()
+        if free_cleaned > 0 or pro_cleaned > 0:
+            print(f"   🧹 Cleanup: {free_cleaned} free-user rashi_phala overrides removed, {pro_cleaned} Pro-user overrides cleared")
+    except Exception as e:
+        print(f"   ⚠️ Cleanup error (non-fatal): {e}")
+    finally:
+        conn.close()
 
 if __name__ == "__main__":
     setup_database()

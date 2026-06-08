@@ -266,6 +266,20 @@
         .btn-outline-sm { background: white; color: var(--orange); border: 2px solid var(--orange); }
         .btn-outline-sm:hover { background: var(--orange); color: white; }
 
+        /* Free/Pro Badge */
+        .user-plan-badge {
+            display: inline-block; padding: 4px 12px; border-radius: 14px;
+            font-size: 0.72rem; font-weight: 700; letter-spacing: 0.5px;
+        }
+        .user-plan-badge.pro {
+            background: linear-gradient(135deg, var(--orange), var(--gold));
+            color: white; box-shadow: 0 2px 8px rgba(255,102,0,0.3);
+        }
+        .user-plan-badge.free {
+            background: #E0E0E0; color: #666;
+            border: 1px solid #ccc;
+        }
+
         .footer {
             text-align: center; padding: 20px;
             color: var(--text-light); font-size: 0.8rem;
@@ -337,6 +351,11 @@
 <nav class="top-nav">
     <div class="brand">🌟 ধ্ৰুৱতৰা <span>AI</span></div>
     <div class="nav-actions">
+        {% if user_sub_info %}
+        <span class="user-plan-badge {% if user_sub_info.is_pro %}pro{% else %}free{% endif %}">
+            {% if user_sub_info.is_pro %}⭐ PRO{% else %}🆓 FREE{% endif %}
+        </span>
+        {% endif %}
         <a href="/dashboard" class="btn-sm btn-outline-sm">📊 ডেশ্ববৰ্ড</a>
         <a href="/logout" class="btn-sm btn-outline-sm">🚪 লগআউট</a>
     </div>
@@ -624,6 +643,46 @@
                 }
             });
     }
+
+    // ─── Inactivity Auto-Logout (Free users: 1 minute) ────────
+    (function() {
+        let lastActivityTime = Date.now();
+        let inactivityCheckInterval = null;
+
+        function resetActivityTimer() {
+            lastActivityTime = Date.now();
+        }
+
+        ['click', 'mousemove', 'keydown', 'scroll', 'touchstart', 'touchend'].forEach(evt => {
+            document.addEventListener(evt, resetActivityTimer, { passive: true });
+        });
+
+        inactivityCheckInterval = setInterval(async () => {
+            const inactiveSeconds = Math.floor((Date.now() - lastActivityTime) / 1000);
+
+            try {
+                const response = await fetch('/api/heartbeat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ last_activity: inactiveSeconds })
+                });
+
+                const data = await response.json();
+
+                if (data.auto_logout) {
+                    clearInterval(inactivityCheckInterval);
+                    alert(data.message || 'আপুনি বেছি সময় নিষ্ক্ৰিয় আছিল। চেচন বন্ধ কৰা হ\'ল।');
+                    window.location.href = '/login';
+                }
+            } catch (err) {
+                // ignore network errors
+            }
+        }, 10000);
+
+        window.addEventListener('beforeunload', () => {
+            if (inactivityCheckInterval) clearInterval(inactivityCheckInterval);
+        });
+    })();
 </script>
 
 </body>
