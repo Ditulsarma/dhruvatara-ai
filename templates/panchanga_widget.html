@@ -7,7 +7,7 @@ Used in login page, kundli page, and as standalone widget
     <div class="pw-header">
         <div class="pw-title-row">
             <span class="pw-icon">🕉️</span>
-            <h3>আজিৰ পঞ্চাঙ্গ</h3>
+            <h3>{{ _('panchanga_today') }}</h3>
         </div>
         <div class="pw-date" id="pwDate">{{ panchanga.get('current_date', '') }}</div>
         <!-- Date Picker for custom date -->
@@ -1315,7 +1315,7 @@ Used in login page, kundli page, and as standalone widget
         if (loading) loading.style.display = 'flex';
         if (content) content.style.display = 'none';
 
-        let url = '/api/panchanga-widget?lat=' + currentLat + '&lon=' + currentLon + '&tz=' + currentTz;
+        let url = '/api/panchanga-widget?lat=' + currentLat + '&lon=' + currentLon + '&tz=' + currentTz + '&lang={{ lang }}';
         if (currentDate) {
             url += '&date=' + encodeURIComponent(currentDate);
         }

@@ -5,7 +5,7 @@ Powered by DhrubataraAi for high-precision calculations.
 With Subscription-based User & Admin Panel.
 """
 
-from flask import Flask, render_template, request, send_file, jsonify, redirect, url_for, session, flash
+from flask import Flask, render_template, request, send_file, jsonify, redirect, url_for, session, flash, g
 import sqlite3
 import swisseph as swe
 from datetime import datetime, timedelta
@@ -17,11 +17,38 @@ from functools import wraps
 from werkzeug.utils import secure_filename
 from config import DB_PATH
 
+# ─── Multi-language support ───
+from translations import get_text, SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE
+from lang_utils import (
+    detect_language, set_language, get_current_language,
+    init_language_for_request, register_template_helpers
+)
+from prediction_i18n import (
+    get_lagna_phala_i18n, get_lagna_phala_html_i18n,
+    get_rashi_phala_i18n, get_rashi_phala_html_i18n,
+    get_nakshatra_phala_i18n, get_nakshatra_phala_html_i18n,
+    get_antardasha_phala_i18n, get_important_antardasha_phala_i18n,
+    get_planet_name_i18n, get_rashi_name_i18n, get_house_name_i18n,
+    get_nakshatra_name_i18n, get_kundli_rashi_name_i18n,
+    get_karakattwa_i18n, get_sade_sati_phase_name_i18n,
+    get_dwadash_html_i18n, get_graha_bichar_html_i18n,
+    translate_dosha_result, translate_yoga_result,
+    get_dosha_labels, get_yoga_labels,
+    get_shani_sare_sati_labels, translate_shani_sare_sati_data,
+)
+from shani_sare_sati_i18n import get_shani_sare_sati_analysis_html
+from dasha_i18n import localize_dasha_hierarchy
+from yoga_labels_data import YOGA_LABELS
+# Inject YOGA_LABELS into prediction_i18n module namespace
+import prediction_i18n
+prediction_i18n.YOGA_LABELS = YOGA_LABELS
+
 from panchanga import get_full_panchanga, get_rashi_lord
 from panchanga_data import get_panchanga_with_times, get_all_planet_positions
 from dosha_engine import get_complete_dosha_analysis
 from yoga_engine import get_complete_yoga_analysis
 from ai_engine import generate_ai_interpretation
+from ai_engine_i18n import generate_ai_interpretation_i18n
 from pdf_generator import generate_pdf_report, get_shani_sare_sati_data
 from chat_engine import chat_with_ai, PREDEFINED_QUESTIONS
 from rashifal_engine import generate_rashifal, RASHI_NAMES as RASHIFAL_RASHI_NAMES
@@ -96,6 +123,32 @@ app.secret_key = 'DhruvataraAI_2026_Secure_Secret_Key_8x7k9m2p'
 
 # ─── Show actual errors in browser (for debugging) ───
 app.config['PROPAGATE_EXCEPTIONS'] = True
+
+# ─── Multi-language: Register template helpers ───
+register_template_helpers(app)
+
+# ─── Multi-language: Before request - detect/set language ───
+@app.before_request
+def before_request_language():
+    """Detect and set language before each request."""
+    # Check for language switch via query param
+    lang_param = request.args.get('lang', None)
+    if lang_param and lang_param in SUPPORTED_LANGUAGES:
+        set_language(lang_param)
+    # Initialize language for this request
+    init_language_for_request()
+
+# ─── Language switcher route ───
+@app.route("/set-language/<lang>")
+def set_language_route(lang):
+    """Set language and redirect back."""
+    if set_language(lang):
+        flash(get_text('lang_switched', lang), 'success')
+    # Redirect to referrer or home
+    referrer = request.referrer
+    if referrer:
+        return redirect(referrer)
+    return redirect(url_for('home'))
 
 # ─── Logging for Railway debugging ───
 import logging
@@ -284,6 +337,63 @@ dasa_years = [7, 20, 6, 10, 7, 18, 16, 19, 17]
 RASHIS = rasis
 NAKSHATRAS = nakshatras
 
+def get_rasis_i18n(lang='as'):
+    """Get rasi names in the specified language."""
+    from prediction_i18n import get_panchanga_names_i18n
+    return get_panchanga_names_i18n(lang)['RASHI_NAMES']
+
+def get_nakshatras_i18n(lang='as'):
+    """Get nakshatra names in the specified language."""
+    from prediction_i18n import get_panchanga_names_i18n
+    return get_panchanga_names_i18n(lang)['NAKSHATRA_NAMES']
+
+def get_dasa_lords_i18n(lang='as'):
+    """Get dasa lord names in the specified language."""
+    from prediction_i18n import get_panchanga_names_i18n
+    pnames = get_panchanga_names_i18n(lang)
+    planet_names = pnames['PLANET_NAMES']
+    return [
+        planet_names.get('Ketu', 'Ketu'),
+        planet_names.get('Venus', 'Venus'),
+        planet_names.get('Sun', 'Sun'),
+        planet_names.get('Moon', 'Moon'),
+        planet_names.get('Mars', 'Mars'),
+        planet_names.get('Rahu', 'Rahu'),
+        planet_names.get('Jupiter', 'Jupiter'),
+        planet_names.get('Saturn', 'Saturn'),
+        planet_names.get('Mercury', 'Mercury'),
+    ]
+
+def get_planet_short_i18n(lang='as'):
+    """Get planet short codes in the specified language."""
+    from prediction_i18n import get_panchanga_names_i18n
+    pnames = get_panchanga_names_i18n(lang)
+    planet_names = pnames['PLANET_NAMES']
+    short_map = {}
+    for eng_key, name in planet_names.items():
+        short_map[name] = name[0] if name else eng_key[0]
+    from translations import get_text
+    short_map[get_text('planet_lagna', lang)] = get_text('planet_lagna_short', lang)
+    return short_map
+
+def get_planet_names_i18n(lang='as'):
+    """Get planet name dict (Assamese key -> i18n name)."""
+    from prediction_i18n import get_panchanga_names_i18n
+    pnames = get_panchanga_names_i18n(lang)
+    planet_names = pnames['PLANET_NAMES']
+    return {
+        "ৰবি": planet_names.get('Sun', 'Sun'),
+        "চন্দ্ৰ": planet_names.get('Moon', 'Moon'),
+        "মংগল": planet_names.get('Mars', 'Mars'),
+        "বুধ": planet_names.get('Mercury', 'Mercury'),
+        "বৃহস্পতি": planet_names.get('Jupiter', 'Jupiter'),
+        "শুক্ৰ": planet_names.get('Venus', 'Venus'),
+        "শনি": planet_names.get('Saturn', 'Saturn'),
+        "ৰাহু": planet_names.get('Rahu', 'Rahu'),
+        "কেতু": planet_names.get('Ketu', 'Ketu'),
+        "লগ্ন": get_text('planet_lagna', lang),
+    }
+
 def fmt_date(ymd_str):
     """Convert YYYY-MM-DD to DD/MM/YYYY for display"""
     if not ymd_str or '-' not in str(ymd_str):
@@ -347,7 +457,7 @@ def get_current_antardasha_info(dasa_data):
 
 
 def build_antardasha_html(dasa_hierarchy, planet_degrees, lagna_sign_index,
-                          selected_maha=None, include_current_and_future_only=True, gender='male'):
+                          selected_maha=None, include_current_and_future_only=True, gender='male', lang=None):
     """
     Build HTML for antardasha phala filtered by mahadasha selection or current+future antardashas.
     - dasa_hierarchy: list of mahadasha dicts (with 'sub_dasas')
@@ -356,7 +466,13 @@ def build_antardasha_html(dasa_hierarchy, planet_degrees, lagna_sign_index,
     - selected_maha: mahadasha lord name (Assamese) to restrict to, or None for all
     - include_current_and_future_only: if True, include only antardashas whose end >= today
     Returns HTML string.
+    Supports i18n via the lang parameter; falls back to current language.
     """
+    if lang is None:
+        try:
+            lang = get_current_language()
+        except Exception:
+            lang = 'as'
     today = datetime.now()
     html = '<div style="font-size:0.85rem;line-height:1.8;">'
 
@@ -367,7 +483,8 @@ def build_antardasha_html(dasa_hierarchy, planet_degrees, lagna_sign_index,
         if selected_maha and md.get('md_lord') != selected_maha:
             continue
 
-        maha_name = md.get('md_lord', '')
+        # Use localized display names; fall back to ASM only if display missing
+        maha_name = md.get('md_lord_display') or md.get('md_lord', '')
         for ad in md.get('sub_dasas', []):
             # parse dates
             try:
@@ -380,22 +497,23 @@ def build_antardasha_html(dasa_hierarchy, planet_degrees, lagna_sign_index,
             if include_current_and_future_only and ad_end < today:
                 continue
 
-            antar_lord = ad.get('ad_lord', '')
+            antar_lord = ad.get('ad_lord_display') or ad.get('ad_lord', '')
+            antar_lord_asm = ad.get('ad_lord', '')
 
             # Resolve planet details to get rasi and house (use English name for lookup)
-            antar_eng = get_eng_planet(antar_lord)
+            antar_eng = get_eng_planet(antar_lord_asm)
             pd = get_planet_details(antar_eng, planet_degrees_en, lagna_sign_index)
             phala_text = ''
             if pd:
-                graha_asm = pd.get('name_asm', antar_lord)
+                graha_asm = pd.get('name_asm', antar_lord_asm)
                 rasi = pd.get('rasi', '')
                 house = pd.get('house', '')
                 try:
-                    phala_text = get_antardasha_phala(graha_asm, rasi, house)
+                    phala_text = get_antardasha_phala_i18n(graha_asm, rasi, house, lang)
                 except Exception:
                     phala_text = ''
 
-            # Format HTML block
+            # Format HTML block (localized planet names)
             html += f'<div style="margin-bottom:12px;padding:8px 12px;background:#fff8f0;border-left:3px solid #FF6600;border-radius:4px;">'
             html += f'<strong style="color:#1a237e;">{maha_name} → {antar_lord}</strong> '
             html += f' | {ad.get("start", "") } — {ad.get("end", "") }'
@@ -406,18 +524,27 @@ def build_antardasha_html(dasa_hierarchy, planet_degrees, lagna_sign_index,
     html += '</div>'
     return html
 
-def build_important_antardasha_html(dasa_hierarchy, gender='male'):
+def build_important_antardasha_html(dasa_hierarchy, gender='male', lang=None):
     """
     Build HTML for antardasha phala using the new importantantardasa.py module
     (which reads from antardasha_data.json with detailed Mahadasha-Antardasha predictions).
     Includes only current and future antardashas.
     Returns HTML string.
+    Supports i18n via the lang parameter; falls back to current language.
     """
+    if lang is None:
+        try:
+            lang = get_current_language()
+        except Exception:
+            lang = 'as'
     today = datetime.now()
     html = '<div style="font-size:0.85rem;line-height:1.8;">'
 
     for md in dasa_hierarchy:
-        maha_name = md.get('md_lord', '')
+        # Use localized display names; fall back to ASM (md_lord/ad_lord) only if display missing
+        maha_name = md.get('md_lord_display') or md.get('md_lord', '')
+        # For the i18n function lookup we still need ASM values (it converts internally)
+        maha_name_asm = md.get('md_lord', '')
         for ad in md.get('sub_dasas', []):
             # parse dates
             try:
@@ -430,18 +557,19 @@ def build_important_antardasha_html(dasa_hierarchy, gender='male'):
             if ad_end < today:
                 continue
 
-            antar_lord = ad.get('ad_lord', '')
+            antar_lord = ad.get('ad_lord_display') or ad.get('ad_lord', '')
+            antar_lord_asm = ad.get('ad_lord', '')
 
             # Get phala from importantantardasa.py using Assamese planet names
             try:
-                phala_text = get_important_antardasha_phala(maha_name, antar_lord)
+                phala_text = get_important_antardasha_phala_i18n(maha_name_asm, antar_lord_asm, lang)
             except Exception:
                 phala_text = ''
 
-            # Format HTML block
+            # Format HTML block (localized planet names)
             html += f'<div style="margin-bottom:12px;padding:8px 12px;background:#fff8f0;border-left:3px solid #FF6600;border-radius:4px;">'
-            html += f'<strong style="color:#1a237e;">{maha_name} → {antar_lord}</strong> '
-            html += f' | {ad.get("start", "")} — {ad.get("end", "")}'
+            html += f'<strong style="color:#1a237e;">{maha_name} \u2192 {antar_lord}</strong> '
+            html += f' | {ad.get("start", "")} \u2014 {ad.get("end", "")}'
             if phala_text:
                 html += f'<div style="margin-top:6px;color:#333;">{apply_gender(phala_text, gender)}</div>'
             html += '</div>'
@@ -449,13 +577,26 @@ def build_important_antardasha_html(dasa_hierarchy, gender='male'):
     html += '</div>'
     return html
 
-def build_pratyantar_dasha_html(dasa_hierarchy, planet_degrees, lagna_sign_index, gender='male'):
+def build_pratyantar_dasha_html(dasa_hierarchy, planet_degrees, lagna_sign_index, gender='male', lang=None):
     """
     Build HTML for pratyantar dasha phala (3rd level dasha).
     Shows ALL pratyantar dashas from today onward across ALL antardashas
     (not just the currently running one). Each pratyantar gets phala from small_antardasaphal.py.
     Returns HTML string.
+    Supports i18n via the lang parameter; falls back to current language.
     """
+    from translations import get_text as _get_text
+    if lang is None:
+        try:
+            lang = get_current_language()
+        except Exception:
+            lang = 'as'
+    # Localized labels
+    lbl_mahadasha = _get_text('mahadasha', lang) or 'Mahadasha'
+    lbl_antardasha = _get_text('antardasha', lang) or 'Antardasha'
+    lbl_pratyantar = _get_text('pratyantar_dasha', lang) or 'Pratyantar Dasha'
+    lbl_unavailable = _get_text('pratyantar_unavailable', lang) or ''
+    lbl_no_pratyantar = _get_text('no_pratyantar', lang) or ''
     today = datetime.now()
     html = '<div style="font-size:0.85rem;line-height:1.8;">'
 
@@ -463,7 +604,7 @@ def build_pratyantar_dasha_html(dasa_hierarchy, planet_degrees, lagna_sign_index
     planet_degrees_en = convert_planet_degrees_to_en(planet_degrees)
 
     for md in dasa_hierarchy:
-        maha_name = md.get('md_lord', '')
+        maha_name = md.get('md_lord_display') or md.get('md_lord', '')
         for ad in md.get('sub_dasas', []):
             # parse antardasha dates
             try:
@@ -477,23 +618,24 @@ def build_pratyantar_dasha_html(dasa_hierarchy, planet_degrees, lagna_sign_index
             if ad_end < today:
                 continue
 
-            antar_lord = ad.get('ad_lord', '')
+            antar_lord = ad.get('ad_lord_display') or ad.get('ad_lord', '')
 
-            # Header for this antardasha
+            # Header for this antardasha (localized)
             html += f'<div style="margin-bottom:16px;padding:10px 14px;background:linear-gradient(135deg,#1a237e,#283593);color:white;border-radius:6px;">'
-            html += f'<strong style="font-size:1rem;">{maha_name} মহাদশা → {antar_lord} অন্তৰ্দশা</strong> '
-            html += f'<span style="font-size:0.8rem;opacity:0.85;">({ad.get("start","")} — {ad.get("end","")})</span>'
+            html += f'<strong style="font-size:1rem;">{maha_name} {lbl_mahadasha} \u2192 {antar_lord} {lbl_antardasha}</strong> '
+            html += f'<span style="font-size:0.8rem;opacity:0.85;">({ad.get("start","")} \u2014 {ad.get("end","")})</span>'
             html += '</div>'
 
             # Now iterate pratyantar dashas within this antardasha
             pd_list = ad.get('pratyantar', [])
             if not pd_list:
-                html += '<div style="padding:8px;color:#888;">প্ৰত্যন্তৰ দশাৰ তথ্য উপলব্ধ নহয়।</div>'
+                if lbl_unavailable:
+                    html += f'<div style="padding:8px;color:#888;">{lbl_unavailable}</div>'
                 continue
 
             has_any_pd = False
             for pd in pd_list:
-                pd_lord = pd.get('lord', '')
+                pd_lord = pd.get('lord_display') or pd.get('lord', '')
                 pd_start = pd.get('start', '')
                 pd_end = pd.get('end', '')
 
@@ -511,45 +653,65 @@ def build_pratyantar_dasha_html(dasa_hierarchy, planet_degrees, lagna_sign_index
 
                 has_any_pd = True
 
-                # Get phala for this pratyantar lord
-                pd_eng = get_eng_planet(pd_lord)
-                pd_detail = get_planet_details(pd_eng, planet_degrees_en, lagna_sign_index)
+                # Get phala for this pratyantar lord (use the English lord for planet lookup,
+                # but the i18n function needs the Assamese graha name for its key conversion)
+                pd_lord_eng = pd.get('lord_en') or get_eng_planet(pd.get('lord', ''))
+                pd_detail = get_planet_details(pd_lord_eng, planet_degrees_en, lagna_sign_index)
                 phala_text = ''
                 if pd_detail:
-                    graha_asm = pd_detail.get('name_asm', pd_lord)
+                    graha_asm = pd_detail.get('name_asm', pd.get('lord', ''))
                     rasi = pd_detail.get('rasi', '')
                     house = pd_detail.get('house', '')
                     try:
-                        phala_text = get_antardasha_phala(graha_asm, rasi, house)
+                        phala_text = get_antardasha_phala_i18n(graha_asm, rasi, house, lang)
                     except Exception:
                         phala_text = ''
 
-                # Format HTML block
+                # Format HTML block (localized)
                 html += f'<div style="margin-bottom:10px;padding:8px 12px;background:#f3e5f5;border-left:3px solid #6A1B9A;border-radius:4px;">'
-                html += f'<strong style="color:#6A1B9A;">└ {pd_lord} প্ৰত্যন্তৰ দশা</strong> '
-                html += f'<span style="font-size:0.8rem;color:#888;">({pd_start} — {pd_end})</span>'
+                html += f'<strong style="color:#6A1B9A;">\u2514 {pd_lord} {lbl_pratyantar}</strong> '
+                html += f'<span style="font-size:0.8rem;color:#888;">({pd_start} \u2014 {pd_end})</span>'
                 if phala_text:
                     html += f'<div style="margin-top:6px;color:#333;">{apply_gender(phala_text, gender)}</div>'
                 html += '</div>'
 
             if not has_any_pd:
-                html += '<div style="padding:8px;color:#888;">এই অন্তৰ্দশাত আজিৰ পৰা কোনো প্ৰত্যন্তৰ দশা বাকী নাই।</div>'
+                if lbl_no_pratyantar:
+                    html += f'<div style="padding:8px;color:#888;">{lbl_no_pratyantar}</div>'
 
     html += '</div>'
     return html
 
-def build_vimsottari_summary(dasa_hierarchy):
+def build_vimsottari_summary(dasa_hierarchy, lang=None):
     """
     Build a complete Vimsottari Dasha Summary showing ALL 9 Mahadashas
     with their start and end dates, plus the currently running Antardasha.
-    Returns a formatted Assamese string.
+    Returns a localized string for the given language.
     """
+    from translations import get_text as _get_text
+    if lang is None:
+        try:
+            lang = get_current_language()
+        except Exception:
+            lang = 'as'
+    # Localized labels
+    lbl_title = _get_text('vimsottari_summary_title', lang) or '【বিংশোত্তৰী দশা সাৰাংশ】'
+    lbl_mahadasha = _get_text('mahadasha', lang) or 'মহাদশা'
+    lbl_years = _get_text('vimsottari_years', lang) or 'বছৰ'
+    lbl_from_to = _get_text('vimsottari_from_to', lang) or 'ৰ পৰা'
+    lbl_until = _get_text('vimsottari_until', lang) or 'লৈ'
+    lbl_current = _get_text('vimsottari_current', lang) or 'বৰ্তমান'
+    lbl_under = _get_text('vimsottari_under', lang) or 'অন্তৰ্গত'
+    lbl_antardasha = _get_text('antardasha', lang) or 'অন্তৰ্দশা'
+    lbl_current_dasha = _get_text('vimsottari_current_dasha', lang) or 'বৰ্তমান চলি থকা দশা'
+    lbl_unknown = _get_text('vimsottari_unknown', lang) or 'অজানা'
+
     if not dasa_hierarchy or len(dasa_hierarchy) == 0:
         return ""
 
     today = datetime.now()
     lines = []
-    lines.append("【বিংশোত্তৰী দশা সাৰাংশ】")
+    lines.append(lbl_title)
     lines.append("")
 
     current_md_lord = ""
@@ -558,7 +720,8 @@ def build_vimsottari_summary(dasa_hierarchy):
     current_ad_end = ""
 
     for i, md in enumerate(dasa_hierarchy):
-        md_lord = md.get('md_lord', 'অজানা')
+        # Use localized display name; fall back to ASM only if display missing
+        md_lord = md.get('md_lord_display') or md.get('md_lord', lbl_unknown)
         md_start = md.get('start', '')
         md_end = md.get('end', '')
         md_years = md.get('years', '')
@@ -568,8 +731,9 @@ def build_vimsottari_summary(dasa_hierarchy):
         md_end_dt = parse_dasha_date(md_end)
         is_current_md = (md_start_dt <= today <= md_end_dt)
 
-        marker = " ★ বৰ্তমান" if is_current_md else ""
-        lines.append(f"{i+1}. {md_lord} মহাদশা ({md_years} বছৰ): {md_start} ৰ পৰা {md_end} লৈ{marker}")
+        marker = f" ★ {lbl_current}" if is_current_md else ""
+        # Localized format: "{i+1}. {md_lord} {lbl_mahadasha} ({md_years} {lbl_years}): {md_start} {lbl_from_to} {md_end} {lbl_until}{marker}"
+        lines.append(f"{i+1}. {md_lord} {lbl_mahadasha} ({md_years} {lbl_years}): {md_start} {lbl_from_to} {md_end} {lbl_until}{marker}")
 
         # Find current antardasha
         if is_current_md:
@@ -578,14 +742,15 @@ def build_vimsottari_summary(dasa_hierarchy):
                 ad_start_dt = parse_dasha_date(ad.get('start', ''))
                 ad_end_dt = parse_dasha_date(ad.get('end', ''))
                 if ad_start_dt <= today <= ad_end_dt:
-                    current_ad_lord = ad.get('ad_lord', '')
+                    current_ad_lord = ad.get('ad_lord_display') or ad.get('ad_lord', '')
                     current_ad_start = ad.get('start', '')
                     current_ad_end = ad.get('end', '')
                     break
 
     lines.append("")
     if current_md_lord and current_ad_lord:
-        lines.append(f"বৰ্তমান চলি থকা দশা: {current_md_lord} মহাদশাৰ অন্তৰ্গত {current_ad_lord} অন্তৰ্দশা ({current_ad_start} ৰ পৰা {current_ad_end} লৈ)।")
+        # Localized: "{lbl_current_dasha}: {current_md_lord} {lbl_mahadasha} {lbl_under} {current_ad_lord} {lbl_antardasha} ({current_ad_start} {lbl_from_to} {current_ad_end} {lbl_until})।"
+        lines.append(f"{lbl_current_dasha}: {current_md_lord} {lbl_mahadasha} {lbl_under} {current_ad_lord} {lbl_antardasha} ({current_ad_start} {lbl_from_to} {current_ad_end} {lbl_until})।")
 
     return "\n".join(lines)
 
@@ -600,14 +765,21 @@ def apply_gender(text: str, gender: str) -> str:
         text = text.replace("তেওঁলোক", "তাইহঁত")
     return text
 
-def get_rasi_and_degree(longitude):
+def get_rasi_and_degree(longitude, lang=None):
+    if lang is None:
+        lang = get_current_language()
     rasi_index = int(longitude / 30) % 12
+    rasi_names = get_rasis_i18n(lang)
     degree = longitude % 30
-    return rasi_index, rasis[rasi_index], round(degree, 2)
+    return rasi_index, rasi_names[rasi_index], round(degree, 2)
 
-def get_nakshatra_details(longitude):
+def get_nakshatra_details(longitude, lang=None):
+    if lang is None:
+        lang = get_current_language()
     nak_index = int(longitude / 13.333333) % 27
-    return nak_index, nakshatras[nak_index], dasa_lords[nak_index % 9]
+    nak_names = get_nakshatras_i18n(lang)
+    dasa_lords_i18n = get_dasa_lords_i18n(lang)
+    return nak_index, nak_names[nak_index], dasa_lords_i18n[nak_index % 9]
 
 # --- ১/ সম্পূৰ্ণ ষোড়শবৰ্গ কুণ্ডলী গণনা ইঞ্জিন (Shodashvarga - All 16 Varga Charts) ---
 def calculate_varga(p_sidereal_lon, varga_number):
@@ -745,13 +917,16 @@ def get_full_dasa_hierarchy(moon_sidereal_lon, birth_date):
     timeline = []
     current_date = birth_date
     
+    # English dasa lords for language-neutral matching (used by JS)
+    dasa_lords_en = ["Ketu", "Venus", "Sun", "Moon", "Mars", "Rahu", "Jupiter", "Saturn", "Mercury"]
+    
     for i in range(9):
         idx = (current_md_idx + i) % 9
         md_lord = dasa_lords[idx]
         md_years = dasa_years[idx]
         
         md_end_date = current_date + timedelta(days=md_remaining_days if i == 0 else int(md_years * 365.25))
-        md_entry = {"md_lord": md_lord, "start": fmt_date(current_date.strftime('%Y-%m-%d')), "end": fmt_date(md_end_date.strftime('%Y-%m-%d')), "years": md_years, "sub_dasas": []}
+        md_entry = {"md_lord": md_lord, "md_lord_en": dasa_lords_en[idx], "start": fmt_date(current_date.strftime('%Y-%m-%d')), "end": fmt_date(md_end_date.strftime('%Y-%m-%d')), "years": md_years, "sub_dasas": []}
         
         ad_current_date = current_date
         for j in range(9):
@@ -775,6 +950,7 @@ def get_full_dasa_hierarchy(moon_sidereal_lon, birth_date):
                 
                 pd_list.append({
                     "lord": dasa_lords[pd_idx],
+                    "lord_en": dasa_lords_en[pd_idx],
                     "start": fmt_date(pd_current_date.strftime('%Y-%m-%d')),
                     "end": fmt_date(pd_end_date.strftime('%Y-%m-%d'))
                 })
@@ -782,6 +958,7 @@ def get_full_dasa_hierarchy(moon_sidereal_lon, birth_date):
                 
             md_entry["sub_dasas"].append({
                 "ad_lord": ad_lord,
+                "ad_lord_en": dasa_lords_en[ad_idx],
                 "start": fmt_date(ad_current_date.strftime('%Y-%m-%d')),
                 "end": fmt_date(ad_end_date.strftime('%Y-%m-%d')),
                 "pratyantar": pd_list
@@ -961,22 +1138,30 @@ def calculate():
         p_sidereal_longitudes = {}
         planet_signs = {}
         planet_houses = {}
+        lang = get_current_language()
+        pnames = get_planet_names_i18n(lang)
 
         for p_name, p_id in planets_dict.items():
             pos, _ = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
             p_sidereal_longitudes[p_name] = pos[0]
             r_idx, rasi, deg = get_rasi_and_degree(pos[0])
-            _, nak, lord = get_nakshatra_details(pos[0])
-            planets_data.append({"name": p_name, "rasi": rasi, "degree": deg,
-                                 "nakshatra": nak, "lord": lord})
+            nak_idx, nak, lord = get_nakshatra_details(pos[0])
+            # Map Assamese planet name to English for i18n
+            asm_to_en = {"ৰবি": "Sun", "চন্দ্ৰ": "Moon", "মংগল": "Mars", "বুধ": "Mercury",
+                        "বৃহস্পতি": "Jupiter", "শুক্ৰ": "Venus", "শনি": "Saturn", "ৰাহু": "Rahu"}
+            planets_data.append({"name": pnames.get(p_name, p_name), "name_asm": p_name, "name_en": asm_to_en.get(p_name, ""),
+                                 "rasi": rasi, "rasi_idx": r_idx, "degree": deg,
+                                 "nakshatra": nak, "nak_idx": int(pos[0] / 13.333333) % 27, "lord": lord})
             planet_signs[p_name] = r_idx
 
         # Ketu
         p_sidereal_longitudes["কেতু"] = (p_sidereal_longitudes["ৰাহু"] + 180) % 360
         r_idx_k, ketu_rasi, ketu_deg = get_rasi_and_degree(p_sidereal_longitudes["কেতু"])
-        _, ketu_nak, ketu_lord = get_nakshatra_details(p_sidereal_longitudes["কেতু"])
-        planets_data.append({"name": "কেতু", "rasi": ketu_rasi, "degree": ketu_deg,
-                             "nakshatra": ketu_nak, "lord": ketu_lord})
+        ketu_idx, ketu_nak, ketu_lord = get_nakshatra_details(p_sidereal_longitudes["কেতু"])
+        ketu_idx = int(p_sidereal_longitudes["কেতু"] / 13.333333) % 27
+        planets_data.append({"name": pnames.get("কেতু", "কেতু"), "name_asm": "কেতু", "name_en": "Ketu",
+                             "rasi": ketu_rasi, "rasi_idx": r_idx_k, "degree": ketu_deg,
+                             "nakshatra": ketu_nak, "nak_idx": ketu_idx, "lord": ketu_lord})
         planet_signs["কেতু"] = r_idx_k
 
         # Lagna (Ascendant)
@@ -984,9 +1169,11 @@ def calculate():
         asc_sidereal = (ascmc[0] - ayanamsa) % 360
         p_sidereal_longitudes["লগ্ন"] = asc_sidereal
         asc_rasi_idx, asc_rasi, asc_deg = get_rasi_and_degree(asc_sidereal)
-        _, asc_nak, asc_nak_lord = get_nakshatra_details(asc_sidereal)
-        planets_data.append({"name": "লগ্ন", "rasi": asc_rasi, "degree": asc_deg,
-                             "nakshatra": asc_nak, "lord": asc_nak_lord})
+        asc_nak_idx, asc_nak, asc_nak_lord = get_nakshatra_details(asc_sidereal)
+        asc_nak_idx = int(asc_sidereal / 13.333333) % 27
+        planets_data.append({"name": pnames.get("লগ্ন", "লগ্ন"), "name_asm": "লগ্ন", "name_en": "Lagna",
+                             "rasi": asc_rasi, "rasi_idx": asc_rasi_idx, "degree": asc_deg,
+                             "nakshatra": asc_nak, "nak_idx": asc_nak_idx, "lord": asc_nak_lord})
         planet_signs["লগ্ন"] = asc_rasi_idx
 
         # Calculate house positions for all planets
@@ -1011,57 +1198,63 @@ def calculate():
 
         # Dasha
         dasa_hierarchy = get_full_dasa_hierarchy(p_sidereal_longitudes["চন্দ্ৰ"], ist_time)
+        # Localize planet names in dasha hierarchy to current language
+        dasa_hierarchy = localize_dasha_hierarchy(dasa_hierarchy, lang=lang)
 
         # Panchanga
-        panchanga = get_full_panchanga(ist_time, lat, lon, tz_offset)
+        panchanga = get_full_panchanga(ist_time, lat, lon, tz_offset, lang=lang)
 
-        # Dosha Analysis
-        dosha_results = get_complete_dosha_analysis(planet_houses, p_sidereal_longitudes)
+        # Dosha Analysis (i18n)
+        dosha_results_raw = get_complete_dosha_analysis(planet_houses, p_sidereal_longitudes)
+        dosha_results = translate_dosha_result(dosha_results_raw, lang)
 
-        # Yoga Analysis
-        yoga_results = get_complete_yoga_analysis(planet_houses, planet_signs, asc_rasi_idx)
+        # Yoga Analysis (i18n)
+        yoga_results_raw = get_complete_yoga_analysis(planet_houses, planet_signs, asc_rasi_idx)
+        yoga_results = translate_yoga_result(yoga_results_raw, lang)
 
-        # Tripap Rista Analysis
+        # Tripap Rista Analysis (i18n)
         moon_nak_idx = get_nakshatra_details(p_sidereal_longitudes["চন্দ্ৰ"])[0] + 1  # 1-indexed
-        tripap_data = get_tripap_rista(moon_nak_idx)
+        lang = get_current_language()
+        tripap_data = get_tripap_rista(moon_nak_idx, lang)
         tripap_analysis = analyze_tripap_rista(moon_nak_idx, planet_houses)
 
-        # Sannari Chakra
-        sannari_data = get_sannari_data(moon_nak_idx)
-        sannari_svg = generate_sannari_svg(moon_nak_idx, nakshatras[moon_nak_idx - 1])
+        # Sannari Chakra (i18n)
+        sannari_data = get_sannari_data(moon_nak_idx, lang)
+        sannari_svg = generate_sannari_svg(moon_nak_idx, nakshatras[moon_nak_idx - 1], lang=lang)
 
-        # Navatara Chakra
-        navatara_data = get_navatara_data(moon_nak_idx)
-        navatara_svg = generate_navatara_svg(moon_nak_idx)
+        # Navatara Chakra (i18n)
+        navatara_data = get_navatara_data(moon_nak_idx, lang)
+        navatara_svg = generate_navatara_svg(moon_nak_idx, lang=lang)
 
-        # Nakshatra Phala
-        nakshatra_phala_text = apply_gender(get_nakshatra_phala(moon_nak_idx), gender)
+        # Nakshatra Phala (i18n)
+        nakshatra_phala_text = apply_gender(get_nakshatra_phala_i18n(moon_nak_idx, lang), gender)
 
-        # Lagna Phala
-        lagna_phala_text = apply_gender(get_lagna_phala(asc_rasi_idx), gender)
+        # Lagna Phala (i18n)
+        lagna_phala_text = apply_gender(get_lagna_phala_i18n(asc_rasi_idx, lang), gender)
 
-        # Rashi Phala (Moon sign based)
+        # Rashi Phala (Moon sign based) (i18n)
         moon_rasi_idx = get_rasi_and_degree(p_sidereal_longitudes["চন্দ্ৰ"])[0]
-        rashi_phala_text = apply_gender(get_rashi_phala(moon_rasi_idx), gender)
+        rashi_phala_text = apply_gender(get_rashi_phala_i18n(moon_rasi_idx, lang), gender)
 
-        # Lagna Lord and Moon Rashi Lord
-        lagna_lord = get_rashi_lord(asc_rasi_idx)
-        moon_rashi_lord = get_rashi_lord(moon_rasi_idx)
+        # Lagna Lord and Moon Rashi Lord (i18n - use user's language)
+        lagna_lord = get_rashi_lord(asc_rasi_idx, lang)
+        moon_rashi_lord = get_rashi_lord(moon_rasi_idx, lang)
 
-        # Graha Bichar - all planets house-wise analysis
+        # Graha Bichar - all planets house-wise analysis (i18n)
         graha_bichar_data = get_all_graha_bichar(planet_houses)
-        graha_bichar_html = get_graha_bichar_html(planet_houses)
+        graha_bichar_html = get_graha_bichar_html_i18n(planet_houses, lang)
 
         # AI Interpretation
-        ai_interpretation = generate_ai_interpretation(
+        ai_interpretation = (generate_ai_interpretation_i18n if lang != 'as' else generate_ai_interpretation)(
             name, planets_data, asc_rasi, dosha_results, yoga_results, dasa_hierarchy,
             asc_rasi_idx=asc_rasi_idx,
             planet_signs=planet_signs,
-            moon_nak_name=nakshatras[moon_nak_idx - 1],
-            moon_rasi=rasis[moon_rasi_idx],
+            moon_nak_name=get_nakshatra_name_i18n(moon_nak_idx - 1, lang),
+            moon_rasi=get_rashi_name_i18n(moon_rasi_idx, lang),
             tripap_ages=TRIPAP_AGES.get(moon_nak_idx, []),
             navatara_data=navatara_data,
-            sannari_data=sannari_data
+            sannari_data=sannari_data,
+            lang=lang
         )
 
         # Dasha Predictions - all Mahadasha + Antardasha predictions
@@ -1108,10 +1301,11 @@ def calculate():
         conn.close()
 
     # Saturn Sare Sati / Dhaiya data for result page
-    shani_sare_sati_data = get_shani_sare_sati_data(moon_rasi=rasis[moon_rasi_idx], planets_data=planets_data, user_dob=dob)
+    shani_sare_sati_data = get_shani_sare_sati_data(moon_rasi=get_rashi_name_i18n(moon_rasi_idx, lang), planets_data=planets_data, user_dob=dob, lang=lang)
+    shani_sare_sati_data = translate_shani_sare_sati_data(shani_sare_sati_data, lang)
 
-    # Dwadash Bhab Phala - 12 House Results (only actual placements)
-    dwadash_html = get_dwadash_html(planet_houses=planet_houses, asc_rasi_idx=asc_rasi_idx)
+    # Dwadash Bhab Phala - 12 House Results (only actual placements) (i18n)
+    dwadash_html = get_dwadash_html_i18n(planet_houses=planet_houses, asc_rasi_idx=asc_rasi_idx, lang=lang)
     dwadash_json_data = get_dwadash_json(planet_houses=planet_houses, asc_rasi_idx=asc_rasi_idx)
 
     return render_template("result.html",
@@ -1127,13 +1321,13 @@ def calculate():
                            all_dasha_predictions=all_dasha_predictions,
                            current_dasha_prediction=current_dasha_prediction,
                            sannari_data=sannari_data, sannari_svg=sannari_svg,
-                           moon_nak_name=nakshatras[moon_nak_idx - 1],
+                           moon_nak_name=get_nakshatra_name_i18n(moon_nak_idx - 1, lang),
                            moon_nak_idx=moon_nak_idx,
                            navatara_data=navatara_data, navatara_svg=navatara_svg,
                            nakshatra_phala_text=nakshatra_phala_text,
                            lagna_phala_text=lagna_phala_text,
                            rashi_phala_text=rashi_phala_text,
-                           moon_rasi=rasis[moon_rasi_idx],
+                           moon_rasi=get_rashi_name_i18n(moon_rasi_idx, lang),
                            graha_bichar_data=graha_bichar_data,
                            graha_bichar_html=graha_bichar_html,
                            shani_sare_sati_data=shani_sare_sati_data,
@@ -1144,7 +1338,12 @@ def calculate():
                            user_subscription_name=user_subscription_name,
                            user_subscription_id=user_subscription_id,
                            all_subscriptions=all_subscriptions,
-                           user_sub_info=get_user_sub_info(session.get('user_id', 0)))
+                           user_sub_info=get_user_sub_info(session.get('user_id', 0)),
+                           lang=get_current_language(),
+                           dosha_labels=get_dosha_labels(lang),
+                           yoga_labels=get_yoga_labels(lang),
+                           shani_sare_sati_labels=get_shani_sare_sati_labels(lang),
+                           shani_sare_sati_analysis_html=get_shani_sare_sati_analysis_html(lang))
 
 @app.route("/download-pdf", methods=["POST"])
 def download_pdf():
@@ -1208,30 +1407,35 @@ def download_pdf():
         p_sidereal_longitudes = {}
         planet_signs = {}
         planet_houses = {}
+        # [i18n fix] Get user's language and planet name map for PDF
+        _pdf_lang = get_current_language()
+        pnames = get_planet_names_i18n(_pdf_lang)
 
         for p_name, p_id in planets_dict.items():
             pos, _ = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
             p_sidereal_longitudes[p_name] = pos[0]
             r_idx, rasi, deg = get_rasi_and_degree(pos[0])
-            _, nak, lord = get_nakshatra_details(pos[0])
-            planets_data.append({"name": p_name, "rasi": rasi, "degree": deg,
-                                 "nakshatra": nak, "lord": lord})
+            nak_idx, nak, lord = get_nakshatra_details(pos[0])
+            # Use language-localized planet name to fix the mixing bug
+            display_name = pnames.get(p_name, p_name)
+            planets_data.append({"name": display_name, "name_asm": p_name, "name_en": get_eng_planet(p_name), "rasi": rasi, "rasi_idx": r_idx, "degree": deg,
+                                 "nakshatra": nak, "nak_idx": nak_idx, "lord": lord})
             planet_signs[p_name] = r_idx
 
         p_sidereal_longitudes["কেতু"] = (p_sidereal_longitudes["ৰাহু"] + 180) % 360
         r_idx_k, ketu_rasi, ketu_deg = get_rasi_and_degree(p_sidereal_longitudes["কেতু"])
-        _, ketu_nak, ketu_lord = get_nakshatra_details(p_sidereal_longitudes["কেতু"])
-        planets_data.append({"name": "কেতু", "rasi": ketu_rasi, "degree": ketu_deg,
-                             "nakshatra": ketu_nak, "lord": ketu_lord})
+        ketu_idx, ketu_nak, ketu_lord = get_nakshatra_details(p_sidereal_longitudes["কেতু"])
+        planets_data.append({"name": pnames.get("কেতু", "কেতু"), "name_asm": "কেতু", "name_en": "Ketu", "rasi": ketu_rasi, "rasi_idx": r_idx_k, "degree": ketu_deg,
+                             "nakshatra": ketu_nak, "nak_idx": ketu_idx, "lord": ketu_lord})
         planet_signs["কেতু"] = r_idx_k
 
         cusps, ascmc = swe.houses(jd, lat, lon, b'P')
         asc_sidereal = (ascmc[0] - ayanamsa) % 360
         p_sidereal_longitudes["লগ্ন"] = asc_sidereal
         asc_rasi_idx, asc_rasi, asc_deg = get_rasi_and_degree(asc_sidereal)
-        _, asc_nak, asc_nak_lord = get_nakshatra_details(asc_sidereal)
-        planets_data.append({"name": "লগ্ন", "rasi": asc_rasi, "degree": asc_deg,
-                             "nakshatra": asc_nak, "lord": asc_nak_lord})
+        asc_nak_idx, asc_nak, asc_nak_lord = get_nakshatra_details(asc_sidereal)
+        planets_data.append({"name": pnames.get("লগ্ন", "লগ্ন"), "name_asm": "লগ্ন", "name_en": "Lagna", "rasi": asc_rasi, "rasi_idx": asc_rasi_idx, "degree": asc_deg,
+                             "nakshatra": asc_nak, "nak_idx": asc_nak_idx, "lord": asc_nak_lord})
         planet_signs["লগ্ন"] = asc_rasi_idx
 
         for p_name, p_lon in p_sidereal_longitudes.items():
@@ -1239,9 +1443,13 @@ def download_pdf():
             planet_houses[p_name] = house_idx
 
         dasa_hierarchy = get_full_dasa_hierarchy(p_sidereal_longitudes["চন্দ্ৰ"], ist_time)
-        panchanga = get_full_panchanga(ist_time, lat, lon, tz_offset)
-        dosha_results = get_complete_dosha_analysis(planet_houses, p_sidereal_longitudes)
-        yoga_results = get_complete_yoga_analysis(planet_houses, planet_signs, asc_rasi_idx)
+        lang = get_current_language()
+        dasa_hierarchy = localize_dasha_hierarchy(dasa_hierarchy, lang=lang)
+        panchanga = get_full_panchanga(ist_time, lat, lon, tz_offset, lang=lang)
+        dosha_results_raw = get_complete_dosha_analysis(planet_houses, p_sidereal_longitudes)
+        dosha_results = translate_dosha_result(dosha_results_raw, lang)
+        yoga_results_raw = get_complete_yoga_analysis(planet_houses, planet_signs, asc_rasi_idx)
+        yoga_results = translate_yoga_result(yoga_results_raw, lang)
 
         # Calculate moon indices BEFORE AI interpretation
         moon_nak_idx = get_nakshatra_details(p_sidereal_longitudes["চন্দ্ৰ"])[0] + 1
@@ -1249,15 +1457,16 @@ def download_pdf():
         navatara_data = get_navatara_data(moon_nak_idx)
         sannari_data = get_sannari_data(moon_nak_idx)
 
-        ai_interpretation = generate_ai_interpretation(
+        ai_interpretation = (generate_ai_interpretation_i18n if lang != 'as' else generate_ai_interpretation)(
             name, planets_data, asc_rasi, dosha_results, yoga_results, dasa_hierarchy,
             asc_rasi_idx=asc_rasi_idx,
             planet_signs=planet_signs,
-            moon_nak_name=nakshatras[moon_nak_idx - 1],
-            moon_rasi=rasis[moon_rasi_idx],
+            moon_nak_name=get_nakshatra_name_i18n(moon_nak_idx - 1, lang),
+            moon_rasi=get_rashi_name_i18n(moon_rasi_idx, lang),
             tripap_ages=TRIPAP_AGES.get(moon_nak_idx, []),
             navatara_data=navatara_data,
-            sannari_data=sannari_data
+            sannari_data=sannari_data,
+            lang=lang
         )
 
         # Varga Charts for PDF
@@ -1276,35 +1485,35 @@ def download_pdf():
                 all_vargas[v_code][v_idx].append(PLANET_SHORT.get(p_key, p_key[:2]))
 
         # Tripap Rista for PDF
-        tripap_data = get_tripap_rista(moon_nak_idx)
+        tripap_data = get_tripap_rista(moon_nak_idx, lang)
         tripap_ages = TRIPAP_AGES.get(moon_nak_idx, [])
 
-        # Sannari Chakra for PDF
-        sannari_html = generate_sannari_html_table(moon_nak_idx, nakshatras[moon_nak_idx - 1])
+        # Sannari Chakra for PDF (with language support)
+        sannari_html = generate_sannari_html_table(moon_nak_idx, nakshatras[moon_nak_idx - 1], lang=lang)
 
-        # Navatara Chakra for PDF
-        navatara_html = generate_navatara_html(moon_nak_idx)
+        # Navatara Chakra for PDF (with language support)
+        navatara_html = generate_navatara_html(moon_nak_idx, lang=lang)
 
         # Nakshatra Phala for PDF
-        nakshatra_phala_html = apply_gender(get_nakshatra_phala_html(moon_nak_idx), gender)
+        nakshatra_phala_html = apply_gender(get_nakshatra_phala_html_i18n(moon_nak_idx, lang), gender)
 
         # Lagna Phala for PDF
-        lagna_phala_html = apply_gender(get_lagna_phala_html(asc_rasi_idx), gender)
+        lagna_phala_html = apply_gender(get_lagna_phala_html_i18n(asc_rasi_idx, lang), gender)
 
         # Rashi Phala for PDF (Moon sign based)
         rashi_phala_html = apply_gender(get_rashi_phala_html(moon_rasi_idx), gender)
 
-        # Lagna Lord and Moon Rashi Lord for PDF
-        lagna_lord = get_rashi_lord(asc_rasi_idx)
-        moon_rashi_lord = get_rashi_lord(moon_rasi_idx)
-        moon_rasi = rasis[moon_rasi_idx]
+        # Lagna Lord and Moon Rashi Lord for PDF (i18n - use user's language)
+        lagna_lord = get_rashi_lord(asc_rasi_idx, lang)
+        moon_rashi_lord = get_rashi_lord(moon_rasi_idx, lang)
+        moon_rasi = get_rashi_name_i18n(moon_rasi_idx, lang)
 
-        # Graha Bichar for PDF
-        graha_bichar_html = get_graha_bichar_html(planet_houses)
+        # Graha Bichar for PDF (i18n)
+        graha_bichar_html = get_graha_bichar_html_i18n(planet_houses, lang)
 
         # Dasha Predictions for PDF - use importantantardasa.py (new detailed JSON data)
         antardasha_phala_html = build_important_antardasha_html(
-            dasa_hierarchy, gender=gender
+            dasa_hierarchy, gender=gender, lang=lang
         )
 
         # Apply gender to AI interpretation
@@ -1326,17 +1535,18 @@ def download_pdf():
             dob=dob, tob=tob,
             asc_rasi=asc_rasi, asc_rasi_idx=asc_rasi_idx, asc_degree=asc_deg,
             moon_rasi=moon_rasi, moon_rasi_idx=moon_rasi_idx,
-            nakshatra_name=nakshatras[moon_nak_idx - 1],
+            nakshatra_name=get_nakshatra_name_i18n(moon_nak_idx - 1, lang),
             nakshatra_idx=moon_nak_idx - 1,
             nakshatra_pada=panchanga.get('nakshatra', {}).get('pada', 1),
             panchanga=panchanga,
+            lang=lang,
         )
 
-        # Dwadash Bhab Phala for PDF (only actual placements)
-        dwadash_html = get_dwadash_html(planet_houses=planet_houses, asc_rasi_idx=asc_rasi_idx)
+        # Dwadash Bhab Phala for PDF (only actual placements) (i18n)
+        dwadash_html = get_dwadash_html_i18n(planet_houses=planet_houses, asc_rasi_idx=asc_rasi_idx, lang=lang)
 
         # Vimsottari Dasha Summary for PDF
-        vimsottari_summary = build_vimsottari_summary(dasa_hierarchy)
+        vimsottari_summary = build_vimsottari_summary(dasa_hierarchy, lang=lang)
 
         pdf_bytes = generate_pdf_report(
             name, dob, tob, place, planets_data, panchanga,
@@ -1351,7 +1561,8 @@ def download_pdf():
             lagna_lord=lagna_lord, moon_rashi_lord=moon_rashi_lord,
             moon_rasi=moon_rasi, gender=gender,
             astrologer_profile=astrologer_profile,
-            patrika_text=patrika_text
+            patrika_text=patrika_text,
+            lang=lang
         )
 
         return send_file(
@@ -1387,6 +1598,7 @@ def generate_patrika():
             return jsonify({'error': 'পত্ৰিকা বনাবলৈ প্ৰ\' ভাৰ্চনলৈ আপগ্ৰেড কৰক।'}), 403
     try:
         data = request.get_json()
+        lang = data.get("lang", get_current_language())
         patrika_text = generate_patrika_text(
             public_name=data.get('public_name', ''),
             secret_name=data.get('secret_name', ''),
@@ -1418,6 +1630,7 @@ def generate_patrika():
                 'gana': data.get('gana', '—'),
                 'sunrise': data.get('sunrise', '06:00'),
             },
+            lang=lang,
         )
         return jsonify({'patrika_text': patrika_text})
     except Exception as e:
@@ -1494,25 +1707,25 @@ def download_patrika_pdf():
             pos, _ = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
             p_sidereal_longitudes[p_name] = pos[0]
             r_idx, rasi, deg = get_rasi_and_degree(pos[0])
-            _, nak, lord = get_nakshatra_details(pos[0])
-            planets_data.append({"name": p_name, "rasi": rasi, "degree": deg,
-                                 "nakshatra": nak, "lord": lord})
+            nak_idx, nak, lord = get_nakshatra_details(pos[0])
+            planets_data.append({"name": p_name, "name_asm": p_name, "name_en": get_eng_planet(p_name), "rasi": rasi, "rasi_idx": r_idx, "degree": deg,
+                                 "nakshatra": nak, "nak_idx": nak_idx, "lord": lord})
             planet_signs[p_name] = r_idx
         
         p_sidereal_longitudes["কেতু"] = (p_sidereal_longitudes["ৰাহু"] + 180) % 360
         r_idx_k, ketu_rasi, ketu_deg = get_rasi_and_degree(p_sidereal_longitudes["কেতু"])
-        _, ketu_nak, ketu_lord = get_nakshatra_details(p_sidereal_longitudes["কেতু"])
-        planets_data.append({"name": "কেতু", "rasi": ketu_rasi, "degree": ketu_deg,
-                             "nakshatra": ketu_nak, "lord": ketu_lord})
+        ketu_idx, ketu_nak, ketu_lord = get_nakshatra_details(p_sidereal_longitudes["কেতু"])
+        planets_data.append({"name": pnames.get("কেতু", "কেতু"), "name_asm": "কেতু", "name_en": "Ketu", "rasi": ketu_rasi, "rasi_idx": r_idx_k, "degree": ketu_deg,
+                             "nakshatra": ketu_nak, "nak_idx": ketu_idx, "lord": ketu_lord})
         planet_signs["কেতু"] = r_idx_k
         
         cusps, ascmc = swe.houses(jd, lat, lon, b'P')
         asc_sidereal = (ascmc[0] - ayanamsa) % 360
         p_sidereal_longitudes["লগ্ন"] = asc_sidereal
         asc_rasi_idx, asc_rasi, asc_deg = get_rasi_and_degree(asc_sidereal)
-        _, asc_nak, asc_nak_lord = get_nakshatra_details(asc_sidereal)
-        planets_data.append({"name": "লগ্ন", "rasi": asc_rasi, "degree": asc_deg,
-                             "nakshatra": asc_nak, "lord": asc_nak_lord})
+        asc_nak_idx, asc_nak, asc_nak_lord = get_nakshatra_details(asc_sidereal)
+        planets_data.append({"name": pnames.get("লগ্ন", "লগ্ন"), "name_asm": "লগ্ন", "name_en": "Lagna", "rasi": asc_rasi, "rasi_idx": asc_rasi_idx, "degree": asc_deg,
+                             "nakshatra": asc_nak, "nak_idx": asc_nak_idx, "lord": asc_nak_lord})
         planet_signs["লগ্ন"] = asc_rasi_idx
         
         for p_name, p_lon in p_sidereal_longitudes.items():
@@ -1520,22 +1733,27 @@ def download_patrika_pdf():
             planet_houses[p_name] = house_idx
         
         dasa_hierarchy = get_full_dasa_hierarchy(p_sidereal_longitudes["চন্দ্ৰ"], ist_time)
-        panchanga = get_full_panchanga(ist_time, lat, lon, tz_offset)
-        dosha_results = get_complete_dosha_analysis(planet_houses, p_sidereal_longitudes)
-        yoga_results = get_complete_yoga_analysis(planet_houses, planet_signs, asc_rasi_idx)
+        lang = get_current_language()
+        dasa_hierarchy = localize_dasha_hierarchy(dasa_hierarchy, lang=lang)
+        panchanga = get_full_panchanga(ist_time, lat, lon, tz_offset, lang=lang)
+        dosha_results_raw = get_complete_dosha_analysis(planet_houses, p_sidereal_longitudes)
+        dosha_results = translate_dosha_result(dosha_results_raw, lang)
+        yoga_results_raw = get_complete_yoga_analysis(planet_houses, planet_signs, asc_rasi_idx)
+        yoga_results = translate_yoga_result(yoga_results_raw, lang)
         
         moon_nak_idx = get_nakshatra_details(p_sidereal_longitudes["চন্দ্ৰ"])[0] + 1
         moon_rasi_idx = get_rasi_and_degree(p_sidereal_longitudes["চন্দ্ৰ"])[0]
         navatara_data = get_navatara_data(moon_nak_idx)
         sannari_data = get_sannari_data(moon_nak_idx)
         
-        ai_interpretation = generate_ai_interpretation(
+        ai_interpretation = (generate_ai_interpretation_i18n if lang != 'as' else generate_ai_interpretation)(
             name, planets_data, asc_rasi, dosha_results, yoga_results, dasa_hierarchy,
             asc_rasi_idx=asc_rasi_idx, planet_signs=planet_signs,
-            moon_nak_name=nakshatras[moon_nak_idx - 1],
-            moon_rasi=rasis[moon_rasi_idx],
+            moon_nak_name=get_nakshatra_name_i18n(moon_nak_idx - 1, lang),
+            moon_rasi=get_rashi_name_i18n(moon_rasi_idx, lang),
             tripap_ages=TRIPAP_AGES.get(moon_nak_idx, []),
-            navatara_data=navatara_data, sannari_data=sannari_data
+            navatara_data=navatara_data, sannari_data=sannari_data,
+            lang=lang
         )
         
         vargas = {"D1": 1, "D2": 2, "D3": 3, "D4": 4, "D7": 7, "D9": 9,
@@ -1549,19 +1767,19 @@ def download_patrika_pdf():
                 if v_idx not in all_vargas[v_code]:
                     all_vargas[v_code][v_idx] = []
                 all_vargas[v_code][v_idx].append(PLANET_SHORT.get(p_key, p_key[:2]))
-        
-        tripap_data = get_tripap_rista(moon_nak_idx)
+
+        tripap_data = get_tripap_rista(moon_nak_idx, lang)
         tripap_ages = TRIPAP_AGES.get(moon_nak_idx, [])
-        sannari_html = generate_sannari_html_table(moon_nak_idx, nakshatras[moon_nak_idx - 1])
-        navatara_html = generate_navatara_html(moon_nak_idx)
-        nakshatra_phala_html = apply_gender(get_nakshatra_phala_html(moon_nak_idx), gender)
-        lagna_phala_html = apply_gender(get_lagna_phala_html(asc_rasi_idx), gender)
-        rashi_phala_html = apply_gender(get_rashi_phala_html(moon_rasi_idx), gender)
-        lagna_lord = get_rashi_lord(asc_rasi_idx)
-        moon_rashi_lord = get_rashi_lord(moon_rasi_idx)
-        moon_rasi = rasis[moon_rasi_idx]
-        graha_bichar_html = get_graha_bichar_html(planet_houses)
-        
+        sannari_html = generate_sannari_html_table(moon_nak_idx, nakshatras[moon_nak_idx - 1], lang=lang)
+        navatara_html = generate_navatara_html(moon_nak_idx, lang=lang)
+        nakshatra_phala_html = apply_gender(get_nakshatra_phala_html_i18n(moon_nak_idx, lang), gender)
+        lagna_phala_html = apply_gender(get_lagna_phala_html_i18n(asc_rasi_idx, lang), gender)
+        rashi_phala_html = apply_gender(get_rashi_phala_html_i18n(moon_rasi_idx, lang), gender)
+        lagna_lord = get_rashi_lord(asc_rasi_idx, lang)
+        moon_rashi_lord = get_rashi_lord(moon_rasi_idx, lang)
+        moon_rasi = get_rashi_name_i18n(moon_rasi_idx, lang)
+        graha_bichar_html = get_graha_bichar_html_i18n(planet_houses, lang)
+
         all_dasha_predictions = get_all_maha_antar_predictions(
             dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx
         )
@@ -1583,24 +1801,30 @@ def download_patrika_pdf():
             dob=dob, tob=tob,
             asc_rasi=asc_rasi, asc_rasi_idx=asc_rasi_idx, asc_degree=asc_deg,
             moon_rasi=moon_rasi, moon_rasi_idx=moon_rasi_idx,
-            nakshatra_name=nakshatras[moon_nak_idx - 1],
+            nakshatra_name=get_nakshatra_name_i18n(moon_nak_idx - 1, lang),
             nakshatra_idx=moon_nak_idx - 1,
             nakshatra_pada=panchanga.get('nakshatra', {}).get('pada', 1),
             panchanga=panchanga,
+            lang=lang,
         )
         
         astrologer_profile = get_astrologer_profile(session.get('user_id', 0))
 
         # Build antardasha phala HTML for patrika PDF (current → end) using importantantardasa.py
         antardasha_phala_html = build_important_antardasha_html(
-            dasa_hierarchy, gender=gender
+            dasa_hierarchy, gender=gender, lang=lang
         )
 
-        # Dwadash Bhab Phala for PDF (only actual placements)
-        dwadash_html = get_dwadash_html(planet_houses=planet_houses, asc_rasi_idx=asc_rasi_idx)
+        # Build pratyantar dasha phala HTML (today onward, current antardasha only)
+        pratyantar_dasha_html = build_pratyantar_dasha_html(
+            dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx, gender=gender, lang=lang
+        )
+
+        # Dwadash Bhab Phala for PDF (only actual placements) (i18n)
+        dwadash_html = get_dwadash_html_i18n(planet_houses=planet_houses, asc_rasi_idx=asc_rasi_idx, lang=lang)
 
         # Vimsottari Dasha Summary for PDF
-        vimsottari_summary = build_vimsottari_summary(dasa_hierarchy)
+        vimsottari_summary = build_vimsottari_summary(dasa_hierarchy, lang=lang)
         
         pdf_bytes = generate_pdf_report(
             name, dob, tob, place, planets_data, panchanga,
@@ -1615,7 +1839,9 @@ def download_patrika_pdf():
             lagna_lord=lagna_lord, moon_rashi_lord=moon_rashi_lord,
             moon_rasi=moon_rasi, gender=gender,
             astrologer_profile=astrologer_profile,
-            patrika_text=patrika_text
+            patrika_text=patrika_text,
+            pratyantar_dasha_html=pratyantar_dasha_html,
+            lang=lang
         )
         
         return send_file(
@@ -1691,30 +1917,35 @@ def download_pratyantar_pdf():
         p_sidereal_longitudes = {}
         planet_signs = {}
         planet_houses = {}
+        # [i18n fix] Get user's language and planet name map for PDF
+        _pdf_lang = get_current_language()
+        pnames = get_planet_names_i18n(_pdf_lang)
 
         for p_name, p_id in planets_dict.items():
             pos, _ = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
             p_sidereal_longitudes[p_name] = pos[0]
             r_idx, rasi, deg = get_rasi_and_degree(pos[0])
-            _, nak, lord = get_nakshatra_details(pos[0])
-            planets_data.append({"name": p_name, "rasi": rasi, "degree": deg,
-                                 "nakshatra": nak, "lord": lord})
+            nak_idx, nak, lord = get_nakshatra_details(pos[0])
+            # Use language-localized planet name to fix the mixing bug
+            display_name = pnames.get(p_name, p_name)
+            planets_data.append({"name": display_name, "name_asm": p_name, "name_en": get_eng_planet(p_name), "rasi": rasi, "rasi_idx": r_idx, "degree": deg,
+                                 "nakshatra": nak, "nak_idx": nak_idx, "lord": lord})
             planet_signs[p_name] = r_idx
 
         p_sidereal_longitudes["কেতু"] = (p_sidereal_longitudes["ৰাহু"] + 180) % 360
         r_idx_k, ketu_rasi, ketu_deg = get_rasi_and_degree(p_sidereal_longitudes["কেতু"])
-        _, ketu_nak, ketu_lord = get_nakshatra_details(p_sidereal_longitudes["কেতু"])
-        planets_data.append({"name": "কেতু", "rasi": ketu_rasi, "degree": ketu_deg,
-                             "nakshatra": ketu_nak, "lord": ketu_lord})
+        ketu_idx, ketu_nak, ketu_lord = get_nakshatra_details(p_sidereal_longitudes["কেতু"])
+        planets_data.append({"name": pnames.get("কেতু", "কেতু"), "name_asm": "কেতু", "name_en": "Ketu", "rasi": ketu_rasi, "rasi_idx": r_idx_k, "degree": ketu_deg,
+                             "nakshatra": ketu_nak, "nak_idx": ketu_idx, "lord": ketu_lord})
         planet_signs["কেতু"] = r_idx_k
 
         cusps, ascmc = swe.houses(jd, lat, lon, b'P')
         asc_sidereal = (ascmc[0] - ayanamsa) % 360
         p_sidereal_longitudes["লগ্ন"] = asc_sidereal
         asc_rasi_idx, asc_rasi, asc_deg = get_rasi_and_degree(asc_sidereal)
-        _, asc_nak, asc_nak_lord = get_nakshatra_details(asc_sidereal)
-        planets_data.append({"name": "লগ্ন", "rasi": asc_rasi, "degree": asc_deg,
-                             "nakshatra": asc_nak, "lord": asc_nak_lord})
+        asc_nak_idx, asc_nak, asc_nak_lord = get_nakshatra_details(asc_sidereal)
+        planets_data.append({"name": pnames.get("লগ্ন", "লগ্ন"), "name_asm": "লগ্ন", "name_en": "Lagna", "rasi": asc_rasi, "rasi_idx": asc_rasi_idx, "degree": asc_deg,
+                             "nakshatra": asc_nak, "nak_idx": asc_nak_idx, "lord": asc_nak_lord})
         planet_signs["লগ্ন"] = asc_rasi_idx
 
         for p_name, p_lon in p_sidereal_longitudes.items():
@@ -1722,22 +1953,27 @@ def download_pratyantar_pdf():
             planet_houses[p_name] = house_idx
 
         dasa_hierarchy = get_full_dasa_hierarchy(p_sidereal_longitudes["চন্দ্ৰ"], ist_time)
-        panchanga = get_full_panchanga(ist_time, lat, lon, tz_offset)
-        dosha_results = get_complete_dosha_analysis(planet_houses, p_sidereal_longitudes)
-        yoga_results = get_complete_yoga_analysis(planet_houses, planet_signs, asc_rasi_idx)
+        lang = get_current_language()
+        dasa_hierarchy = localize_dasha_hierarchy(dasa_hierarchy, lang=lang)
+        panchanga = get_full_panchanga(ist_time, lat, lon, tz_offset, lang=lang)
+        dosha_results_raw = get_complete_dosha_analysis(planet_houses, p_sidereal_longitudes)
+        dosha_results = translate_dosha_result(dosha_results_raw, lang)
+        yoga_results_raw = get_complete_yoga_analysis(planet_houses, planet_signs, asc_rasi_idx)
+        yoga_results = translate_yoga_result(yoga_results_raw, lang)
 
         moon_nak_idx = get_nakshatra_details(p_sidereal_longitudes["চন্দ্ৰ"])[0] + 1
         moon_rasi_idx = get_rasi_and_degree(p_sidereal_longitudes["চন্দ্ৰ"])[0]
         navatara_data = get_navatara_data(moon_nak_idx)
         sannari_data = get_sannari_data(moon_nak_idx)
 
-        ai_interpretation = generate_ai_interpretation(
+        ai_interpretation = (generate_ai_interpretation_i18n if lang != 'as' else generate_ai_interpretation)(
             name, planets_data, asc_rasi, dosha_results, yoga_results, dasa_hierarchy,
             asc_rasi_idx=asc_rasi_idx, planet_signs=planet_signs,
-            moon_nak_name=nakshatras[moon_nak_idx - 1],
-            moon_rasi=rasis[moon_rasi_idx],
+            moon_nak_name=get_nakshatra_name_i18n(moon_nak_idx - 1, lang),
+            moon_rasi=get_rashi_name_i18n(moon_rasi_idx, lang),
             tripap_ages=TRIPAP_AGES.get(moon_nak_idx, []),
-            navatara_data=navatara_data, sannari_data=sannari_data
+            navatara_data=navatara_data, sannari_data=sannari_data,
+            lang=lang
         )
 
         vargas = {"D1": 1, "D2": 2, "D3": 3, "D4": 4, "D7": 7, "D9": 9,
@@ -1752,17 +1988,17 @@ def download_pratyantar_pdf():
                     all_vargas[v_code][v_idx] = []
                 all_vargas[v_code][v_idx].append(PLANET_SHORT.get(p_key, p_key[:2]))
 
-        tripap_data = get_tripap_rista(moon_nak_idx)
+        tripap_data = get_tripap_rista(moon_nak_idx, lang)
         tripap_ages = TRIPAP_AGES.get(moon_nak_idx, [])
-        sannari_html = generate_sannari_html_table(moon_nak_idx, nakshatras[moon_nak_idx - 1])
-        navatara_html = generate_navatara_html(moon_nak_idx)
-        nakshatra_phala_html = apply_gender(get_nakshatra_phala_html(moon_nak_idx), gender)
-        lagna_phala_html = apply_gender(get_lagna_phala_html(asc_rasi_idx), gender)
-        rashi_phala_html = apply_gender(get_rashi_phala_html(moon_rasi_idx), gender)
-        lagna_lord = get_rashi_lord(asc_rasi_idx)
-        moon_rashi_lord = get_rashi_lord(moon_rasi_idx)
-        moon_rasi = rasis[moon_rasi_idx]
-        graha_bichar_html = get_graha_bichar_html(planet_houses)
+        sannari_html = generate_sannari_html_table(moon_nak_idx, nakshatras[moon_nak_idx - 1], lang=lang)
+        navatara_html = generate_navatara_html(moon_nak_idx, lang=lang)
+        nakshatra_phala_html = apply_gender(get_nakshatra_phala_html_i18n(moon_nak_idx, lang), gender)
+        lagna_phala_html = apply_gender(get_lagna_phala_html_i18n(asc_rasi_idx, lang), gender)
+        rashi_phala_html = apply_gender(get_rashi_phala_html_i18n(moon_rasi_idx, lang), gender)
+        lagna_lord = get_rashi_lord(asc_rasi_idx, lang)
+        moon_rashi_lord = get_rashi_lord(moon_rasi_idx, lang)
+        moon_rasi = get_rashi_name_i18n(moon_rasi_idx, lang)
+        graha_bichar_html = get_graha_bichar_html_i18n(planet_houses, lang)
 
         all_dasha_predictions = get_all_maha_antar_predictions(
             dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx
@@ -1774,12 +2010,12 @@ def download_pratyantar_pdf():
 
         # Build antardasha phala HTML
         antardasha_phala_html = build_important_antardasha_html(
-            dasa_hierarchy, gender=gender
+            dasa_hierarchy, gender=gender, lang=lang
         )
 
         # Build pratyantar dasha phala HTML (today onward, current antardasha only)
         pratyantar_dasha_html = build_pratyantar_dasha_html(
-            dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx, gender=gender
+            dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx, gender=gender, lang=lang
         )
 
         # Generate patrika text
@@ -1795,19 +2031,20 @@ def download_pratyantar_pdf():
             dob=dob, tob=tob,
             asc_rasi=asc_rasi, asc_rasi_idx=asc_rasi_idx, asc_degree=asc_deg,
             moon_rasi=moon_rasi, moon_rasi_idx=moon_rasi_idx,
-            nakshatra_name=nakshatras[moon_nak_idx - 1],
+            nakshatra_name=get_nakshatra_name_i18n(moon_nak_idx - 1, lang),
             nakshatra_idx=moon_nak_idx - 1,
             nakshatra_pada=panchanga.get('nakshatra', {}).get('pada', 1),
             panchanga=panchanga,
+            lang=lang,
         )
 
         astrologer_profile = get_astrologer_profile(session.get('user_id', 0))
 
-        # Dwadash Bhab Phala
-        dwadash_html = get_dwadash_html(planet_houses=planet_houses, asc_rasi_idx=asc_rasi_idx)
+        # Dwadash Bhab Phala (i18n)
+        dwadash_html = get_dwadash_html_i18n(planet_houses=planet_houses, asc_rasi_idx=asc_rasi_idx, lang=lang)
 
         # Vimsottari Dasha Summary
-        vimsottari_summary = build_vimsottari_summary(dasa_hierarchy)
+        vimsottari_summary = build_vimsottari_summary(dasa_hierarchy, lang=lang)
 
         pdf_bytes = generate_pdf_report(
             name, dob, tob, place, planets_data, panchanga,
@@ -1823,7 +2060,8 @@ def download_pratyantar_pdf():
             moon_rasi=moon_rasi, gender=gender,
             astrologer_profile=astrologer_profile,
             patrika_text=patrika_text,
-            pratyantar_dasha_html=pratyantar_dasha_html
+            pratyantar_dasha_html=pratyantar_dasha_html,
+            lang=lang
         )
 
         return send_file(
@@ -1911,30 +2149,35 @@ def custom_pdf():
         p_sidereal_longitudes = {}
         planet_signs = {}
         planet_houses = {}
+        # [i18n fix] Get user's language and planet name map for PDF
+        _pdf_lang = get_current_language()
+        pnames = get_planet_names_i18n(_pdf_lang)
 
         for p_name, p_id in planets_dict.items():
             pos, _ = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
             p_sidereal_longitudes[p_name] = pos[0]
             r_idx, rasi, deg = get_rasi_and_degree(pos[0])
-            _, nak, lord = get_nakshatra_details(pos[0])
-            planets_data.append({"name": p_name, "rasi": rasi, "degree": deg,
-                                 "nakshatra": nak, "lord": lord})
+            nak_idx, nak, lord = get_nakshatra_details(pos[0])
+            # Use language-localized planet name to fix the mixing bug
+            display_name = pnames.get(p_name, p_name)
+            planets_data.append({"name": display_name, "name_asm": p_name, "name_en": get_eng_planet(p_name), "rasi": rasi, "rasi_idx": r_idx, "degree": deg,
+                                 "nakshatra": nak, "nak_idx": nak_idx, "lord": lord})
             planet_signs[p_name] = r_idx
 
         p_sidereal_longitudes["কেতু"] = (p_sidereal_longitudes["ৰাহু"] + 180) % 360
         r_idx_k, ketu_rasi, ketu_deg = get_rasi_and_degree(p_sidereal_longitudes["কেতু"])
-        _, ketu_nak, ketu_lord = get_nakshatra_details(p_sidereal_longitudes["কেতু"])
-        planets_data.append({"name": "কেতু", "rasi": ketu_rasi, "degree": ketu_deg,
-                             "nakshatra": ketu_nak, "lord": ketu_lord})
+        ketu_idx, ketu_nak, ketu_lord = get_nakshatra_details(p_sidereal_longitudes["কেতু"])
+        planets_data.append({"name": pnames.get("কেতু", "কেতু"), "name_asm": "কেতু", "name_en": "Ketu", "rasi": ketu_rasi, "rasi_idx": r_idx_k, "degree": ketu_deg,
+                             "nakshatra": ketu_nak, "nak_idx": ketu_idx, "lord": ketu_lord})
         planet_signs["কেতু"] = r_idx_k
 
         cusps, ascmc = swe.houses(jd, lat, lon, b'P')
         asc_sidereal = (ascmc[0] - ayanamsa) % 360
         p_sidereal_longitudes["লগ্ন"] = asc_sidereal
         asc_rasi_idx, asc_rasi, asc_deg = get_rasi_and_degree(asc_sidereal)
-        _, asc_nak, asc_nak_lord = get_nakshatra_details(asc_sidereal)
-        planets_data.append({"name": "লগ্ন", "rasi": asc_rasi, "degree": asc_deg,
-                             "nakshatra": asc_nak, "lord": asc_nak_lord})
+        asc_nak_idx, asc_nak, asc_nak_lord = get_nakshatra_details(asc_sidereal)
+        planets_data.append({"name": pnames.get("লগ্ন", "লগ্ন"), "name_asm": "লগ্ন", "name_en": "Lagna", "rasi": asc_rasi, "rasi_idx": asc_rasi_idx, "degree": asc_deg,
+                             "nakshatra": asc_nak, "nak_idx": asc_nak_idx, "lord": asc_nak_lord})
         planet_signs["লগ্ন"] = asc_rasi_idx
 
         for p_name, p_lon in p_sidereal_longitudes.items():
@@ -1942,9 +2185,13 @@ def custom_pdf():
             planet_houses[p_name] = house_idx
 
         dasa_hierarchy = get_full_dasa_hierarchy(p_sidereal_longitudes["চন্দ্ৰ"], ist_time)
-        panchanga = get_full_panchanga(ist_time, lat, lon, tz_offset)
-        dosha_results = get_complete_dosha_analysis(planet_houses, p_sidereal_longitudes)
-        yoga_results = get_complete_yoga_analysis(planet_houses, planet_signs, asc_rasi_idx)
+        lang = get_current_language()
+        dasa_hierarchy = localize_dasha_hierarchy(dasa_hierarchy, lang=lang)
+        panchanga = get_full_panchanga(ist_time, lat, lon, tz_offset, lang=lang)
+        dosha_results_raw = get_complete_dosha_analysis(planet_houses, p_sidereal_longitudes)
+        dosha_results = translate_dosha_result(dosha_results_raw, lang)
+        yoga_results_raw = get_complete_yoga_analysis(planet_houses, planet_signs, asc_rasi_idx)
+        yoga_results = translate_yoga_result(yoga_results_raw, lang)
 
         # Calculate moon indices BEFORE AI interpretation
         moon_nak_idx = get_nakshatra_details(p_sidereal_longitudes["চন্দ্ৰ"])[0] + 1
@@ -1954,15 +2201,16 @@ def custom_pdf():
         navatara_data = get_navatara_data(moon_nak_idx)
         sannari_data = get_sannari_data(moon_nak_idx)
 
-        ai_interpretation = generate_ai_interpretation(
+        ai_interpretation = (generate_ai_interpretation_i18n if lang != 'as' else generate_ai_interpretation)(
             name, planets_data, asc_rasi, dosha_results, yoga_results, dasa_hierarchy,
             asc_rasi_idx=asc_rasi_idx,
             planet_signs=planet_signs,
-            moon_nak_name=nakshatras[moon_nak_idx - 1],
-            moon_rasi=rasis[moon_rasi_idx],
+            moon_nak_name=get_nakshatra_name_i18n(moon_nak_idx - 1, lang),
+            moon_rasi=get_rashi_name_i18n(moon_rasi_idx, lang),
             tripap_ages=TRIPAP_AGES.get(moon_nak_idx, []),
             navatara_data=navatara_data,
-            sannari_data=sannari_data
+            sannari_data=sannari_data,
+            lang=lang
         )
 
         # Varga Charts
@@ -1980,25 +2228,25 @@ def custom_pdf():
                     all_vargas[v_code][v_idx] = []
                 all_vargas[v_code][v_idx].append(PLANET_SHORT.get(p_key, p_key[:2]))
 
-        tripap_data = get_tripap_rista(moon_nak_idx)
+        tripap_data = get_tripap_rista(moon_nak_idx, lang)
         tripap_ages = TRIPAP_AGES.get(moon_nak_idx, [])
 
-        sannari_html = generate_sannari_html_table(moon_nak_idx, nakshatras[moon_nak_idx - 1])
+        sannari_html = generate_sannari_html_table(moon_nak_idx, nakshatras[moon_nak_idx - 1], lang=lang)
 
-        navatara_html = generate_navatara_html(moon_nak_idx)
+        navatara_html = generate_navatara_html(moon_nak_idx, lang=lang)
 
-        nakshatra_phala_html = apply_gender(get_nakshatra_phala_html(moon_nak_idx), gender)
-        lagna_phala_html = apply_gender(get_lagna_phala_html(asc_rasi_idx), gender)
+        nakshatra_phala_html = apply_gender(get_nakshatra_phala_html_i18n(moon_nak_idx, lang), gender)
+        lagna_phala_html = apply_gender(get_lagna_phala_html_i18n(asc_rasi_idx, lang), gender)
 
-        rashi_phala_html = apply_gender(get_rashi_phala_html(moon_rasi_idx), gender)
+        rashi_phala_html = apply_gender(get_rashi_phala_html_i18n(moon_rasi_idx, lang), gender)
 
-        # Lagna Lord and Moon Rashi Lord for PDF
-        lagna_lord = get_rashi_lord(asc_rasi_idx)
-        moon_rashi_lord = get_rashi_lord(moon_rasi_idx)
-        moon_rasi = rasis[moon_rasi_idx]
+        # Lagna Lord and Moon Rashi Lord for PDF (i18n - use user's language)
+        lagna_lord = get_rashi_lord(asc_rasi_idx, lang)
+        moon_rashi_lord = get_rashi_lord(moon_rasi_idx, lang)
+        moon_rasi = get_rashi_name_i18n(moon_rasi_idx, lang)
 
-        # Graha Bichar for PDF
-        graha_bichar_html = get_graha_bichar_html(planet_houses)
+        # Graha Bichar for PDF (i18n)
+        graha_bichar_html = get_graha_bichar_html_i18n(planet_houses, lang)
 
         all_dasha_predictions = get_all_maha_antar_predictions(
             dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx
@@ -2030,10 +2278,11 @@ def custom_pdf():
             dob=dob, tob=tob,
             asc_rasi=asc_rasi, asc_rasi_idx=asc_rasi_idx, asc_degree=asc_deg,
             moon_rasi=moon_rasi, moon_rasi_idx=moon_rasi_idx,
-            nakshatra_name=nakshatras[moon_nak_idx - 1],
+            nakshatra_name=get_nakshatra_name_i18n(moon_nak_idx - 1, lang),
             nakshatra_idx=moon_nak_idx - 1,
             nakshatra_pada=panchanga.get('nakshatra', {}).get('pada', 1),
             panchanga=panchanga,
+            lang=lang,
         )
 
         # Get astrologer profile for PDF footer (user's profile, fallback to admin)
@@ -2049,37 +2298,37 @@ def custom_pdf():
                 # Show all antardashas of the selected mahadasha (future only)
                 antardasha_phala_html = build_antardasha_html(
                     dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx,
-                    selected_maha=antardasha_maha, include_current_and_future_only=True, gender=gender
+                    selected_maha=antardasha_maha, include_current_and_future_only=True, gender=gender, lang=lang
                 )
             elif antardasha_mode == "all_future":
                 # Show all future antardashas across all mahadashas
                 antardasha_phala_html = build_antardasha_html(
                     dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx,
-                    selected_maha=None, include_current_and_future_only=True, gender=gender
+                    selected_maha=None, include_current_and_future_only=True, gender=gender, lang=lang
                 )
             else:
                 # current_onward: current antardasha → end of current mahadasha
                 antardasha_phala_html = build_antardasha_html(
                     dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx,
-                    selected_maha=None, include_current_and_future_only=True, gender=gender
+                    selected_maha=None, include_current_and_future_only=True, gender=gender, lang=lang
                 )
 
         # Build pratyantar dasha phala HTML for custom PDF (only if selected)
         pratyantar_dasha_html = ""
         if 'pratyantar_dasha' in selected_sections:
             pratyantar_dasha_html = build_pratyantar_dasha_html(
-                dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx, gender=gender
+                dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx, gender=gender, lang=lang
             )
 
-        # Dwadash Bhab Phala for PDF (only if selected, only actual placements)
+        # Dwadash Bhab Phala for PDF (only if selected, only actual placements) (i18n)
         dwadash_html = ""
         if 'dwadash_bhab_phala' in selected_sections:
-            dwadash_html = get_dwadash_html(planet_houses=planet_houses, asc_rasi_idx=asc_rasi_idx)
+            dwadash_html = get_dwadash_html_i18n(planet_houses=planet_houses, asc_rasi_idx=asc_rasi_idx, lang=lang)
 
         # Vimsottari Dasha Summary for PDF
         vimsottari_summary = ""
         if 'dasha_summary' in selected_sections:
-            vimsottari_summary = build_vimsottari_summary(dasa_hierarchy)
+            vimsottari_summary = build_vimsottari_summary(dasa_hierarchy, lang=lang)
 
         pdf_bytes = generate_pdf_report(
             name, dob, tob, place, planets_data, panchanga,
@@ -2096,7 +2345,8 @@ def custom_pdf():
             moon_rasi=moon_rasi, gender=gender,
             astrologer_profile=astrologer_profile,
             patrika_text=patrika_text,
-            pratyantar_dasha_html=pratyantar_dasha_html
+            pratyantar_dasha_html=pratyantar_dasha_html,
+            lang=lang
         )
 
         return send_file(
@@ -2114,13 +2364,14 @@ def api_panchanga():
     """API endpoint for Panchanga data."""
     lat = float(request.args.get("lat", 26.1445))
     lon = float(request.args.get("lon", 91.7362))
+    lang = request.args.get("lang", get_current_language())
     now = datetime.now()
     # timezone offset (hours) - optional query param 'tz', default 5.5
     try:
         tz_offset = float(request.args.get("tz", request.args.get("timezone", 5.5)))
     except (ValueError, TypeError):
         tz_offset = 5.5
-    panchanga = get_full_panchanga(now, lat, lon, tz_offset)
+    panchanga = get_full_panchanga(now, lat, lon, tz_offset, lang=lang)
     return jsonify(panchanga)
 
 
@@ -2132,12 +2383,13 @@ def api_panchanga_full():
         lon = float(request.args.get("lon", 91.7362))
     except (ValueError, TypeError):
         lat, lon = 26.1445, 91.7362
+    lang = request.args.get("lang", get_current_language())
     now = datetime.now()
     try:
         tz_offset = float(request.args.get("tz", request.args.get("timezone", 5.5)))
     except (ValueError, TypeError):
         tz_offset = 5.5
-    panchanga = get_panchanga_with_times(now, lat, lon, tz_offset)
+    panchanga = get_panchanga_with_times(now, lat, lon, tz_offset, lang=lang)
     return jsonify(panchanga)
 
 
@@ -2149,6 +2401,7 @@ def api_panchanga_widget():
         lon = float(request.args.get("lon", 91.7362))
     except (ValueError, TypeError):
         lat, lon = 26.1445, 91.7362
+    lang = request.args.get("lang", get_current_language())
     try:
         tz_offset = float(request.args.get("tz", request.args.get("timezone", 5.5)))
     except (ValueError, TypeError):
@@ -2166,7 +2419,7 @@ def api_panchanga_widget():
     else:
         now = datetime.now()
 
-    panchanga = get_panchanga_with_times(now, lat, lon, tz_offset)
+    panchanga = get_panchanga_with_times(now, lat, lon, tz_offset, lang=lang)
     return render_template("panchanga_widget.html", panchanga=panchanga, lat=lat, lon=lon, tz=tz_offset)
 
 
@@ -2254,7 +2507,39 @@ def api_antardasha_phala():
     if not graha_name or not rashi_name or not house_num:
         return jsonify({"error": "Missing graha/rashi/house"}), 400
 
-    phala_text = get_antardasha_phala(graha_name, rashi_name, int(house_num))
+    lang = request.args.get("lang", get_current_language())
+    # graha_name is English (e.g. "Sun") from JS - convert to Assamese for the lookup
+    from dasha_engine import get_asm_planet
+    graha_name_asm = get_asm_planet(graha_name)
+    # rashi_name from JS is in user's language (Assamese/Hindi/Bengali/English)
+    # Convert to Assamese for the i18n function to use for key lookup
+    import unicodedata
+    from prediction_i18n import _ASM_RASHI_TO_INDEX
+    rashi_idx = -1
+    # Normalize input to NFC for consistent matching
+    rashi_name_n = unicodedata.normalize('NFC', rashi_name)
+    # Try to find rashi index (rashi names in user's lang might match ASM index mapping)
+    rashi_names_asm = ["মেষ", "বৃষ", "মিথুন", "কৰ্কট", "সিংহ", "কন্যা", "তুলা", "বৃশ্চিক", "ধনু", "মকৰ", "কুম্ভ", "মীন"]
+    rashi_names_asm_n = [unicodedata.normalize('NFC', r) for r in rashi_names_asm]
+    if rashi_name_n in rashi_names_asm_n:
+        rashi_idx = rashi_names_asm_n.index(rashi_name_n)
+    elif rashi_name_n in _ASM_RASHI_TO_INDEX:
+        rashi_idx = _ASM_RASHI_TO_INDEX[rashi_name_n]
+    
+    # If rashi is in user's language (not Assamese), we need to convert it
+    # The i18n function will convert it to target language, but we need ASM input
+    if rashi_idx < 0:
+        # Try English rashi names
+        rashi_names_en = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"]
+        if rashi_name_n in rashi_names_en:
+            rashi_idx = rashi_names_en.index(rashi_name_n)
+    
+    if rashi_idx >= 0:
+        rashi_name_asm = rashi_names_asm[rashi_idx]
+    else:
+        rashi_name_asm = rashi_name  # fallback
+    
+    phala_text = get_antardasha_phala_i18n(graha_name_asm, rashi_name_asm, int(house_num), lang)
     return jsonify({"phala": phala_text})
 
 # ═══════════════════════════════════════════
@@ -2271,7 +2556,12 @@ def api_important_antardasha_phala():
     if not maha_lord or not antar_lord:
         return jsonify({"error": "Missing maha/antar lords"}), 400
 
-    phala_text = get_important_antardasha_phala(maha_lord, antar_lord)
+    lang = request.args.get("lang", get_current_language())
+    # Convert English planet names to Assamese for i18n lookup
+    from dasha_engine import get_asm_planet
+    maha_asm = get_asm_planet(maha_lord)
+    antar_asm = get_asm_planet(antar_lord)
+    phala_text = get_important_antardasha_phala_i18n(maha_asm, antar_asm, lang)
     return jsonify({"phala": phala_text})
 
 # ═══════════════════════════════════════════
@@ -2285,7 +2575,8 @@ def login_page():
         return redirect(url_for('user_dashboard'))
     # Compute today's panchanga for Guwahati (default)
     from panchanga_data import get_panchanga_with_times
-    panchanga = get_panchanga_with_times(datetime.now(), 26.1445, 91.7362, 5.5)
+    lang = get_current_language()
+    panchanga = get_panchanga_with_times(datetime.now(), 26.1445, 91.7362, 5.5, lang=lang)
     return render_template("login.html", panchanga=panchanga)
 
 
@@ -2333,7 +2624,7 @@ def register_post():
     password = request.form.get("password", "")
 
     if len(password) < 6:
-        flash("পাছৱৰ্ড ন্যূনতম ৬ আখৰৰ হ'ব লাগিব।", 'error')
+        flash(get_text('password_min_length', get_current_language()), 'error')
         return redirect(url_for('login_page'))
 
     success, message = register_user(name, email, mobile, password)
@@ -2356,7 +2647,7 @@ def verify_page():
     conn.close()
 
     if not user:
-        flash("ব্যৱহাৰকাৰী পোৱা নগল।", 'error')
+        flash(get_text('user_not_found', get_current_language()), 'error')
         return redirect(url_for('login_page'))
 
     return render_template("verify.html", user=dict(user))
@@ -2388,7 +2679,7 @@ def verify_mobile_post():
     conn.close()
 
     if not user['mobile']:
-        flash("আপোনাৰ মোবাইল নম্বৰ পঞ্জীয়ন কৰা নাই।", 'error')
+        flash(get_text('mobile_not_registered', get_current_language()), 'error')
         return redirect(url_for('verify_page'))
 
     otp = request.form.get("mobile_otp", "").strip()
@@ -2418,7 +2709,7 @@ def logout():
     if 'user_id' in session:
         end_all_user_sessions(session['user_id'])
     session.clear()
-    flash("আপুনি লগআউট কৰিছে।", 'info')
+    flash(get_text('logout_message', get_current_language()), 'info')
     return redirect(url_for('login_page'))
 
 
@@ -2518,7 +2809,7 @@ def user_dashboard():
 
     if not user:
         session.clear()
-        flash("ব্যৱহাৰকাৰী পোৱা নগল।", 'error')
+        flash(get_text('user_not_found', get_current_language()), 'error')
         return redirect(url_for('login_page'))
 
     user_features = get_user_features(session['user_id'])
@@ -2567,7 +2858,8 @@ def kundli_page():
 
     # Compute today's panchanga for Guwahati (default)
     from panchanga_data import get_panchanga_with_times
-    panchanga = get_panchanga_with_times(datetime.now(), 26.1445, 91.7362, 5.5)
+    lang = get_current_language()
+    panchanga = get_panchanga_with_times(datetime.now(), 26.1445, 91.7362, 5.5, lang=lang)
 
     return render_template("index.html", places=places, timezones=timezones,
                            user_features=user_features, feature_defs=feature_defs,
@@ -2583,7 +2875,7 @@ def kundli_page():
 def rashifal_page():
     """Rashifal (horoscope) page — login required. Free users get 1 per day."""
     if 'user_id' not in session:
-        flash("ৰাশিফল চাবলৈ প্ৰথমে লগইন কৰক।", 'error')
+        flash(get_text('rashifal_login_required', get_current_language()), 'error')
         return redirect(url_for('login_page'))
 
     user_id = session['user_id']
@@ -2694,7 +2986,7 @@ def admin_login_post():
 def admin_logout():
     """Admin logout."""
     session.clear()
-    flash("এডমিন লগআউট সফল।", 'info')
+    flash(get_text('admin_logout_success', get_current_language()), 'info')
     return redirect(url_for('admin_login_page'))
 
 
@@ -3252,30 +3544,35 @@ def api_calculate_kundli():
         p_sidereal_longitudes = {}
         planet_signs = {}
         planet_houses = {}
+        # [i18n fix] Get user's language and planet name map for PDF
+        _pdf_lang = get_current_language()
+        pnames = get_planet_names_i18n(_pdf_lang)
 
         for p_name, p_id in planets_dict.items():
             pos, _ = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
             p_sidereal_longitudes[p_name] = pos[0]
             r_idx, rasi, deg = get_rasi_and_degree(pos[0])
-            _, nak, lord = get_nakshatra_details(pos[0])
-            planets_data.append({"name": p_name, "rasi": rasi, "degree": deg,
-                                 "nakshatra": nak, "lord": lord})
+            nak_idx, nak, lord = get_nakshatra_details(pos[0])
+            # Use language-localized planet name to fix the mixing bug
+            display_name = pnames.get(p_name, p_name)
+            planets_data.append({"name": display_name, "name_asm": p_name, "name_en": get_eng_planet(p_name), "rasi": rasi, "rasi_idx": r_idx, "degree": deg,
+                                 "nakshatra": nak, "nak_idx": nak_idx, "lord": lord})
             planet_signs[p_name] = r_idx
 
         p_sidereal_longitudes["কেতু"] = (p_sidereal_longitudes["ৰাহু"] + 180) % 360
         r_idx_k, ketu_rasi, ketu_deg = get_rasi_and_degree(p_sidereal_longitudes["কেতু"])
-        _, ketu_nak, ketu_lord = get_nakshatra_details(p_sidereal_longitudes["কেতু"])
-        planets_data.append({"name": "কেতু", "rasi": ketu_rasi, "degree": ketu_deg,
-                             "nakshatra": ketu_nak, "lord": ketu_lord})
+        ketu_idx, ketu_nak, ketu_lord = get_nakshatra_details(p_sidereal_longitudes["কেতু"])
+        planets_data.append({"name": pnames.get("কেতু", "কেতু"), "name_asm": "কেতু", "name_en": "Ketu", "rasi": ketu_rasi, "rasi_idx": r_idx_k, "degree": ketu_deg,
+                             "nakshatra": ketu_nak, "nak_idx": ketu_idx, "lord": ketu_lord})
         planet_signs["কেতু"] = r_idx_k
 
         cusps, ascmc = swe.houses(jd, lat, lon, b'P')
         asc_sidereal = (ascmc[0] - ayanamsa) % 360
         p_sidereal_longitudes["লগ্ন"] = asc_sidereal
         asc_rasi_idx, asc_rasi, asc_deg = get_rasi_and_degree(asc_sidereal)
-        _, asc_nak, asc_nak_lord = get_nakshatra_details(asc_sidereal)
-        planets_data.append({"name": "লগ্ন", "rasi": asc_rasi, "degree": asc_deg,
-                             "nakshatra": asc_nak, "lord": asc_nak_lord})
+        asc_nak_idx, asc_nak, asc_nak_lord = get_nakshatra_details(asc_sidereal)
+        planets_data.append({"name": pnames.get("লগ্ন", "লগ্ন"), "name_asm": "লগ্ন", "name_en": "Lagna", "rasi": asc_rasi, "rasi_idx": asc_rasi_idx, "degree": asc_deg,
+                             "nakshatra": asc_nak, "nak_idx": asc_nak_idx, "lord": asc_nak_lord})
         planet_signs["লগ্ন"] = asc_rasi_idx
 
         for p_name, p_lon in p_sidereal_longitudes.items():
@@ -3286,10 +3583,11 @@ def api_calculate_kundli():
         moon_rasi_idx = get_rasi_and_degree(p_sidereal_longitudes["চন্দ্ৰ"])[0]
 
         dasa_hierarchy = get_full_dasa_hierarchy(p_sidereal_longitudes["চন্দ্ৰ"], ist_time)
+        dasa_hierarchy = localize_dasha_hierarchy(dasa_hierarchy, lang=get_current_language())
         dosha_results = get_complete_dosha_analysis(planet_houses, p_sidereal_longitudes)
 
-        lagna_lord = get_rashi_lord(asc_rasi_idx)
-        moon_rashi_lord = get_rashi_lord(moon_rasi_idx)
+        lagna_lord = get_rashi_lord(asc_rasi_idx, lang=get_current_language())
+        moon_rashi_lord = get_rashi_lord(moon_rasi_idx, lang=get_current_language())
 
         return jsonify({
             "success": True,
@@ -3298,8 +3596,8 @@ def api_calculate_kundli():
             "planet_signs": planet_signs,
             "asc_rasi": asc_rasi,
             "asc_rasi_idx": asc_rasi_idx,
-            "moon_nak_name": nakshatras[moon_nak_idx - 1],
-            "moon_rasi": rasis[moon_rasi_idx],
+            "moon_nak_name": get_nakshatra_name_i18n(moon_nak_idx - 1, get_current_language()),
+            "moon_rasi": get_rashi_name_i18n(moon_rasi_idx, get_current_language()),
             "dosha_results": dosha_results,
             "dasa_data": dasa_hierarchy,
             "lagna_lord": lagna_lord,
@@ -3716,6 +4014,7 @@ def api_chart_image():
     """
     style = request.args.get("style", "bengali")
     asc_str = request.args.get("asc", "0")
+    lang = get_current_language()
     
     try:
         ascendant_index = int(asc_str) % 12
@@ -3784,23 +4083,23 @@ def api_chart_image():
                 planet_data[v_idx].append(PLANET_SHORT.get(p_key, p_key[:2]))
             
             if name:
-                title = f"{name}ৰ কুণ্ডলী ({varga_code})"
+                title = f"{name} {get_text('result_title', lang)} ({varga_code})"
             else:
-                title = f"কুণ্ডলী চক্ৰ ({varga_code})"
+                title = f"{get_text('result_kundli_chart', lang)} ({varga_code})"
         except Exception as e:
             logger.error(f"Chart image calculation error: {e}")
-            # Fall back to empty chart
-            title = f"কুণ্ডলী চক্ৰ ({varga_code})"
+            title = f"{get_text('result_kundli_chart', lang)} ({varga_code})"
     
     try:
         if style == "all":
-            buf = draw_all_styles(ascendant_index=ascendant_index, planet_data=planet_data)
+            buf = draw_all_styles(ascendant_index=ascendant_index, planet_data=planet_data, lang=lang)
         else:
             buf = draw_kundli_chart(
                 style=style,
                 ascendant_index=ascendant_index,
                 planet_data=planet_data,
-                title=title
+                title=title,
+                lang=lang
             )
         return send_file(buf, mimetype="image/png")
     except Exception as e:
@@ -3860,10 +4159,18 @@ def jotok_milan_calculate():
                                    user_features=get_user_features(session.get('user_id', 0)),
                                    feature_defs=get_all_feature_definitions())
 
+        # Convert user inputs to Assamese for engine lookup
+        from prediction_i18n import convert_nakshatra_to_asm, convert_rashi_to_asm
+        user_lang = session.get('lang', 'as')
+        boy_nakshatra_asm = convert_nakshatra_to_asm(boy_nakshatra, user_lang)
+        girl_nakshatra_asm = convert_nakshatra_to_asm(girl_nakshatra, user_lang)
+        boy_rashi_asm = convert_rashi_to_asm(boy_rashi, user_lang)
+        girl_rashi_asm = convert_rashi_to_asm(girl_rashi, user_lang)
+
         boy_data = {
             "name": boy_name,
-            "rashi": boy_rashi,
-            "nakshatra": boy_nakshatra,
+            "rashi": boy_rashi_asm,
+            "nakshatra": boy_nakshatra_asm,
             "charan": boy_charan,
             "lagna": boy_lagna,
             "mars_house": boy_mars_house
@@ -3871,8 +4178,8 @@ def jotok_milan_calculate():
 
         girl_data = {
             "name": girl_name,
-            "rashi": girl_rashi,
-            "nakshatra": girl_nakshatra,
+            "rashi": girl_rashi_asm,
+            "nakshatra": girl_nakshatra_asm,
             "charan": girl_charan,
             "lagna": girl_lagna,
             "mars_house": girl_mars_house
@@ -3902,12 +4209,21 @@ def jotok_milan_calculate():
         # Check if user can download PDF (subscription_id > 1 = paid user)
         can_download_pdf = user_subscription_id > 1
 
+        # Get i18n labels for Jotok Milan
+        from prediction_i18n import get_jotok_labels, translate_jotok_result
+        jotok_lang = session.get('lang', 'as')
+        jotok_labels = get_jotok_labels(jotok_lang)
+        
+        # Translate engine result to target language
+        translated_result = translate_jotok_result(result, jotok_lang)
+
         return render_template("jotok_milan_result.html",
-                               result=result,
-                               boy=boy_data,
-                               girl=girl_data,
+                               result=translated_result,
+                               boy=translated_result['boy'],
+                               girl=translated_result['girl'],
                                get_koota_name_asm=get_koota_name_asm,
                                get_koota_icon=get_koota_icon,
+                               jotok_labels=jotok_labels,
                                user_features=get_user_features(session.get('user_id', 0)),
                                user_subscription_name=user_subscription_name,
                                user_subscription_id=user_subscription_id,
@@ -4007,12 +4323,20 @@ def jotok_milan_download_pdf():
         girl_lagna = request.form.get("girl_lagna_calc", "").strip() or request.form.get("girl_lagna", "").strip()
         girl_mars_house = int(request.form.get("girl_mars_house_calc", "0") or request.form.get("girl_mars_house", "0"))
 
+        # Convert user inputs to Assamese for engine lookup
+        from prediction_i18n import convert_nakshatra_to_asm, convert_rashi_to_asm
+        user_lang = session.get('lang', 'as')
+        boy_nakshatra_asm = convert_nakshatra_to_asm(boy_nakshatra, user_lang)
+        girl_nakshatra_asm = convert_nakshatra_to_asm(girl_nakshatra, user_lang)
+        boy_rashi_asm = convert_rashi_to_asm(boy_rashi, user_lang)
+        girl_rashi_asm = convert_rashi_to_asm(girl_rashi, user_lang)
+
         boy_data = {
-            "name": boy_name, "rashi": boy_rashi, "nakshatra": boy_nakshatra,
+            "name": boy_name, "rashi": boy_rashi_asm, "nakshatra": boy_nakshatra_asm,
             "charan": boy_charan, "lagna": boy_lagna, "mars_house": boy_mars_house
         }
         girl_data = {
-            "name": girl_name, "rashi": girl_rashi, "nakshatra": girl_nakshatra,
+            "name": girl_name, "rashi": girl_rashi_asm, "nakshatra": girl_nakshatra_asm,
             "charan": girl_charan, "lagna": girl_lagna, "mars_house": girl_mars_house
         }
 
@@ -4024,7 +4348,8 @@ def jotok_milan_download_pdf():
         astrologer_profile = get_astrologer_profile(user_id)
 
         # Generate PDF
-        pdf_bytes = generate_jotok_milan_pdf(result, boy_data, girl_data, astrologer_profile)
+        lang = session.get('lang', 'as')
+        pdf_bytes = generate_jotok_milan_pdf(result, boy_data, girl_data, astrologer_profile, lang=lang)
 
         # Create filename
         filename = f"Jotok_Milan_{boy_name}_{girl_name}.pdf".replace(" ", "_")

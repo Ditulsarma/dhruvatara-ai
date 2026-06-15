@@ -28,13 +28,25 @@ NAKSHATRA_NAMES = [
 # নৱতাৰা চক্ৰ গণনা
 # ═══════════════════════════════════════════════════════════════
 
-def get_navatara_data(nakshatra_number: int) -> dict:
+def get_navatara_data(nakshatra_number: int, lang: str = 'as') -> dict:
     """
     নক্ষত্ৰ সংখ্যা (১-২৭) ৰ পৰা নৱতাৰা চক্ৰৰ ৩x৯ গ্ৰীড গণনা কৰে।
+    Args:
+        nakshatra_number: 1-27
+        lang: language code (as/bn/hi/en)
     Returns dict with rows of (nakshatra_number, tara_name, is_red) tuples.
     """
     if nakshatra_number < 1 or nakshatra_number > 27:
         return None
+
+    # Get i18n tara names and nakshatra names
+    try:
+        from prediction_i18n import get_navatara_tara_names_i18n, get_nakshatra_names_list_i18n
+        tara_names = get_navatara_tara_names_i18n(lang)
+        nak_names = get_nakshatra_names_list_i18n(lang)
+    except ImportError:
+        tara_names = TARA_NAMES
+        nak_names = NAKSHATRA_NAMES
 
     n = nakshatra_number
     rows = []
@@ -43,9 +55,9 @@ def get_navatara_data(nakshatra_number: int) -> dict:
         row_data = []
         for col in range(9):
             nak_num = ((n - 1) + row * 9 + col) % 27 + 1
-            tara_name = TARA_NAMES[col]
+            tara_name = tara_names[col]
             is_red = col in RED_COLUMNS
-            nak_name = NAKSHATRA_NAMES[nak_num - 1]
+            nak_name = nak_names[nak_num - 1]
             row_data.append({
                 "nakshatra_number": nak_num,
                 "nakshatra_name": nak_name,
@@ -56,8 +68,8 @@ def get_navatara_data(nakshatra_number: int) -> dict:
 
     return {
         "nakshatra_number": n,
-        "nakshatra_name": NAKSHATRA_NAMES[n - 1],
-        "headers": TARA_NAMES,
+        "nakshatra_name": nak_names[n - 1],
+        "headers": tara_names,
         "rows": rows,
         "red_columns": list(RED_COLUMNS),
     }
@@ -67,25 +79,35 @@ def get_navatara_data(nakshatra_number: int) -> dict:
 # নৱতাৰা চক্ৰ HTML Table (ৱেব আৰু PDF দুয়োৰে বাবে)
 # ═══════════════════════════════════════════════════════════════
 
-def generate_navatara_html(nakshatra_number: int) -> str:
+def generate_navatara_html(nakshatra_number: int, lang: str = 'as') -> str:
     """
     নৱতাৰা চক্ৰৰ সম্পূৰ্ণ HTML (টেবুল + ব্যাখ্যা) নিৰ্মাণ কৰে।
     """
-    data = get_navatara_data(nakshatra_number)
+    data = get_navatara_data(nakshatra_number, lang)
+    try:
+        from prediction_i18n import get_navatara_label_i18n
+        title_label = get_navatara_label_i18n('title', lang)
+        note_label = get_navatara_label_i18n('note', lang)
+        invalid_label = get_navatara_label_i18n('invalid', lang)
+    except ImportError:
+        title_label = 'নৱতাৰা চক্ৰ'
+        note_label = 'নৱতাৰা চক্ৰত উল্লেখিত নক্ষত্ৰত গ্ৰহ সঞ্চাৰ হলে...'
+        invalid_label = 'অবৈধ নক্ষত্ৰ সংখ্যা'
+
     if data is None:
-        return '<p style="color:#c62828;">অবৈধ নক্ষত্ৰ সংখ্যা</p>'
+        return f'<p style="color:#c62828;">{invalid_label}</p>'
 
     # Build table
     html = '<div class="navatara-section">'
-    html += f'<h4 style="text-align:center;color:#1a237e;margin-bottom:8px;">🌀 নৱতাৰা চক্ৰ — {data["nakshatra_name"]} (নক্ষত্ৰ নং {data["nakshatra_number"]})</h4>'
+    html += f'<h4 style="text-align:center;color:#1a237e;margin-bottom:8px;">🌀 {title_label} — {data["nakshatra_name"]} (নং {data["nakshatra_number"]})</h4>'
 
     html += '<div style="overflow-x:auto;">'
     html += '<table class="navatara-table">'
 
-    # Header row
+    # Header row - use column index to check RED_COLUMNS instead of searching in TARA_NAMES
     html += '<thead><tr>'
-    for h in data["headers"]:
-        is_red = TARA_NAMES.index(h) in RED_COLUMNS
+    for col_idx, h in enumerate(data["headers"]):
+        is_red = col_idx in RED_COLUMNS
         style = 'style="color:#C62828;"' if is_red else ''
         html += f'<th {style}>{h}</th>'
     html += '</tr></thead>'
@@ -94,8 +116,9 @@ def generate_navatara_html(nakshatra_number: int) -> str:
     html += '<tbody>'
     for row in data["rows"]:
         html += '<tr>'
-        for cell in row:
-            if cell["is_red"]:
+        for col_idx, cell in enumerate(row):
+            is_red = col_idx in RED_COLUMNS
+            if is_red:
                 html += f'<td class="navatara-red">{cell["nakshatra_number"]}<br><span class="navatara-name">{cell["nakshatra_name"]}</span></td>'
             else:
                 html += f'<td class="navatara-blue">{cell["nakshatra_number"]}<br><span class="navatara-name">{cell["nakshatra_name"]}</span></td>'
@@ -105,10 +128,10 @@ def generate_navatara_html(nakshatra_number: int) -> str:
     html += '</table>'
     html += '</div>'
 
-    # Explanation text (matching VB.Net)
-    html += '''
+    # Explanation text (i18n)
+    html += f'''
     <div class="navatara-note">
-        <p>নৱতাৰা চক্ৰত উল্লেখিত নক্ষত্ৰত গ্ৰহ সঞ্চাৰ হলে শুভ গ্ৰহই হওঁক বা অশুভ গ্ৰহই হওঁক উল্লেখিত নামানুসৰি স্থিতি নক্ষত্ৰ কালত শুভা শুভ ফল সম্পাদিত হব। ৰঙা চিহ্ন থকা নক্ষত্ৰসমুহত জাতকৰ শুভকৰ্ম বৰ্জন কৰিব।</p>
+        <p>{note_label}</p>
     </div>
     '''
 
@@ -120,13 +143,21 @@ def generate_navatara_html(nakshatra_number: int) -> str:
 # নৱতাৰা চক্ৰ SVG (ৱেবৰ বাবে)
 # ═══════════════════════════════════════════════════════════════
 
-def generate_navatara_svg(nakshatra_number: int, width: int = 700, height: int = 200) -> str:
+def generate_navatara_svg(nakshatra_number: int, width: int = 700, height: int = 200, lang: str = 'as') -> str:
     """
     নৱতাৰা চক্ৰৰ SVG চিত্ৰ নিৰ্মাণ কৰে।
     """
-    data = get_navatara_data(nakshatra_number)
+    data = get_navatara_data(nakshatra_number, lang)
+    try:
+        from prediction_i18n import get_navatara_label_i18n
+        title_label = get_navatara_label_i18n('title', lang)
+        invalid_label = get_navatara_label_i18n('invalid', lang)
+    except ImportError:
+        title_label = 'নৱতাৰা চক্ৰ'
+        invalid_label = 'অবৈধ নক্ষত্ৰ সংখ্যা'
+
     if data is None:
-        return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 200"><text x="350" y="100" text-anchor="middle" font-size="14" fill="#c62828">অবৈধ নক্ষত্ৰ সংখ্যা</text></svg>'
+        return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 200"><text x="350" y="100" text-anchor="middle" font-size="14" fill="#c62828">{invalid_label}</text></svg>'
 
     cell_w = 72
     cell_h = 36
@@ -138,7 +169,7 @@ def generate_navatara_svg(nakshatra_number: int, width: int = 700, height: int =
     svg += f'<rect x="0" y="0" width="{width}" height="{height}" fill="#ffffff"/>'
 
     # Title
-    svg += f'<text x="{width//2}" y="18" text-anchor="middle" font-size="13" fill="#1a237e" font-weight="bold" font-family="Noto Sans Bengali, Nirmala UI, sans-serif">নৱতাৰা চক্ৰ — {data["nakshatra_name"]} (নং {data["nakshatra_number"]})</text>'
+    svg += f'<text x="{width//2}" y="18" text-anchor="middle" font-size="13" fill="#1a237e" font-weight="bold" font-family="Noto Sans Bengali, Nirmala UI, sans-serif">{title_label} — {data["nakshatra_name"]} (নং {data["nakshatra_number"]})</text>'
 
     # Headers
     for col, h in enumerate(data["headers"]):

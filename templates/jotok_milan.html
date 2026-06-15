@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="as">
+<html lang="{{ lang }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>যোটক মিলন | বিবাহ মিলন বিচাৰ — ধ্ৰুৱতৰা AI</title>
+    <title>{{ _('jotok_title') }}</title>
     <meta name="description" content="ধ্ৰুৱতৰা AI ত অসমীয়া বৈদিক জ্যোতিষৰ দ্বাৰা বিবাহ যোটক মিলন (Jotok Milan) বিচাৰ কৰক। অষ্টকূট গুণ মিলন, মাংগলিক দোষ বিচাৰ, আৰু সম্পূৰ্ণ বিবাহ সামঞ্জস্য বিশ্লেষণ। দিতুল শৰ্মাৰ দ্বাৰা নিৰ্মিত প্ৰথম অসমীয়া জ্যোতিষ চফ্টৱেৰ। dhrubataraai.com" />
     <meta name="keywords" content="যোটক মিলন, Jotok Milan, বিবাহ মিলন, Marriage Matching, অষ্টকূট মিলন, Ashtakoot Milan, গুণ মিলন, Guna Milan, মাংগলিক দোষ, Mangalik Dosha, ধ্ৰুৱতৰা AI, Dhrubatara AI, দিতুল শৰ্মা, Ditul Sarma, অসমীয়া জ্যোতিষ, Assamese Astrology, dhrubataraai.com" />
     <meta name="author" content="দিতুল শৰ্মা, Ditul Sarma" />
@@ -230,14 +230,15 @@
 
 <!-- Top Navigation -->
 <nav class="top-nav">
-    <a href="/" class="brand">🔮 ধ্ৰুৱতৰা <span>AI</span></a>
+    <a href="/" class="brand">🔮 {{ _('app_name') }}</a>
     <div class="nav-actions">
+        {% include 'lang_selector.html' %}
         {% if user_sub_info %}
         <span class="user-plan-badge {% if user_sub_info.is_pro %}pro{% else %}free{% endif %}">
-            {% if user_sub_info.is_pro %}⭐ PRO{% else %}🆓 FREE{% endif %}
+            {{ _('pro_badge') if user_sub_info.is_pro else _('free_badge') }}
         </span>
         {% endif %}
-        <a href="/" class="btn-sm btn-outline">🏠 মূল পৃষ্ঠা</a>
+        <a href="/" class="btn-sm btn-outline">🏠 {{ _('home') }}</a>
     </div>
 </nav>
 

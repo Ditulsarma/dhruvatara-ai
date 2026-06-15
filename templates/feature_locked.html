@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="as">
+<html lang="{{ lang }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ফিচাৰ লক | ধ্ৰুৱতৰা AI</title>
+    <title>{{ _('feature_locked_title') }} | {{ _('app_name') }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -50,11 +50,11 @@
 <div class="page-wrapper">
 <div class="container">
     <span class="icon">🔒</span>
-    <h1>এই ফিচাৰটো লক কৰা আছে</h1>
-    <p>এই বৈশিষ্ট্য ব্যৱহাৰ কৰিবলৈ আপোনাৰ চাবস্ক্ৰিপশ্যন প্লেন আপগ্ৰেড কৰিব লাগিব। অধিক জানিবলৈ এডমিনৰ সৈতে যোগাযোগ কৰক।</p>
+    <h1>{{ _('feature_locked_title') }}</h1>
+    <p>{{ _('feature_locked_message') }}</p>
     <div>
-        <a href="/dashboard" class="btn btn-primary">← ডেশ্ববৰ্ডলৈ উভতক</a>
-        <a href="/kundli" class="btn btn-outline">✨ কুণ্ডলী চাওক</a>
+        <a href="/dashboard" class="btn btn-primary">← {{ _('back_to_dashboard') }}</a>
+        <a href="/kundli" class="btn btn-outline">{{ _('btn_generate_kundli') }}</a>
     </div>
 </div>
 </div>

@@ -23,13 +23,14 @@ GOLD = '#D4A017'
 
 
 def generate_jotok_milan_pdf(result: dict, boy: dict, girl: dict,
-                               astrologer_profile: dict = None) -> bytes:
+                               astrologer_profile: dict = None, lang: str = 'as') -> bytes:
     """
-    Generate a professional Assamese marriage matching PDF report.
-    Uses Playwright (Chromium) for perfect Assamese text rendering.
+    Generate a professional marriage matching PDF report.
+    Uses Playwright (Chromium) for perfect text rendering.
     Returns PDF as bytes.
+    lang: 'as' (Assamese), 'bn' (Bengali), 'hi' (Hindi), 'en' (English)
     """
-    html_content = _build_jotok_html(result, boy, girl, astrologer_profile)
+    html_content = _build_jotok_html(result, boy, girl, astrologer_profile, lang)
 
     # Use sync Playwright directly (more reliable than subprocess)
     try:
@@ -78,9 +79,28 @@ def generate_jotok_milan_pdf(result: dict, boy: dict, girl: dict,
                     pass
 
 
+def _charan_suffix(charan, lang, L):
+    """Get proper charan suffix for the language."""
+    if lang == 'en':
+        ordinals = {1: 'st', 2: 'nd', 3: 'rd', 4: 'th'}
+        suf = ordinals.get(charan, 'th')
+        return f'{charan}{suf} Charan'
+    return f'{charan}{L.get("charan_unit", "ম চৰণ")}'
+
+
 def _build_jotok_html(result: dict, boy: dict, girl: dict,
-                       astrologer_profile: dict = None) -> str:
+                       astrologer_profile: dict = None, lang: str = 'as') -> str:
     """Build complete HTML for the Jotok Milan PDF report."""
+    from prediction_i18n import get_jotok_labels, get_nakshatra_name_i18n, get_rashi_name_i18n, translate_jotok_result
+
+    L = get_jotok_labels(lang)
+    
+    # Translate engine result (Assamese) to target language
+    result = translate_jotok_result(result, lang)
+    
+    # Use translated profile data from result
+    boy = result['boy']
+    girl = result['girl']
 
     total = result['total_score']
     max_score = result['max_score']
@@ -92,15 +112,8 @@ def _build_jotok_html(result: dict, boy: dict, girl: dict,
 
     # ─── Koota order ───
     koota_order = ['varna', 'vashya', 'tara', 'yoni', 'graha_maitri', 'gana', 'bhakoot', 'nadi']
-    koota_names = {
-        'varna': 'বৰ্ণ কূট', 'vashya': 'বশ্য কূট', 'tara': 'তাৰা কূট',
-        'yoni': 'যোনি কূট', 'graha_maitri': 'গ্ৰহ মৈত্ৰী কূট',
-        'gana': 'গণ কূট', 'bhakoot': 'ভকূট কূট', 'nadi': 'নাড়ী কূট'
-    }
-    koota_icons = {
-        'varna': '🕉️', 'vashya': '💑', 'tara': '⭐', 'yoni': '💕',
-        'graha_maitri': '🪐', 'gana': '🎭', 'bhakoot': '🏠', 'nadi': '🧬'
-    }
+    koota_names = L['koota_names']
+    koota_icons = L['koota_icons']
 
     # ─── Koota Summary Table ───
     koota_rows = ""
@@ -117,54 +130,7 @@ def _build_jotok_html(result: dict, boy: dict, girl: dict,
 
     # ─── Detailed Koota Analysis ───
     koota_details_html = ""
-    koota_descriptions = {
-        'varna': {
-            'title': '১। বৰ্ণ কূট — আধ্যাত্মিক আৰু মানসিক সামঞ্জস্য',
-            'good': 'পাত্ৰ-পাত্ৰীৰ বৰ্ণগত সামঞ্জস্য অতি উত্তম। পাত্ৰৰ বৰ্ণ পাত্ৰীতকৈ উচ্চ বা সমান হোৱাৰ বাবে ই এক সুস্থ আৰু সমতাপূৰ্ণ দাম্পত্য সম্পৰ্কৰ ইংগিত দিয়ে। তেওঁলোকৰ মাজত পাৰস্পৰিক শ্ৰদ্ধা, বুজাবুজি, আৰু আধ্যাত্মিক চিন্তাধাৰাৰ মিল থাকিব।',
-            'bad': "পাত্ৰ-পাত্ৰীৰ বৰ্ণগত অমিল আছে। দাম্পত্য জীৱনত কেতিয়াবা মানসিক দূৰত্ব আৰু অহংকাৰৰ সংঘাত হ'ব পাৰে। পাৰস্পৰিক শ্ৰদ্ধা আৰু বুজাবুজিৰ দ্বাৰা এই অমিল অতিক্ৰম কৰিব পাৰি।"
-        },
-        'vashya': {
-            'title': '২। বশ্য কূট — পাৰস্পৰিক আকৰ্ষণ আৰু নিয়ন্ত্ৰণ',
-            'good': 'বশ্য কূটত পূৰ্ণ গুণ — এক গভীৰ পাৰস্পৰিক আকৰ্ষণ আৰু প্ৰভাৱৰ সম্পৰ্ক। তেওঁলোকৰ মাজত এক স্বাভাৱিক চুম্বকীয় আকৰ্ষণ থাকিব, যিয়ে দাম্পত্য জীৱনক প্ৰগাঢ় কৰি ৰাখিব।',
-            'mid': 'বশ্য কূটত আংশিক মিল। পাৰস্পৰিক বুজাবুজি আৰু সম্মানেৰে ভাৰসাম্য ৰক্ষা কৰিব পাৰি।',
-            'bad': "বশ্য কূটত অমিল। স্বাভাৱিক আকৰ্ষণৰ অভাৱ হ'ব পাৰে। পৰস্পৰৰ প্ৰতি সহনশীলতা বৃদ্ধি কৰা উচিত।"
-        },
-        'tara': {
-            'title': '৩। তাৰা কূট — ভাগ্য, স্বাস্থ্য আৰু মঙ্গল',
-            'good': 'তাৰা কূটত পূৰ্ণ গুণ — অত্যন্ত শুভ! দাম্পত্য জীৱনত ভাগ্যৰ সহায় থাকিব। স্বাস্থ্য সুৰক্ষিত থাকিব।',
-            'mid': 'তাৰা কূটত মধ্যম গুণ। দাম্পত্য জীৱনত কিছুমান উত্থান-পতন থাকিব পাৰে। সাৱধানতা অৱলম্বন কৰা উচিত।',
-            'bad': 'তাৰা কূটত অশুভ গুণ — বিপৎ বা নৈধন তাৰা। স্বাস্থ্যজনিত সমস্যা বা অপ্রত্যাশিত বিপদৰ সম্ভাৱনা। পূজা-অৰ্চনা আৰু সাৱধানতাৰ প্ৰয়োজন।'
-        },
-        'yoni': {
-            'title': '৪। যোনি কূট — শাৰীৰিক সামঞ্জস্য আৰু জৈৱিক সমতা',
-            'good': "যোনি কূটত উত্তম গুণ। শাৰীৰিক আৰু জৈৱিক স্তৰত গভীৰ সামঞ্জস্য থাকিব। দাম্পত্য জীৱন প্ৰেম আৰু ঘনিষ্ঠতাৰে পৰিপূৰ্ণ হ'ব।",
-            'mid': 'যোনি কূটত মধ্যম গুণ। শাৰীৰিক সম্পৰ্কত কিছু পাৰ্থক্য থাকিব পাৰে, কিন্তু প্ৰেমৰ দ্বাৰা অতিক্ৰম কৰিব পাৰি।',
-            'bad': "যোনি কূটত অমিল — শত্ৰু যোনি। শাৰীৰিক সম্পৰ্কত গুৰুতৰ অমিল হ'ব পাৰে। বিশেষ পূজা-অৰ্চনাৰ প্ৰয়োজন।"
-        },
-        'graha_maitri': {
-            'title': '৫। গ্ৰহ মৈত্ৰী কূট — মানসিক স্বভাৱ আৰু গ্ৰহগত বন্ধুত্ব',
-            'good': 'গ্ৰহ মৈত্ৰী কূটত উত্তম গুণ। ৰাশি অধিপতি গ্ৰহদ্বয় পৰস্পৰৰ মিত্ৰ বা একে। মানসিক স্বভাৱ আৰু চিন্তাধাৰাৰ মাজত ভাল সামঞ্জস্য থাকিব।',
-            'mid': 'গ্ৰহ মৈত্ৰী কূটত মধ্যম গুণ। মানসিক স্বভাৱত কিছু পাৰ্থক্য থাকিব পাৰে কিন্তু গুৰুতৰ সংঘাত নহয়।',
-            'bad': 'গ্ৰহ মৈত্ৰী কূটত অমিল — ৰাশি অধিপতি শত্ৰু। মানসিক স্বভাৱত গুৰুতৰ পাৰ্থক্য থাকিব। মতানক্যৰ সম্ভাৱনা বেছি।'
-        },
-        'gana': {
-            'title': '৬। গণ কূট — স্বভাৱগত মিল আৰু আচৰণ',
-            'good': "গণ কূটত উত্তম গুণ। স্বভাৱ, আচৰণ, আৰু জীৱনশৈলীৰ মাজত ভাল সামঞ্জস্য। দাম্পত্য জীৱনত সংঘাতৰ পৰিমাণ নূন্যতম হ'ব।",
-            'mid': 'গণ কূটত মধ্যম গুণ। স্বভাৱৰ পাৰ্থক্যই কেতিয়াবা সংঘাতৰ সৃষ্টি কৰিব পাৰে। পাৰস্পৰিক বুজাবুজিৰ প্ৰয়োজন।',
-            'bad': 'গণ কূটত অমিল। স্বভাৱৰ মাজত গুৰুতৰ পাৰ্থক্য আছে। দাম্পত্য জীৱনত সংঘাতৰ সম্ভাৱনা বেছি। জ্যোতিষীৰ পৰামৰ্শ লওক।'
-        },
-        'bhakoot': {
-            'title': '৭। ভকূট কূট — পাৰিবাৰিক কল্যাণ আৰু সমৃদ্ধি',
-            'good': 'ভকূট কূটত পূৰ্ণ গুণ — কোনো ভকূট দোষ নাই! পাৰিবাৰিক কল্যাণ, অৰ্থনৈতিক সমৃদ্ধি, আৰু সুখ-শান্তি বিৰাজ কৰিব।',
-            'mid': 'ভকূট কূটত মধ্যম গুণ। পাৰিবাৰিক জীৱনত কিছু উত্থান-পতন থাকিব পাৰে।',
-            'bad': 'ভকূট কূটত দোষ উপস্থিত! পাৰিবাৰিক অশান্তি আৰু অৰ্থনৈতিক সংকটৰ সম্ভাৱনা। ভকূট দোষ নিবাৰণৰ প্ৰতিকাৰ কৰক।'
-        },
-        'nadi': {
-            'title': '৮। নাড়ী কূট — সন্তান সুখ আৰু জিনগত স্বাস্থ্য',
-            'good': 'নাড়ী কূটত পূৰ্ণ গুণ — নাড়ী দোষ সম্পূৰ্ণ অনুপস্থিত! সন্তান সুখ অতি শুভ। সুস্থ আৰু বুদ্ধিমান সন্তান লাভ কৰিব।',
-            'bad': 'নাড়ী কূটত অমিল — নাড়ী দোষ উপস্থিত! সন্তানৰ ক্ষেত্ৰত সমস্যা আৰু স্বাস্থ্যজনিত জটিলতাৰ সম্ভাৱনা। নাড়ী দোষ নিবাৰণৰ বাবে বিশেষ পূজা আৰু জ্যোতিষীৰ পৰামৰ্শ অতি জৰুৰী।'
-        }
-    }
+    koota_descriptions = L.get('koota_descriptions', {})
 
     for key in koota_order:
         k = kootas[key]
@@ -178,35 +144,36 @@ def _build_jotok_html(result: dict, boy: dict, girl: dict,
             prediction = desc.get('mid', desc.get('good', ''))
 
         score_badge_class = 'kd-excellent' if k['score'] >= k['max_score'] * 0.7 else ('kd-bad' if k['score'] == 0 else 'kd-average')
+        guna_label = L.get('guna', 'গুণ')
 
         koota_details_html += f"""
         <div class="koota-detail">
             <div class="kd-header">
                 <span class="kd-title">{title}</span>
-                <span class="kd-score {score_badge_class}">{k['score']} / {k['max_score']} গুণ</span>
+                <span class="kd-score {score_badge_class}">{k['score']} / {k['max_score']} {guna_label}</span>
             </div>
             <div class="kd-desc">{k['description']}</div>
             <div class="kd-prediction">{prediction}</div>
         </div>"""
 
     # ─── Mangalik Section ───
-    boy_mangalik = "⚠️ মাংগলিক" if mangalik['boy_mangalik'] else "✅ অমাংগলিক"
-    girl_mangalik = "⚠️ মাংগলিক" if mangalik['girl_mangalik'] else "✅ অমাংগলিক"
+    boy_mangalik = f"⚠️ {L['mangalik']}" if mangalik['boy_mangalik'] else f"✅ {L['not_mangalik']}"
+    girl_mangalik = f"⚠️ {L['mangalik']}" if mangalik['girl_mangalik'] else f"✅ {L['not_mangalik']}"
 
     mangalik_analysis = ""
     if mangalik['boy_mangalik'] and mangalik['girl_mangalik']:
-        mangalik_analysis = "পাত্ৰ আৰু পাত্ৰী উভয়ে মাংগলিক — <b>দোষ সাম্য</b>। উভয়ৰে মাংগলিক দোষ পৰস্পৰে নিষ্ক্ৰিয় কৰে। ই বিবাহৰ বাবে এক সুখবৰ!"
+        mangalik_analysis = L['mangalik_both']
     elif mangalik['boy_mangalik']:
-        mangalik_analysis = "পাত্ৰ মাংগলিক কিন্তু পাত্ৰী অমাংগলিক। মাংগলিক দোষ নিবাৰণৰ বাবে প্ৰতিকাৰ কৰাটো জৰুৰী।"
+        mangalik_analysis = L['mangalik_boy']
     elif mangalik['girl_mangalik']:
-        mangalik_analysis = "পাত্ৰী মাংগলিক কিন্তু পাত্ৰ অমাংগলিক। মাংগলিক দোষ নিবাৰণৰ বাবে প্ৰতিকাৰ কৰাটো জৰুৰী।"
+        mangalik_analysis = L['mangalik_girl']
     else:
-        mangalik_analysis = "পাত্ৰ আৰু পাত্ৰী উভয়ে অমাংগলিক। মাংগলিক দোষ সম্পূৰ্ণ অনুপস্থিত — অতি শুভ লক্ষণ।"
+        mangalik_analysis = L['mangalik_none']
 
     remedies_html = ""
     if mangalik['boy_mangalik'] or mangalik['girl_mangalik']:
         remedies_items = ''.join(f'<li>{r}</li>' for r in mangalik.get('remedies', [])[:5])
-        remedies_html = f'<div class="remedies"><h4>🛐 মাংগলিক দোষৰ প্ৰতিকাৰ:</h4><ul>{remedies_items}</ul></div>'
+        remedies_html = f'<div class="remedies"><h4>🛐 {L["mangalik_heading"]}:</h4><ul>{remedies_items}</ul></div>'
 
     # ─── Verdict styling ───
     verdict_colors = {
@@ -242,16 +209,16 @@ def _build_jotok_html(result: dict, boy: dict, girl: dict,
         if lines:
             astro_header_html = f"""
             <div class="astro-header">
-                <div class="astro-title">শ্ৰমেণ গণ্যতে কোষ্ঠীং </div>
+                <div class="astro-title">{L.get('pdf_astro_title', 'শ্ৰমেণ গণ্যতে কোষ্ঠীং')} </div>
                 {''.join(lines)}
             </div>"""
 
     # ─── Nadi/Bhakoot warnings ───
     warnings_html = ""
     if result.get('has_nadi_dosha'):
-        warnings_html += '<div class="warning-box">⚠️ <b>নাড়ী দোষ</b> উপস্থিত — নাড়ী দোষ নিবাৰণ নকৰাকৈ বিবাহ পৰামৰ্শিত নহয়।</div>'
+        warnings_html += f'<div class="warning-box">{L.get("pdf_nadi_warning", "⚠️ <b>নাড়ী দোষ</b> উপস্থিত — নাড়ী দোষ নিবাৰণ নকৰাকৈ বিবাহ পৰামৰ্শিত নহয়।")}</div>'
     if result.get('has_bhakoot_dosha'):
-        warnings_html += '<div class="warning-box">⚠️ <b>ভকূট দোষ</b> উপস্থিত — পাৰিবাৰিক কল্যাণৰ বাবে প্ৰতিকাৰ কৰক।</div>'
+        warnings_html += f'<div class="warning-box">{L.get("pdf_bhakoot_warning", "⚠️ <b>ভকূট দোষ</b> উপস্থিত — পাৰিবাৰিক কল্যাণৰ বাবে প্ৰতিকাৰ কৰক।")}</div>'
 
     # ═══════════════════════════════════════════════════════════════
     # FULL HTML
@@ -415,14 +382,14 @@ def _build_jotok_html(result: dict, boy: dict, girl: dict,
 {astro_header_html}
 
 <div class="main-title">
-    <h1>💍 যোটক মিলন ৰিপৰ্ট</h1>
+    <h1>{L.get('pdf_title', '💍 যোটক মিলন ৰিপৰ্ট')}</h1>
     <div class="couple">{boy['name']} <span class="heart">💖</span> {girl['name']}</div>
 </div>
 
 <div class="score-section">
     <div class="score-circle">
         <div class="score-num">{total}</div>
-        <div class="score-max">/ {max_score} গুণ</div>
+        <div class="score-max">{L.get('pdf_score_unit', '/ {max_score} গুণ').format(max_score=max_score)}</div>
     </div>
     <div class="verdict-badge">{verdict}</div>
 </div>
@@ -430,35 +397,35 @@ def _build_jotok_html(result: dict, boy: dict, girl: dict,
 <!-- Profile Cards -->
 <div class="profile-row">
     <div class="profile-card boy">
-        <h3>🧑 পাত্ৰ — {boy['name']}</h3>
+        <h3>🧑 {L['boy_label']} — {boy['name']}</h3>
         <table class="profile-table">
-            <tr><td>ৰাশি</td><td>♈ {boy['rashi']}</td></tr>
-            <tr><td>নক্ষত্ৰ</td><td>⭐ {boy['nakshatra']}</td></tr>
-            <tr><td>চৰণ</td><td>🦶 {boy['charan']}ম</td></tr>
-            <tr><td>লগ্ন</td><td>🌅 {boy.get('lagna', '—')}</td></tr>
-            <tr><td>মঙ্গল</td><td>🔥 {boy['mars_house']}ম ঘৰ</td></tr>
+            <tr><td>{L['rashi']}</td><td>♈ {boy['rashi']}</td></tr>
+            <tr><td>{L['nakshatra']}</td><td>⭐ {boy['nakshatra']}</td></tr>
+            <tr><td>{L['charan']}</td><td>🦶 {boy['charan']}{_charan_suffix(boy['charan'], lang, L)}</td></tr>
+            <tr><td>{L['lagna']}</td><td>🌅 {boy.get('lagna', '—')}</td></tr>
+            <tr><td>{L['mars_house']}</td><td>🔥 {boy['mars_house']}{L['mars_house_unit']}</td></tr>
         </table>
     </div>
     <div class="profile-card girl">
-        <h3>👩 পাত্ৰী — {girl['name']}</h3>
+        <h3>👩 {L['girl_label']} — {girl['name']}</h3>
         <table class="profile-table">
-            <tr><td>ৰাশি</td><td>♈ {girl['rashi']}</td></tr>
-            <tr><td>নক্ষত্ৰ</td><td>⭐ {girl['nakshatra']}</td></tr>
-            <tr><td>চৰণ</td><td>🦶 {girl['charan']}ম</td></tr>
-            <tr><td>লগ্ন</td><td>🌅 {girl.get('lagna', '—')}</td></tr>
-            <tr><td>মঙ্গল</td><td>🔥 {girl['mars_house']}ম ঘৰ</td></tr>
+            <tr><td>{L['rashi']}</td><td>♈ {girl['rashi']}</td></tr>
+            <tr><td>{L['nakshatra']}</td><td>⭐ {girl['nakshatra']}</td></tr>
+            <tr><td>{L['charan']}</td><td>🦶 {girl['charan']}{_charan_suffix(girl['charan'], lang, L)}</td></tr>
+            <tr><td>{L['lagna']}</td><td>🌅 {girl.get('lagna', '—')}</td></tr>
+            <tr><td>{L['mars_house']}</td><td>🔥 {girl['mars_house']}{L['mars_house_unit']}</td></tr>
         </table>
     </div>
 </div>
 
 <!-- Ashtakoot Summary -->
-<h2 class="section-heading">📊 অষ্টকূট গুণ মিলন — সাৰাংশ</h2>
+<h2 class="section-heading">📊 {L['summary_heading']}</h2>
 <table class="koota-table">
-    <thead><tr><th>ক্ৰম</th><th>কূটৰ নাম</th><th>প্ৰাপ্ত</th><th>সৰ্বোচ্চ</th><th>স্থিতি</th></tr></thead>
+    <thead><tr><th>{L['order']}</th><th>{L['koota_name']}</th><th>{L['score']}</th><th>{L['max_score']}</th><th>{L['status']}</th></tr></thead>
     <tbody>
         {koota_rows}
         <tr class="total-row">
-            <td colspan="2">🌟 সৰ্বমুঠ গুণ</td>
+            <td colspan="2">🌟 {L['total_guna']}</td>
             <td style="color:{DEEP_BLUE};">{total}</td>
             <td>{max_score}</td>
             <td style="color:{DEEP_BLUE};">{verdict}</td>
@@ -467,22 +434,22 @@ def _build_jotok_html(result: dict, boy: dict, girl: dict,
 </table>
 
 <!-- Detailed Koota Analysis -->
-<h2 class="section-heading">🔍 অষ্টকূটৰ সবিশেষ বিশ্লেষণ</h2>
+<h2 class="section-heading">🔍 {L['detail_heading']}</h2>
 {koota_details_html}
 
 <!-- Mangalik Dosha -->
 <div class="mangalik-section">
-    <h2 class="section-heading" style="color:#E65100;">🔥 মাংগলিক দোষ (কূজ দোষ) বিচাৰ</h2>
+    <h2 class="section-heading" style="color:#E65100;">🔥 {L['mangalik_heading']}</h2>
     <div class="mangalik-row">
         <div class="mangalik-item">
-            <div class="mi-label">🧑 পাত্ৰ ({boy['name']})</div>
+            <div class="mi-label">🧑 {L['boy_label']} ({boy['name']})</div>
             <div class="mi-value {'mi-yes' if mangalik['boy_mangalik'] else 'mi-no'}">{boy_mangalik}</div>
-            <div style="font-size:7pt;color:#888;">মঙ্গল {boy['mars_house']}ম ঘৰত</div>
+            <div style="font-size:7pt;color:#888;">{L.get('pdf_mars_position', 'মঙ্গল {house}ম ঘৰত').format(house=boy['mars_house'])}</div>
         </div>
         <div class="mangalik-item">
-            <div class="mi-label">👩 পাত্ৰী ({girl['name']})</div>
+            <div class="mi-label">👩 {L['girl_label']} ({girl['name']})</div>
             <div class="mi-value {'mi-yes' if mangalik['girl_mangalik'] else 'mi-no'}">{girl_mangalik}</div>
-            <div style="font-size:7pt;color:#888;">মঙ্গল {girl['mars_house']}ম ঘৰত</div>
+            <div style="font-size:7pt;color:#888;">{L.get('pdf_mars_position', 'মঙ্গল {house}ম ঘৰত').format(house=girl['mars_house'])}</div>
         </div>
     </div>
     <div class="kd-prediction" style="margin-top:8px;">{mangalik_analysis}</div>
@@ -493,19 +460,18 @@ def _build_jotok_html(result: dict, boy: dict, girl: dict,
 
 <!-- Conclusion -->
 <div class="conclusion">
-    <h2 class="section-heading" style="color:{DEEP_BLUE};border:none;">🌟 সৰ্বমুঠ মূল্যাংকন আৰু সিদ্ধান্ত</h2>
+    <h2 class="section-heading" style="color:{DEEP_BLUE};border:none;">{L.get('pdf_conclusion_title', '🌟 সৰ্বমুঠ মূল্যাংকন আৰু সিদ্ধান্ত')}</h2>
     <div class="conclusion-text">
-        <p><b>{boy['name']}</b> আৰু <b>{girl['name']}</b>ৰ যোটক মিলনত সৰ্বমুঠ <b>{total} / {max_score}</b> গুণ প্ৰাপ্ত হৈছে।</p>
+        <p>{L.get('pdf_conclusion_text', '{boy} আৰু {girl}ৰ যোটক মিলনত সৰ্বমুঠ {total} / {max_score} গুণ প্ৰাপ্ত হৈছে।').format(boy=boy['name'], girl=girl['name'], total=total, max_score=max_score)}</p>
         <p>{verdict_desc}</p>
     </div>
     <div class="blessing">
-        ✨ ঈশ্বৰে আপোনালোকৰ দাম্পত্য জীৱন সুখময়, সমৃদ্ধিশালী আৰু দীৰ্ঘস্থায়ী কৰি তোলক।<br>
-        শুভম ভৱতু। 🙏
+        {L.get('pdf_blessing', '✨ ঈশ্বৰে আপোনালোকৰ দাম্পত্য জীৱন সুখময়, সমৃদ্ধিশালী আৰু দীৰ্ঘস্থায়ী কৰি তোলক।<br>\n        শুভম ভৱতু। 🙏')}
     </div>
 </div>
 
 <div class="footer-note">
-    © ২০২৬ ধ্ৰুৱতৰা AI • dhrubataraai.com • সৰ্বস্বত্ব সংৰক্ষিত
+    {L.get('pdf_footer', '© ২০২৬ ধ্ৰুৱতৰা AI • dhrubataraai.com • সৰ্বস্বত্ব সংৰক্ষিত')}
 </div>
 
 </body>

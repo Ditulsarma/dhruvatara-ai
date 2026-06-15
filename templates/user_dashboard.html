@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="as">
+<html lang="{{ lang }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>মোৰ ডেশ্ববৰ্ড | ধ্ৰুৱতৰা AI</title>
+    <title>{{ _('dashboard_title') }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -151,23 +151,24 @@
 </head>
 <body>
     <nav class="top-nav">
-        <div class="brand">🌟 ধ্ৰুৱতৰা <span>AI</span></div>
+        <div class="brand">🌟 {{ _('app_name') }}</div>
         <div class="nav-actions">
+            {% include 'lang_selector.html' %}
             {% if user_sub_info %}
             <span class="user-plan-badge {% if user_sub_info.is_pro %}pro{% else %}free{% endif %}">
-                {% if user_sub_info.is_pro %}⭐ PRO{% else %}🆓 FREE{% endif %}
+                {{ _('pro_badge') if user_sub_info.is_pro else _('free_badge') }}
             </span>
             {% endif %}
             <span style="font-size:0.85rem;color:var(--text-light);">👤 {{ user.name }}</span>
-            <a href="/logout" class="btn btn-outline">🚪 লগআউট</a>
+            <a href="/logout" class="btn btn-outline">🚪 {{ _('nav_logout') }}</a>
         </div>
     </nav>
 
     <div class="container">
         <!-- Welcome -->
         <div class="welcome-card">
-            <h1>নমস্কাৰ, {{ user.name }}! 🙏</h1>
-            <div class="sub">ধ্ৰুৱতৰা AI লৈ স্বাগতম</div>
+            <h1>{{ _('dashboard_welcome') }} {{ user.name }}! 🙏</h1>
+            <div class="sub">{{ _('login_welcome') }}</div>
             <span class="plan-badge">💳 {{ subscription.name_asm }} প্লেন</span>
             {% if user.subscription_expiry %}
             <div style="margin-top:6px;font-size:0.8rem;opacity:0.8;">ম্যাদ: {{ user.subscription_expiry }}</div>

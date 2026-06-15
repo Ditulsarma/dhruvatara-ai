@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="as">
+<html lang="{{ lang }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>লগিন | ধ্ৰুৱতৰা AI — প্ৰথম অসমীয়া জ্যোতিষ চফ্টৱেৰ</title>
-    <meta name="description" content="ধ্ৰুৱতৰা AI ত লগিন কৰক — প্ৰথম অসমীয়া জ্যোতিষ চফ্টৱেৰ। ৰাশিফল, নক্ষত্ৰ ফল, পঞ্চাঙ্গ, দ্বাদশ ভাব ফল, জন্মকুণ্ডলী। দিতুল শৰ্মাৰ দ্বাৰা নিৰ্মিত। dhrubataraai.com" />
-    <meta name="keywords" content="ধ্ৰুৱতৰা AI, Dhrubatara AI, দিতুল শৰ্মা, Ditul Sarma, লগিন, Login, অসমীয়া জ্যোতিষ, Assamese Astrology, dhrubataraai.com" />
-    <meta name="author" content="দিতুল শৰ্মা, Ditul Sarma" />
+    <title>{{ _('login_title') }}</title>
+    <meta name="description" content="{{ _('meta_description_home') }}" />
+    <meta name="keywords" content="{{ _('app_name') }}, Dhrubatara AI, {{ _('meta_author') }}, Jyotish, Astrology, dhrubataraai.com" />
+    <meta name="author" content="{{ _('meta_author') }}" />
     <meta name="robots" content="noindex, follow" />
     <link rel="canonical" href="https://dhrubataraai.com" />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -332,12 +332,16 @@
     <div class="login-column">
         <div class="logo">
             <span class="icon">🌟</span>
-            <h1>ধ্ৰুৱতৰা AI</h1>
+            <h1>{{ _('app_name') }}</h1>
         </div>
         <div class="card">
+            <!-- Language Selector -->
+            <div style="text-align:right;margin-bottom:12px;">
+                {% include 'lang_selector.html' %}
+            </div>
             <div class="tabs">
-                <button class="tab-btn active" onclick="switchTab('login')">🔑 লগিন</button>
-                <button class="tab-btn" onclick="switchTab('register')">📝 পঞ্জীয়ন</button>
+                <button class="tab-btn active" onclick="switchTab('login')">🔑 {{ _('login_tab') }}</button>
+                <button class="tab-btn" onclick="switchTab('register')">📝 {{ _('register_tab') }}</button>
             </div>
 
             <!-- Flash Messages -->
@@ -351,65 +355,65 @@
 
             <!-- Login Tab -->
             <div id="tab-login" class="tab-content active">
-                <h2>🔑 লগিন কৰক</h2>
+                <h2>🔑 {{ _('login_tab') }}</h2>
                 <form method="POST" action="/login">
                     <div class="form-group">
-                        <label>📧 ইমেইল</label>
-                        <input type="email" name="email" required placeholder="আপোনাৰ ইমেইল">
+                        <label>📧 {{ _('email_label') }}</label>
+                        <input type="email" name="email" required placeholder="{{ _('email_label') }}">
                     </div>
                     <div class="form-group">
-                        <label>🔒 পাছৱৰ্ড</label>
-                        <input type="password" name="password" required placeholder="আপোনাৰ পাছৱৰ্ড">
+                        <label>🔒 {{ _('password_label') }}</label>
+                        <input type="password" name="password" required placeholder="{{ _('password_label') }}">
                     </div>
-                    <button type="submit" class="btn btn-primary">🔓 লগিন কৰক</button>
+                    <button type="submit" class="btn btn-primary">{{ _('btn_login') }}</button>
                 </form>
                 <div class="links" style="margin-top:12px;">
-                    <a href="/forgot-password">পাছৱৰ্ড পাহৰিলে?</a>
+                    <a href="/forgot-password">{{ _('forgot_password') }}</a>
                 </div>
-                <div class="divider-text">অথবা</div>
+                <div class="divider-text">{{ _('or_text') }}</div>
                 <div class="links">
-                    <a href="/admin/login">🔐 এডমিন লগিন</a>
+                    <a href="/admin/login">🔐 {{ _('admin_login') }}</a>
                 </div>
                 <div style="margin-top:12px;">
-                    <a href="/rashifal" class="btn btn-outline" style="text-decoration:none;">⭐ ৰাশিফল চাওক (দৈনিক / মাহেকীয়া / বছেৰেকীয়া)</a>
+                    <a href="/rashifal" class="btn btn-outline" style="text-decoration:none;">⭐ {{ _('rashifal_daily') }} / {{ _('rashifal_monthly') }} / {{ _('rashifal_yearly') }}</a>
                 </div>
             </div>
 
             <!-- Register Tab -->
             <div id="tab-register" class="tab-content">
-                <h2>📝 পঞ্জীয়ন কৰক</h2>
+                <h2>📝 {{ _('register_tab') }}</h2>
                 <form method="POST" action="/register" id="registerForm">
                     <div class="form-group">
-                        <label>👤 সম্পূৰ্ণ নাম</label>
-                        <input type="text" name="name" required placeholder="আপোনাৰ সম্পূৰ্ণ নাম">
+                        <label>👤 {{ _('name_label') }}</label>
+                        <input type="text" name="name" required placeholder="{{ _('name_label') }}">
                     </div>
                     <div class="form-group">
-                        <label>📧 ইমেইল</label>
-                        <input type="email" name="email" id="regEmail" required placeholder="আপোনাৰ ইমেইল">
+                        <label>📧 {{ _('email_label') }}</label>
+                        <input type="email" name="email" id="regEmail" required placeholder="{{ _('email_label') }}">
                     </div>
                     <div class="form-group">
-                        <label>📱 মোবাইল নম্বৰ (ঐচ্ছিক)</label>
-                        <input type="tel" name="mobile" id="regMobile" placeholder="যেনে: 9876543210" pattern="[0-9]{10}" title="১০ সংখ্যাৰ মোবাইল নম্বৰ">
+                        <label>📱 {{ _('mobile_label') }}</label>
+                        <input type="tel" name="mobile" id="regMobile" placeholder="{{ _('mobile_placeholder') }}" pattern="[0-9]{10}" title="{{ _('mobile_title') }}">
                     </div>
                     <div class="form-group">
-                        <label>🔒 পাছৱৰ্ড</label>
-                        <input type="password" name="password" id="regPassword" required placeholder="ন্যূনতম ৬ আখৰৰ পাছৱৰ্ড" minlength="6">
+                        <label>🔒 {{ _('password_label') }}</label>
+                        <input type="password" name="password" id="regPassword" required placeholder="{{ _('password_min_length') }}" minlength="6">
                     </div>
                     <div class="form-group">
-                        <label>🔒 পাছৱৰ্ড নিশ্চিত কৰক</label>
-                        <input type="password" name="confirm_password" required placeholder="পুনৰ পাছৱৰ্ড লিখক" minlength="6">
+                        <label>🔒 {{ _('confirm_password') }}</label>
+                        <input type="password" name="confirm_password" required placeholder="{{ _('confirm_password') }}" minlength="6">
                     </div>
-                    <button type="submit" class="btn btn-primary">📝 পঞ্জীয়ন কৰক</button>
+                    <button type="submit" class="btn btn-primary">{{ _('btn_register') }}</button>
                 </form>
                 <div class="links">
-                    ইতিমধ্যে একাউণ্ট আছে? <a href="#" onclick="switchTab('login')">লগিন কৰক</a>
+                    {{ _('has_account') }} <a href="#" onclick="switchTab('login')">{{ _('login_tab') }}</a>
                 </div>
             </div>
         </div>
 
         <!-- Panchanga Toggle Button (Mobile Only) -->
         <button class="pw-toggle-btn" onclick="togglePanchanga()" id="pwToggleBtn">
-            🕉️ আজিৰ পঞ্চাঙ্গ চাওক
+            {{ _('panchanga_view') }}
         </button>
     </div>
 
@@ -438,7 +442,7 @@
         const cpw = document.querySelector('[name="confirm_password"]').value;
         if (pw !== cpw) {
             e.preventDefault();
-            alert('পাছৱৰ্ড মিলা নাই। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।');
+            alert('{{ _("password_mismatch") }}');
         }
     });
 
@@ -448,9 +452,9 @@
         const btn = document.getElementById('pwToggleBtn');
         col.classList.toggle('hide');
         if (col.classList.contains('hide')) {
-            btn.innerHTML = '🕉️ আজিৰ পঞ্চাঙ্গ চাওক';
+            btn.innerHTML = '{{ _("panchanga_view") }}';
         } else {
-            btn.innerHTML = '🕉️ পঞ্চাঙ্গ লুকাওক';
+            btn.innerHTML = '{{ _("panchanga_hide") }}';
         }
     }
 </script>
@@ -459,7 +463,7 @@
 <div class="welcome-section" style="margin-top:24px;margin-bottom:16px;">
     <div class="welcome-card expanded" id="welcomeCard">
         <div class="welcome-header" onclick="document.getElementById('welcomeCard').classList.toggle('expanded')">
-            <h3>🌟 আপোনাক dhrubataraai.com লৈ স্বাগতম!</h3>
+            <h3>{{ _('welcome_title') }}</h3>
             <span class="toggle-icon">▼</span>
         </div>
         <div class="welcome-body">

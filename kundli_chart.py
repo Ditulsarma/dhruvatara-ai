@@ -169,7 +169,9 @@ def _draw_text_centered_multi(draw, cx, cy, lines, font, fill, line_spacing=2):
 # BENGALI (EAST INDIAN) CHART — 3x3 grid + split corners
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def _draw_bengali_chart(draw, W, H, ascendant_index, planet_data, fonts, scale=1.0):
+def _draw_bengali_chart(draw, W, H, ascendant_index, planet_data, fonts, scale=1.0, rasi_names=None, planet_short=None):
+    if rasi_names is None: rasi_names = RASI_NAMES
+    if planet_short is None: planet_short = PLANET_SHORT_DISPLAY
     M = int(40 * scale)
     cell = (min(W, H) - 2 * M) / 3
     X0, Y0 = M, M + (H - min(W, H)) // 2
@@ -209,7 +211,7 @@ def _draw_bengali_chart(draw, W, H, ascendant_index, planet_data, fonts, scale=1
             _draw_text_centered(draw, (cx, cy - 14), "", fonts["planet_sm"], ASC_HIGHLIGHT)
         
         if rasi_idx in planet_data and planet_data[rasi_idx]:
-            planet_names = [PLANET_SHORT_DISPLAY.get(p, p) for p in planet_data[rasi_idx]]
+            planet_names = [planet_short.get(p, p) for p in planet_data[rasi_idx]]
             py = cy + 10 if rasi_idx == ascendant_index else cy
             _draw_text_centered_multi(draw, cx, py, planet_names, fonts["planet"], PLANET_COLOR, line_spacing=3)
 
@@ -218,7 +220,9 @@ def _draw_bengali_chart(draw, W, H, ascendant_index, planet_data, fonts, scale=1
 # NORTH INDIAN CHART — Fixed Geometry & Bengali Numerals Fixed
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def _draw_north_indian_chart(draw, W, H, ascendant_index, planet_data, fonts, scale=1.0):
+def _draw_north_indian_chart(draw, W, H, ascendant_index, planet_data, fonts, scale=1.0, rasi_numbers=None, planet_short=None):
+    if rasi_numbers is None: rasi_numbers = RASI_NUMBERS
+    if planet_short is None: planet_short = PLANET_SHORT_DISPLAY
     M = int(30 * scale)
     S = min(W, H) - 2 * M
     X0, Y0 = M + (W - min(W, H)) // 2, M
@@ -251,7 +255,7 @@ def _draw_north_indian_chart(draw, W, H, ascendant_index, planet_data, fonts, sc
 
     for i, (cx, cy) in enumerate(houses):
         rasi_idx = (ascendant_index + i) % 12
-        rasi_num_str = RASI_NUMBERS[rasi_idx] # Render standard Bengali/Assamese Numeral
+        rasi_num_str = rasi_numbers[rasi_idx]
         
         # Adjust Y so text doesn't overlap lines in tight corner spaces
         _draw_text_centered(draw, (cx, cy - 10), rasi_num_str, fonts["number"], RASI_COLOR)
@@ -262,7 +266,7 @@ def _draw_north_indian_chart(draw, W, H, ascendant_index, planet_data, fonts, sc
 
         # Draw Planets
         if rasi_idx in planet_data and planet_data[rasi_idx]:
-            planet_names = [PLANET_SHORT_DISPLAY.get(p, p) for p in planet_data[rasi_idx]]
+            planet_names = [planet_short.get(p, p) for p in planet_data[rasi_idx]]
             py = cy + 30 if i == 0 else cy + 12
             _draw_text_centered_multi(draw, cx, py, planet_names, fonts["planet_sm"], PLANET_COLOR, line_spacing=2)
 
@@ -271,7 +275,9 @@ def _draw_north_indian_chart(draw, W, H, ascendant_index, planet_data, fonts, sc
 # SOUTH INDIAN CHART — 4x4 grid, empty center
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def _draw_south_indian_chart(draw, W, H, ascendant_index, planet_data, fonts, scale=1.0):
+def _draw_south_indian_chart(draw, W, H, ascendant_index, planet_data, fonts, scale=1.0, rasi_names=None, planet_short=None):
+    if rasi_names is None: rasi_names = RASI_NAMES
+    if planet_short is None: planet_short = PLANET_SHORT_DISPLAY
     M = int(30 * scale)
     S = min(W, H) - 2 * M
     cell = S / 4
@@ -334,8 +340,25 @@ def draw_kundli_chart(
     title: str = "",
     width: int = 700,
     height: int = 700,
+    lang: str = "as",
 ) -> io.BytesIO:
     if planet_data is None: planet_data = {}
+
+    # Get i18n names
+    try:
+        from prediction_i18n import (
+            get_kundli_planet_name_i18n, get_kundli_planet_short_i18n,
+            get_kundli_rashi_name_i18n, get_kundli_rashi_number_i18n
+        )
+        _planet_names = {k: get_kundli_planet_name_i18n(k, lang) for k in PLANET_NAMES}
+        _planet_short = {k: get_kundli_planet_short_i18n(k, lang) for k in PLANET_SHORT_DISPLAY}
+        _rasi_names = [get_kundli_rashi_name_i18n(i, lang) for i in range(12)]
+        _rasi_numbers = [get_kundli_rashi_number_i18n(i, lang) for i in range(12)]
+    except ImportError:
+        _planet_names = PLANET_NAMES
+        _planet_short = PLANET_SHORT_DISPLAY
+        _rasi_names = RASI_NAMES
+        _rasi_numbers = RASI_NUMBERS
 
     # Scale fonts and geometry proportionally to chart size (reference: 700px)
     ref = 700.0
@@ -352,11 +375,11 @@ def draw_kundli_chart(
     chart_draw = ImageDraw.Draw(chart_img)
 
     if style == "bengali":
-        _draw_bengali_chart(chart_draw, width, height, ascendant_index, planet_data, fonts, scale)
+        _draw_bengali_chart(chart_draw, width, height, ascendant_index, planet_data, fonts, scale, _rasi_names, _planet_short)
     elif style == "north":
-        _draw_north_indian_chart(chart_draw, width, height, ascendant_index, planet_data, fonts, scale)
+        _draw_north_indian_chart(chart_draw, width, height, ascendant_index, planet_data, fonts, scale, _rasi_numbers, _planet_short)
     elif style == "south":
-        _draw_south_indian_chart(chart_draw, width, height, ascendant_index, planet_data, fonts, scale)
+        _draw_south_indian_chart(chart_draw, width, height, ascendant_index, planet_data, fonts, scale, _rasi_names, _planet_short)
 
     img.paste(chart_img, (0, title_h))
 
@@ -371,25 +394,43 @@ def draw_all_styles(
     planet_data: dict = None,
     width: int = 2100,
     height: int = 700,
+    lang: str = "as",
 ) -> io.BytesIO:
     if planet_data is None: 
         planet_data = {}
 
+    # Get i18n names
+    try:
+        from prediction_i18n import (
+            get_kundli_planet_short_i18n, get_kundli_rashi_name_i18n, get_kundli_rashi_number_i18n
+        )
+        _planet_short = {k: get_kundli_planet_short_i18n(k, lang) for k in PLANET_SHORT_DISPLAY}
+        _rasi_names = [get_kundli_rashi_name_i18n(i, lang) for i in range(12)]
+        _rasi_numbers = [get_kundli_rashi_number_i18n(i, lang) for i in range(12)]
+    except ImportError:
+        _planet_short = PLANET_SHORT_DISPLAY
+        _rasi_names = RASI_NAMES
+        _rasi_numbers = RASI_NUMBERS
+
+    chart_w = width // 3
+    chart_h = height - 50
+
     ref = 700.0
     scale = min(chart_w, chart_h) / ref
     fonts = _load_fonts(scale)
-    chart_w = width // 3
-    chart_h = height - 50 # Leave room for the titles at the top
 
     # Create the main wide canvas
     img = Image.new("RGB", (width, height), BG_COLOR)
     draw = ImageDraw.Draw(img)
 
-    styles = [
-        ("bengali", "বঙালী আৰ্হি (East Indian)"),
-        ("north", "উত্তৰ ভাৰতীয় (North Indian)"),
-        ("south", "দক্ষিণ ভাৰতীয় (South Indian)"),
-    ]
+    # i18n style labels
+    style_labels = {
+        'as': [("bengali", "বঙালী আৰ্হি (East Indian)"), ("north", "উত্তৰ ভাৰতীয় (North Indian)"), ("south", "দক্ষিণ ভাৰতীয় (South Indian)")],
+        'bn': [("bengali", "বাংলা আর্হি (East Indian)"), ("north", "উত্তর ভারতীয় (North Indian)"), ("south", "দক্ষিণ ভারতীয় (South Indian)")],
+        'hi': [("bengali", "बंगाली शैली (East Indian)"), ("north", "उत्तर भारतीय (North Indian)"), ("south", "दक्षिण भारतीय (South Indian)")],
+        'en': [("bengali", "Bengali Style (East Indian)"), ("north", "North Indian Style"), ("south", "South Indian Style")],
+    }
+    styles = style_labels.get(lang, style_labels['as'])
 
     for idx, (style, label) in enumerate(styles):
         x_offset = idx * chart_w
@@ -403,11 +444,11 @@ def draw_all_styles(
 
         # Draw the respective chart on the sub-image
         if style == "bengali":
-            _draw_bengali_chart(chart_draw, chart_w, chart_h, ascendant_index, planet_data, fonts, scale)
+            _draw_bengali_chart(chart_draw, chart_w, chart_h, ascendant_index, planet_data, fonts, scale, _rasi_names, _planet_short)
         elif style == "north":
-            _draw_north_indian_chart(chart_draw, chart_w, chart_h, ascendant_index, planet_data, fonts, scale)
+            _draw_north_indian_chart(chart_draw, chart_w, chart_h, ascendant_index, planet_data, fonts, scale, _rasi_numbers, _planet_short)
         elif style == "south":
-            _draw_south_indian_chart(chart_draw, chart_w, chart_h, ascendant_index, planet_data, fonts, scale)
+            _draw_south_indian_chart(chart_draw, chart_w, chart_h, ascendant_index, planet_data, fonts, scale, _rasi_names, _planet_short)
 
         # Paste the finished chart sub-image onto the main wide canvas
         img.paste(chart_img, (x_offset, 50))

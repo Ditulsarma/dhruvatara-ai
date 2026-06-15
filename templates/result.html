@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="as">
+<html lang="{{ lang }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ধ্ৰুৱতৰা এআই — {{ user_name }}ৰ কুণ্ডলী | ৰাশিফল, নক্ষত্ৰ ফল, পঞ্চাঙ্গ, দ্বাদশ ভাব ফল</title>
+    <title>{{ _('app_name') }} — {{ user_name }} {{ _('result_title') }}</title>
     <meta name="description" content="{{ user_name }}ৰ সম্পূৰ্ণ জন্মকুণ্ডলী — ধ্ৰুৱতৰা AI ত ৰাশিফল, নক্ষত্ৰ ফল, পঞ্চাঙ্গ, দ্বাদশ ভাব ফল, লগ্ন, গ্ৰহ বিচাৰ, দোষ বিশ্লেষণ, যোগ বিশ্লেষণ, দশা, সাৰেসাতী, ত্ৰিপাপ ৰিষ্ট, সন্নাড়ী চক্ৰ, নৱতাৰা চক্ৰ আৰু AI বিশ্লেষণ সহিতে। দিতুল শৰ্মাৰ দ্বাৰা নিৰ্মিত প্ৰথম অসমীয়া জ্যোতিষ চফ্টৱেৰ। dhrubataraai.com" />
     <meta name="keywords" content="ধ্ৰুৱতৰা AI, Dhrubatara AI, দিতুল শৰ্মা, Ditul Sarma, প্ৰথম অসমীয়া জ্যোতিষ চফ্টৱেৰ, First Assamese Astrology Software, অসমীয়া জ্যোতিষ চফ্টৱেৰ, Assamese Astrology Software, ৰাশিফল, Rashi Phal, নক্ষত্ৰ ফল, Nakshatra Phala, আজিৰ পঞ্চাঙ্গ, Today Panchanga, পঞ্চাঙ্গ, Panchanga, দ্বাদশ ভাব, Dwadash Bhab, দ্বাদশ ভাব ফল, Dwadash Bhab Phal, লগ্ন, Lagna, ৰাশি, Rashi, বাৰ ফল, Baar Phal, তিথি, Tithi, জন্মকুণ্ডলী, Janmakundali, নৱাংশ কুণ্ডলী, Navamsa Kundali, চলিত কুণ্ডলী, Chalit Kundali, চফ্টৱেৰ, Software, dhrubataraai.com, Astrology Software, বৈদিক জ্যোতিষ, Vedic Astrology, কুণ্ডলী, Kundli, গ্ৰহ বিচাৰ, Graha Bichar, দোষ বিশ্লেষণ, Dosha Analysis, যোগ বিশ্লেষণ, Yoga Analysis, দশা, Dasha, সাৰেসাতী, Sade Sati, ত্ৰিপাপ ৰিষ্ট, Tripap Rista, সন্নাড়ী চক্ৰ, Sannari Chakra, নৱতাৰা চক্ৰ, Navatara Chakra, অসম, Assam, জ্যোতিষ, Jyotish" />
     <meta name="author" content="দিতুল শৰ্মা, Ditul Sarma" />
@@ -908,17 +908,18 @@
 <body>
 
 <nav class="top-nav">
-    <div class="brand">🌟 ধ্ৰুৱতৰা<span> AI</span></div>
+    <div class="brand">🌟 {{ _('app_name') }}</div>
     <div class="nav-actions">
+        {% include 'lang_selector.html' %}
         {% if user_sub_info %}
         <span class="user-plan-badge {% if user_sub_info.is_pro %}pro{% else %}free{% endif %}">
-            {% if user_sub_info.is_pro %}⭐ PRO{% else %}🆓 FREE{% endif %}
+            {{ _('pro_badge') if user_sub_info.is_pro else _('free_badge') }}
         </span>
         {% endif %}
-        <a href="/dashboard" class="btn-sm btn-outline">📊 ডেশ্ববৰ্ড</a>
-        <a href="/kundli" class="btn-sm btn-outline">🏠 নতুন কুণ্ডলী</a>
+        <a href="/dashboard" class="btn-sm btn-outline">📊 {{ _('nav_dashboard') }}</a>
+        <a href="/kundli" class="btn-sm btn-outline">🏠 {{ _('nav_new_kundli') }}</a>
         {% if session.get('user_id') %}
-        <button class="btn-sm btn-fill" onclick="saveKundli()" style="background:var(--green);">💾 কুণ্ডলী সংৰক্ষণ কৰক</button>
+        <button class="btn-sm btn-fill" onclick="saveKundli()" style="background:var(--green);">{{ _('btn_save_kundli') }}</button>
         {% endif %}
         {% if user_features and user_features.get('pdf_report', False) %}
         <form id="downloadPdfForm" action="/download-pdf" method="POST" style="display:inline;">
@@ -937,20 +938,20 @@
             <input type="hidden" name="lat" value="{{ lat }}">
             <input type="hidden" name="lon" value="{{ lon }}">
             <input type="hidden" name="timezone" value="{{ timezone }}">
-            <button type="submit" class="btn-sm btn-fill" onclick="populatePatrikaHiddenFields()">📥 PDF ডাউনলোড</button>
+            <button type="submit" class="btn-sm btn-fill" onclick="populatePatrikaHiddenFields()">{{ _('btn_pdf_download') }}</button>
         </form>
         {% else %}
-        <button class="btn-sm btn-fill" onclick="openUpgradePlansModal()">📥 PDF ডাউনলোড</button>
+        <button class="btn-sm btn-fill" onclick="openUpgradePlansModal()">{{ _('btn_pdf_download') }}</button>
         {% endif %}
         {% if user_features and user_features.get('custom_pdf', False) %}
-        <button class="btn-sm btn-fill" onclick="openCustomPdfModal()" style="background:var(--deep-blue);">⚙️ নিজৰ মতে PDF</button>
+        <button class="btn-sm btn-fill" onclick="openCustomPdfModal()" style="background:var(--deep-blue);">{{ _('btn_custom_pdf') }}</button>
         {% else %}
-        <button class="btn-sm btn-fill" onclick="openUpgradePlansModal()" style="background:var(--deep-blue);">⚙️ নিজৰ মতে PDF</button>
+        <button class="btn-sm btn-fill" onclick="openUpgradePlansModal()" style="background:var(--deep-blue);">{{ _('btn_custom_pdf') }}</button>
         {% endif %}
-        <button class="btn-sm btn-fill" onclick="toggleBirthDetails()" id="btnBirthDetails" style="background:var(--deep-blue);">📋 জন্মৰ সবিশেষ</button>
-        <button class="btn-sm btn-fill" onclick="togglePatrika()" id="btnPatrika" style="background:var(--green);">📜 জন্মপত্ৰিকা বনাওক</button>
-        <button class="btn-sm btn-fill" onclick="openKartariModal()" style="background:#5B3E96;">🔮 কৰ্তৰী যোগ</button>
-        <button class="btn-sm btn-fill" onclick="openChatFromResult()" style="background:var(--purple);">💬 AI চেট</button>
+        <button class="btn-sm btn-fill" onclick="toggleBirthDetails()" id="btnBirthDetails" style="background:var(--deep-blue);">{{ _('btn_birth_details') }}</button>
+        <button class="btn-sm btn-fill" onclick="togglePatrika()" id="btnPatrika" style="background:var(--green);">{{ _('btn_patrika') }}</button>
+        <button class="btn-sm btn-fill" onclick="openKartariModal()" style="background:#5B3E96;">{{ _('btn_kartari') }}</button>
+        <button class="btn-sm btn-fill" onclick="openChatFromResult()" style="background:var(--purple);">{{ _('btn_ai_chat') }}</button>
     </div>
 </nav>
 
@@ -961,67 +962,67 @@
     <div class="info-card" id="birthDetailsCard" style="margin-bottom:0;border-radius:var(--radius);">
         <div class="info-item">
             <span class="i-icon">👤</span>
-            <div><div class="i-label">নাম</div><div class="i-value">{{ user_name }}</div></div>
+            <div><div class="i-label">{{ _('bd_name') }}</div><div class="i-value">{{ user_name }}</div></div>
         </div>
         <div class="info-item">
             <span class="i-icon">⚧</span>
-            <div><div class="i-label">লিংগ</div><div class="i-value">{% if gender == 'female' %}মহিলা (জাতিকা){% else %}পুৰুষ (জাতক){% endif %}</div></div>
+            <div><div class="i-label">{{ _('bd_gender') }}</div><div class="i-value">{% if gender == 'female' %}{{ _('gender_female') }}{% else %}{{ _('gender_male') }}{% endif %}</div></div>
         </div>
         <div class="info-item">
             <span class="i-icon">📍</span>
-            <div><div class="i-label">জন্মৰ স্থান</div><div class="i-value">{{ user_place }}</div></div>
+            <div><div class="i-label">{{ _('bd_birth_place') }}</div><div class="i-value">{{ user_place }}</div></div>
         </div>
         <div class="info-item">
             <span class="i-icon">📅</span>
-            <div><div class="i-label">জন্মৰ তাৰিখ</div><div class="i-value">{{ user_dob }}</div></div>
+            <div><div class="i-label">{{ _('bd_dob') }}</div><div class="i-value">{{ user_dob }}</div></div>
         </div>
         <div class="info-item">
             <span class="i-icon">⏰</span>
-            <div><div class="i-label">জন্মৰ সময়</div><div class="i-value">{{ user_tob }}</div></div>
+            <div><div class="i-label">{{ _('bd_tob') }}</div><div class="i-value">{{ user_tob }}</div></div>
         </div>
         <div class="info-item">
             <span class="i-icon">🌅</span>
-            <div><div class="i-label">লগ্ন</div><div class="i-value">{{ asc_rasi }}</div></div>
+            <div><div class="i-label">{{ _('bd_lagna') }}</div><div class="i-value">{{ asc_rasi }}</div></div>
         </div>
         <div class="info-item">
             <span class="i-icon">👑</span>
-            <div><div class="i-label">লগ্নৰ অধিপতি</div><div class="i-value">{{ lagna_lord }}</div></div>
+            <div><div class="i-label">{{ _('bd_lagna_lord') }}</div><div class="i-value">{{ lagna_lord }}</div></div>
         </div>
         <div class="info-item">
             <span class="i-icon">🌙</span>
-            <div><div class="i-label">জন্ম ৰাশি</div><div class="i-value">{{ moon_rasi }}</div></div>
+            <div><div class="i-label">{{ _('bd_moon_rashi') }}</div><div class="i-value">{{ moon_rasi }}</div></div>
         </div>
         <div class="info-item">
             <span class="i-icon">⭐</span>
-            <div><div class="i-label">জন্ম ৰাশিৰ অধিপতি</div><div class="i-value">{{ moon_rashi_lord }}</div></div>
+            <div><div class="i-label">{{ _('bd_moon_lord') }}</div><div class="i-value">{{ moon_rashi_lord }}</div></div>
         </div>
         <div class="info-item">
             <span class="i-icon">🕉️</span>
-            <div><div class="i-label">বৰ্ণ</div><div class="i-value">{{ panchanga.varna }}</div></div>
+            <div><div class="i-label">{{ _('bd_varna') }}</div><div class="i-value">{{ panchanga.varna }}</div></div>
         </div>
         <div class="info-item">
             <span class="i-icon">🔱</span>
-            <div><div class="i-label">গণ</div><div class="i-value">{{ panchanga.gana }}</div></div>
+            <div><div class="i-label">{{ _('bd_gana') }}</div><div class="i-value">{{ panchanga.gana }}</div></div>
         </div>
         <div class="info-item">
             <span class="i-icon">🐾</span>
-            <div><div class="i-label">যোনি</div><div class="i-value">{{ panchanga.yoni }}</div></div>
+            <div><div class="i-label">{{ _('bd_yoni') }}</div><div class="i-value">{{ panchanga.yoni }}</div></div>
         </div>
         <div class="info-item">
             <span class="i-icon">🌊</span>
-            <div><div class="i-label">নাড়ী</div><div class="i-value">{{ panchanga.nadi }}</div></div>
+            <div><div class="i-label">{{ _('bd_nadi') }}</div><div class="i-value">{{ panchanga.nadi }}</div></div>
         </div>
         <div class="info-item">
             <span class="i-icon">⏳</span>
-            <div><div class="i-label">জাতদণ্ড</div><div class="i-value">{{ panchanga.jata_danda }}</div></div>
+            <div><div class="i-label">{{ _('bd_jata_danda') }}</div><div class="i-value">{{ panchanga.jata_danda }}</div></div>
         </div>
         <div class="info-item">
             <span class="i-icon">☀️</span>
-            <div><div class="i-label">দিবামান</div><div class="i-value">{{ panchanga.divaman }}</div></div>
+            <div><div class="i-label">{{ _('bd_divaman') }}</div><div class="i-value">{{ panchanga.divaman }}</div></div>
         </div>
         <div class="info-item">
             <span class="i-icon">🌙</span>
-            <div><div class="i-label">ৰাত্ৰিমান</div><div class="i-value">{{ panchanga.ratriman }}</div></div>
+            <div><div class="i-label">{{ _('bd_ratriman') }}</div><div class="i-value">{{ panchanga.ratriman }}</div></div>
         </div>
     </div>
     </div>
@@ -1030,58 +1031,58 @@
     <!-- পত্ৰিকা ফৰ্ম - Collapsible (hidden by default) -->
     <div id="patrikaWrapper" style="max-height:0;overflow:hidden;transition:max-height 0.5s ease, margin 0.3s ease;margin-bottom:0;">
     <div class="info-card" id="patrika-card" style="margin-bottom:0;border-radius:var(--radius);">
-        <h3 style="color:var(--orange);margin-bottom:12px;font-size:1.1rem;">📜 পত্ৰিকা (জন্ম পত্ৰ)</h3>
+        <h3 style="color:var(--orange);margin-bottom:12px;font-size:1.1rem;">{{ _('patrika_title') }}</h3>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
             <div>
-                <label style="font-size:0.82rem;font-weight:600;color:var(--deep-blue);">জাতক/জাতিকাৰ নাম (অসমীয়াত)</label>
-                <input type="text" id="patrika_public_name" placeholder="যেনে: শ্ৰীমান দিতুল শৰ্মা" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.85rem;">
+                <label style="font-size:0.82rem;font-weight:600;color:var(--deep-blue);">{{ _('patrika_public_name') }}</label>
+                <input type="text" id="patrika_public_name" placeholder="{{ _('patrika_ph_public_name') }}" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.85rem;">
             </div>
             <div>
-                <label style="font-size:0.82rem;font-weight:600;color:var(--deep-blue);">গুপ্ত নাম</label>
-                <input type="text" id="patrika_secret_name" placeholder="যেনে: শ্ৰীমান দিপাংকৰ শৰ্মা" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.85rem;">
+                <label style="font-size:0.82rem;font-weight:600;color:var(--deep-blue);">{{ _('patrika_secret_name') }}</label>
+                <input type="text" id="patrika_secret_name" placeholder="{{ _('patrika_ph_secret_name') }}" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.85rem;">
             </div>
             <div>
-                <label style="font-size:0.82rem;font-weight:600;color:var(--deep-blue);">পিতৃৰ নাম</label>
-                <input type="text" id="patrika_father_name" placeholder="যেনে: মহেন্দ্ৰ নাথ শৰ্মা" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.85rem;">
+                <label style="font-size:0.82rem;font-weight:600;color:var(--deep-blue);">{{ _('patrika_father') }}</label>
+                <input type="text" id="patrika_father_name" placeholder="{{ _('patrika_ph_father') }}" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.85rem;">
             </div>
             <div>
-                <label style="font-size:0.82rem;font-weight:600;color:var(--deep-blue);">মাতৃৰ নাম</label>
-                <input type="text" id="patrika_mother_name" placeholder="যেনে: মনোমতী শৰ্মা" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.85rem;">
+                <label style="font-size:0.82rem;font-weight:600;color:var(--deep-blue);">{{ _('patrika_mother') }}</label>
+                <input type="text" id="patrika_mother_name" placeholder="{{ _('patrika_ph_mother') }}" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.85rem;">
             </div>
             <div>
-                <label style="font-size:0.82rem;font-weight:600;color:var(--deep-blue);">জন্ম জিলা</label>
-                <input type="text" id="patrika_birth_district" placeholder="যেনে: বজালী" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.85rem;">
+                <label style="font-size:0.82rem;font-weight:600;color:var(--deep-blue);">{{ _('patrika_birth_district') }}</label>
+                <input type="text" id="patrika_birth_district" placeholder="{{ _('patrika_ph_birth_district') }}" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.85rem;">
             </div>
             <div>
-                <label style="font-size:0.82rem;font-weight:600;color:var(--deep-blue);">বাসস্থান জিলা</label>
-                <input type="text" id="patrika_residence_district" placeholder="যেনে: বজালী" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.85rem;">
+                <label style="font-size:0.82rem;font-weight:600;color:var(--deep-blue);">{{ _('patrika_residence_district') }}</label>
+                <input type="text" id="patrika_residence_district" placeholder="{{ _('patrika_ph_residence_district') }}" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.85rem;">
             </div>
             <div>
-                <label style="font-size:0.82rem;font-weight:600;color:var(--deep-blue);">বাসস্থান</label>
-                <input type="text" id="patrika_residence" placeholder="যেনে: ৰহাধৰ বিৰকলা, পাঠশালা" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.85rem;">
+                <label style="font-size:0.82rem;font-weight:600;color:var(--deep-blue);">{{ _('patrika_residence') }}</label>
+                <input type="text" id="patrika_residence" placeholder="{{ _('patrika_ph_residence') }}" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.85rem;">
             </div>
             <div>
-                <label style="font-size:0.82rem;font-weight:600;color:var(--deep-blue);">আশীৰ্বাদ বাক্য</label>
+                <label style="font-size:0.82rem;font-weight:600;color:var(--deep-blue);">{{ _('patrika_blessing') }}</label>
                 <select id="patrika_blessing" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:0.85rem;">
-                    <option value="male" {% if gender == 'male' %}selected{% endif %}>বালক সু-কীৰ্তিশালী</option>
-                    <option value="female" {% if gender == 'female' %}selected{% endif %}>বালিকা সু-কীৰ্তিশালিনী</option>
+                    <option value="male" {% if gender == 'male' %}selected{% endif %}>{{ _('patrika_boy') }}</option>
+                    <option value="female" {% if gender == 'female' %}selected{% endif %}>{{ _('patrika_girl') }}</option>
                 </select>
             </div>
         </div>
         <div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
             {% if user_features and user_features.get('patrika_pdf', False) %}
-            <button class="btn-sm btn-fill" onclick="generatePatrika()" style="background:var(--deep-blue);">📜 পত্ৰিকা বনাওক</button>
-            <button class="btn-sm btn-outline" onclick="downloadPatrikaPDF()">📥 পত্ৰিকা PDF ডাউনলোড</button>
+            <button class="btn-sm btn-fill" onclick="generatePatrika()" style="background:var(--deep-blue);">{{ _('btn_generate_patrika') }}</button>
+            <button class="btn-sm btn-outline" onclick="downloadPatrikaPDF()">{{ _('btn_patrika_pdf') }}</button>
             {% if user_features and user_features.get('pratyantar_dasha_pdf', False) %}
-            <button class="btn-sm btn-fill" onclick="downloadPratyantarPDF()" style="background:#6A1B9A;">🔮 প্ৰত্যন্তৰ দশা ফল PDF</button>
+            <button class="btn-sm btn-fill" onclick="downloadPratyantarPDF()" style="background:#6A1B9A;">{{ _('btn_pratyantar_pdf') }}</button>
             {% else %}
-            <button class="btn-sm btn-fill" disabled style="background:#6A1B9A;opacity:0.5;cursor:not-allowed;" title="প্ৰ' ভাৰ্চনলৈ আপগ্ৰেড কৰক">🔮 প্ৰত্যন্তৰ দশা ফল PDF</button>
+            <button class="btn-sm btn-fill" disabled style="background:#6A1B9A;opacity:0.5;cursor:not-allowed;" title="{{ _('txt_upgrade_to_pro') }}">{{ _('btn_pratyantar_pdf') }}</button>
             {% endif %}
             {% else %}
-            <button class="btn-sm btn-fill" disabled style="background:var(--deep-blue);opacity:0.5;cursor:not-allowed;" title="প্ৰ' ভাৰ্চনলৈ আপগ্ৰেড কৰক">📜 পত্ৰিকা বনাওক</button>
-            <button class="btn-sm btn-outline" disabled style="opacity:0.5;cursor:not-allowed;" title="প্ৰ' ভাৰ্চনলৈ আপগ্ৰেড কৰক">📥 পত্ৰিকা PDF ডাউনলোড</button>
-            <button class="btn-sm btn-fill" disabled style="background:#6A1B9A;opacity:0.5;cursor:not-allowed;" title="প্ৰ' ভাৰ্চনলৈ আপগ্ৰেড কৰক">🔮 প্ৰত্যন্তৰ দশা ফল PDF</button>
-            <button class="btn-upgrade" onclick="openUpgradePlansModal()" style="padding:8px 18px;font-size:0.78rem;">💳 Upgrade to Pro Version</button>
+            <button class="btn-sm btn-fill" disabled style="background:var(--deep-blue);opacity:0.5;cursor:not-allowed;" title="{{ _('txt_upgrade_to_pro') }}">{{ _('btn_generate_patrika') }}</button>
+            <button class="btn-sm btn-outline" disabled style="opacity:0.5;cursor:not-allowed;" title="{{ _('txt_upgrade_to_pro') }}">{{ _('btn_patrika_pdf') }}</button>
+            <button class="btn-sm btn-fill" disabled style="background:#6A1B9A;opacity:0.5;cursor:not-allowed;" title="{{ _('txt_upgrade_to_pro') }}">{{ _('btn_pratyantar_pdf') }}</button>
+            <button class="btn-upgrade" onclick="openUpgradePlansModal()" style="padding:8px 18px;font-size:0.78rem;">{{ _('btn_upgrade_pro') }}</button>
             {% endif %}
         </div>
         <div id="patrika-result" style="margin-top:12px;padding:12px;background:#FFF8E1;border:1px solid #FFCC80;border-radius:8px;font-size:0.85rem;line-height:2;white-space:pre-wrap;display:none;"></div>
@@ -1090,58 +1091,58 @@
     <!-- END পত্ৰিকা Collapsible -->
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('planets')">🪐 গ্ৰহ অৱস্থান</button>
+        <button class="tab-btn active" onclick="switchTab('planets')">{{ _('tab_planets') }}</button>
         {% if not user_features or user_features.get('varga_charts', True) %}
-        <button class="tab-btn" onclick="switchTab('charts')">📊 বিভাগীয় কুণ্ডলী</button>
-        <button class="tab-btn" onclick="switchTab('all_charts')">🎨 সকলো চাৰ্ট (PIL)</button>
+        <button class="tab-btn" onclick="switchTab('charts')">{{ _('tab_varga') }}</button>
+        <button class="tab-btn" onclick="switchTab('all_charts')">{{ _('tab_all_charts') }}</button>
         {% endif %}
         {% if not user_features or user_features.get('panchanga', True) %}
-        <button class="tab-btn" onclick="switchTab('panchanga')">🕉️ পঞ্চাঙ্গ</button>
+        <button class="tab-btn" onclick="switchTab('panchanga')">{{ _('tab_panchanga') }}</button>
         {% endif %}
         {% if not user_features or user_features.get('dosha_analysis', True) %}
-        <button class="tab-btn" onclick="switchTab('dosha')">⚠️ দোষ বিশ্লেষণ</button>
+        <button class="tab-btn" onclick="switchTab('dosha')">{{ _('tab_dosha') }}</button>
         {% endif %}
-        <button class="tab-btn" onclick="switchTab('shani_sare_sati')">🌑 শনি সাৰেসাতী</button>
+        <button class="tab-btn" onclick="switchTab('shani_sare_sati')">{{ _('tab_sade_sati') }}</button>
         {% if not user_features or user_features.get('yoga_analysis', True) %}
-        <button class="tab-btn" onclick="switchTab('yoga')">✨ যোগ বিশ্লেষণ</button>
+        <button class="tab-btn" onclick="switchTab('yoga')">{{ _('tab_yoga') }}</button>
         {% endif %}
         {% if not user_features or user_features.get('dasha', True) %}
-        <button class="tab-btn" onclick="switchTab('dasha')">⏳ দশা</button>
+        <button class="tab-btn" onclick="switchTab('dasha')">{{ _('tab_dasha') }}</button>
         {% endif %}
-        <button class="tab-btn" onclick="switchTab('antardasha_phala')">📖 অন্তৰদশা ফল</button>
+        <button class="tab-btn" onclick="switchTab('antardasha_phala')">{{ _('tab_antardasha') }}</button>
         {% if not user_features or user_features.get('ai_interpretation', True) %}
-        <button class="tab-btn" onclick="switchTab('ai')">🤖 AI বিশ্লেষণ</button>
+        <button class="tab-btn" onclick="switchTab('ai')">{{ _('tab_ai') }}</button>
         {% endif %}
         {% if not user_features or user_features.get('tripap_rista', True) %}
-        <button class="tab-btn" onclick="switchTab('tripap')">☠️ ত্ৰিপাপ ৰিষ্ট</button>
+        <button class="tab-btn" onclick="switchTab('tripap')">{{ _('tab_tripap') }}</button>
         {% endif %}
         {% if not user_features or user_features.get('sannari_chakra', True) %}
-        <button class="tab-btn" onclick="switchTab('sannari')">🌀 সন্নাড়ী চক্ৰ</button>
+        <button class="tab-btn" onclick="switchTab('sannari')">{{ _('tab_sannari') }}</button>
         {% endif %}
         {% if not user_features or user_features.get('navatara_chakra', True) %}
-        <button class="tab-btn" onclick="switchTab('navatara')">🌀 নৱতাৰা চক্ৰ</button>
+        <button class="tab-btn" onclick="switchTab('navatara')">{{ _('tab_navatara') }}</button>
         {% endif %}
         {% if not user_features or user_features.get('nakshatra_phala', True) %}
-        <button class="tab-btn" onclick="switchTab('nakshatra_phala')">🌟 নক্ষত্ৰ ফল</button>
+        <button class="tab-btn" onclick="switchTab('nakshatra_phala')">{{ _('tab_nakshatra_phala') }}</button>
         {% endif %}
         {% if not user_features or user_features.get('lagna_phala', True) %}
-        <button class="tab-btn" onclick="switchTab('lagna_phala')">🌅 লগ্ন ফল</button>
+        <button class="tab-btn" onclick="switchTab('lagna_phala')">{{ _('tab_lagna_phala') }}</button>
         {% endif %}
         {% if not user_features or user_features.get('rashi_phala', True) %}
-        <button class="tab-btn" onclick="switchTab('rashi_phala')">🌙 ৰাশিফল</button>
+        <button class="tab-btn" onclick="switchTab('rashi_phala')">{{ _('tab_rashi_phala') }}</button>
         {% endif %}
         {% if not user_features or user_features.get('graha_bichar', True) %}
-        <button class="tab-btn" onclick="switchTab('graha_bichar')">🪐 গ্ৰহ বিচাৰ</button>
+        <button class="tab-btn" onclick="switchTab('graha_bichar')">{{ _('tab_graha_bichar') }}</button>
         {% endif %}
         {% if not user_features or user_features.get('dwadash_bhab_phala', True) %}
-        <button class="tab-btn" onclick="switchTab('dwadash_bhab_phala')">🏠 দ্বাদশ ভাব ফল</button>
+        <button class="tab-btn" onclick="switchTab('dwadash_bhab_phala')">{{ _('tab_dwadash') }}</button>
         {% endif %}
     </div>
 
     <div id="tab-planets" class="tab-content active">
         <div class="section"><div class="section-body">
             <table>
-                <thead><tr><th>গ্ৰহ</th><th>ৰাশি</th><th>ডিগ্ৰী</th><th>নক্ষত্ৰ</th><th>নক্ষত্ৰ পতি</th></tr></thead>
+                <thead><tr><th>{{ _('th_planet') }}</th><th>{{ _('th_rashi') }}</th><th>{{ _('th_degree') }}</th><th>{{ _('th_nakshatra') }}</th><th>{{ _('th_nak_lord') }}</th></tr></thead>
                 <tbody>
                     {% for p in planets %}
                     <tr><td><b>{{ p.name }}</b></td><td>{{ p.rasi }}</td><td>{{ p.degree }}°</td><td>{{ p.nakshatra }}</td><td>{{ p.lord }}</td></tr>
@@ -1226,37 +1227,38 @@
     <div id="tab-panchanga" class="tab-content">
         <div class="section"><div class="section-body">
             <div class="panchanga-grid">
-                <div class="panchanga-item"><div class="p-label">তিথি</div><div class="p-value">{{ panchanga.tithi.name }}</div><div class="p-sub">{{ panchanga.paksha }}</div></div>
-                <div class="panchanga-item"><div class="p-label">নক্ষত্ৰ</div><div class="p-value">{{ panchanga.nakshatra.name }}</div><div class="p-sub">পাদ: {{ panchanga.nakshatra.pada }}</div></div>
-                <div class="panchanga-item"><div class="p-label">যোগ</div><div class="p-value">{{ panchanga.yoga.name }}</div></div>
-                <div class="panchanga-item"><div class="p-label">কৰণ</div><div class="p-value">{{ panchanga.karana.name }}</div></div>
-                <div class="panchanga-item"><div class="p-label">বাৰ</div><div class="p-value">{{ panchanga.vaar.name }}</div></div>
-                <div class="panchanga-item"><div class="p-label">ঋতু</div><div class="p-value">{{ panchanga.ritu.name }}</div></div>
-                <div class="panchanga-item"><div class="p-label">অসমীয়া মাহ</div><div class="p-value">{{ panchanga.masa.name }}</div></div>
-                <div class="panchanga-item"><div class="p-label">অয়নাংশ (লাহিড়ী)</div><div class="p-value">{{ panchanga.ayanamsa }}°</div></div>
-                <div class="panchanga-item"><div class="p-label">সূৰ্য্যোদয়</div><div class="p-value">{{ panchanga.sunrise }}</div></div>
-                <div class="panchanga-item"><div class="p-label">সূৰ্য্যাস্ত</div><div class="p-value">{{ panchanga.sunset }}</div></div>
-                <div class="panchanga-item"><div class="p-label">ৰাহুকাল</div><div class="p-value" style="color:#C62828;">{{ panchanga.rahu_kalam }}</div></div>
-                <div class="panchanga-item"><div class="p-label">যমগণ্ড</div><div class="p-value" style="color:#E65100;">{{ panchanga.yama_gandam }}</div></div>
-                <div class="panchanga-item"><div class="p-label">গুলিক কাল</div><div class="p-value" style="color:#6A1B9A;">{{ panchanga.gulika_kalam }}</div></div>
-                <div class="panchanga-item"><div class="p-label">অভিজিৎ মুহূৰ্ত</div><div class="p-value" style="color:#2E7D32;">{{ panchanga.abhijit_muhurta }}</div></div>
-                <div class="panchanga-item"><div class="p-label">যমকাল</div><div class="p-value" style="color:#C62828;">{{ panchanga.yama_kaal }}</div></div>
-                <div class="panchanga-item"><div class="p-label">কালবেলা</div><div class="p-value" style="color:#E65100;">{{ panchanga.kaal_bela }}</div></div>
-                <div class="panchanga-item"><div class="p-label">ৰাৰবেলা</div><div class="p-value" style="color:#6A1B9A;">{{ panchanga.rar_bela }}</div></div>
-                <div class="panchanga-item"><div class="p-label">বাৰবেলা</div><div class="p-value" style="color:#BF360C;">{{ panchanga.bara_bela }}</div></div>
-                <div class="panchanga-item"><div class="p-label">দিবামান</div><div class="p-value">{{ panchanga.divaman }}</div></div>
-                <div class="panchanga-item"><div class="p-label">ৰাত্ৰিমান</div><div class="p-value">{{ panchanga.ratriman }}</div></div>
-                <div class="panchanga-item"><div class="p-label">জাতদণ্ড</div><div class="p-value">{{ panchanga.jata_danda }}</div></div>
-                <div class="panchanga-item"><div class="p-label">বৰ্ণ</div><div class="p-value">{{ panchanga.varna }}</div></div>
-                <div class="panchanga-item"><div class="p-label">গণ</div><div class="p-value">{{ panchanga.gana }}</div></div>
-                <div class="panchanga-item"><div class="p-label">যোনি</div><div class="p-value">{{ panchanga.yoni }}</div></div>
-                <div class="panchanga-item"><div class="p-label">নাড়ী</div><div class="p-value">{{ panchanga.nadi }}</div></div>
+                <div class="panchanga-item"><div class="p-label">{{ _('panch_tithi') }}</div><div class="p-value">{{ panchanga.tithi.name }}</div><div class="p-sub">{{ panchanga.paksha }}</div></div>
+                <div class="panchanga-item"><div class="p-label">{{ _('panch_nakshatra') }}</div><div class="p-value">{{ panchanga.nakshatra.name }}</div><div class="p-sub">{{ _('panch_pada') }}: {{ panchanga.nakshatra.pada }}</div></div>
+                <div class="panchanga-item"><div class="p-label">{{ _('panch_yoga') }}</div><div class="p-value">{{ panchanga.yoga.name }}</div></div>
+                <div class="panchanga-item"><div class="p-label">{{ _('panch_karana') }}</div><div class="p-value">{{ panchanga.karana.name }}</div></div>
+                <div class="panchanga-item"><div class="p-label">{{ _('panch_vaar') }}</div><div class="p-value">{{ panchanga.vaar.name }}</div></div>
+                <div class="panchanga-item"><div class="p-label">{{ _('panch_ritu') }}</div><div class="p-value">{{ panchanga.ritu.name }}</div></div>
+                <div class="panchanga-item"><div class="p-label">{{ _('panch_masa') }}</div><div class="p-value">{{ panchanga.masa.name }}</div></div>
+                <div class="panchanga-item"><div class="p-label">{{ _('panch_ayanamsa') }}</div><div class="p-value">{{ panchanga.ayanamsa }}°</div></div>
+                <div class="panchanga-item"><div class="p-label">{{ _('panch_sunrise') }}</div><div class="p-value">{{ panchanga.sunrise }}</div></div>
+                <div class="panchanga-item"><div class="p-label">{{ _('panch_sunset') }}</div><div class="p-value">{{ panchanga.sunset }}</div></div>
+                <div class="panchanga-item"><div class="p-label">{{ _('panch_rahu_kalam') }}</div><div class="p-value" style="color:#C62828;">{{ panchanga.rahu_kalam }}</div></div>
+                <div class="panchanga-item"><div class="p-label">{{ _('panch_yama_gandam') }}</div><div class="p-value" style="color:#E65100;">{{ panchanga.yama_gandam }}</div></div>
+                <div class="panchanga-item"><div class="p-label">{{ _('panch_gulika') }}</div><div class="p-value" style="color:#6A1B9A;">{{ panchanga.gulika_kalam }}</div></div>
+                <div class="panchanga-item"><div class="p-label">{{ _('panch_abhijit') }}</div><div class="p-value" style="color:#2E7D32;">{{ panchanga.abhijit_muhurta }}</div></div>
+                <div class="panchanga-item"><div class="p-label">{{ _('panch_yama_kaal') }}</div><div class="p-value" style="color:#C62828;">{{ panchanga.yama_kaal }}</div></div>
+                <div class="panchanga-item"><div class="p-label">{{ _('panch_kaal_bela') }}</div><div class="p-value" style="color:#E65100;">{{ panchanga.kaal_bela }}</div></div>
+                <div class="panchanga-item"><div class="p-label">{{ _('panch_rar_bela') }}</div><div class="p-value" style="color:#6A1B9A;">{{ panchanga.rar_bela }}</div></div>
+                <div class="panchanga-item"><div class="p-label">{{ _('panch_bara_bela') }}</div><div class="p-value" style="color:#BF360C;">{{ panchanga.bara_bela }}</div></div>
+                <div class="panchanga-item"><div class="p-label">{{ _('panch_divaman') }}</div><div class="p-value">{{ panchanga.divaman }}</div></div>
+                <div class="panchanga-item"><div class="p-label">{{ _('panch_ratriman') }}</div><div class="p-value">{{ panchanga.ratriman }}</div></div>
+                <div class="panchanga-item"><div class="p-label">{{ _('panch_jata_danda') }}</div><div class="p-value">{{ panchanga.jata_danda }}</div></div>
+                <div class="panchanga-item"><div class="p-label">{{ _('panch_varna') }}</div><div class="p-value">{{ panchanga.varna }}</div></div>
+                <div class="panchanga-item"><div class="p-label">{{ _('panch_gana') }}</div><div class="p-value">{{ panchanga.gana }}</div></div>
+                <div class="panchanga-item"><div class="p-label">{{ _('panch_yoni') }}</div><div class="p-value">{{ panchanga.yoni }}</div></div>
+                <div class="panchanga-item"><div class="p-label">{{ _('panch_nadi') }}</div><div class="p-value">{{ panchanga.nadi }}</div></div>
             </div>
         </div></div>
     </div>
 
     <div id="tab-dosha" class="tab-content">
         <div class="section"><div class="section-body">
+            <h3 class="section-heading" style="color:var(--deep-blue);margin-bottom:10px;">{{ dosha_labels.title }}</h3>
             <div class="dosha-list">
                 {% for d in dosha_results %}
                 <div class="dosha-card {% if not d.present %}safe{% endif %}">
@@ -1267,13 +1269,15 @@
                             {% if d.present %}
                             <span class="d-severity {% if d.severity >= 3 %}high{% elif d.severity >= 2 %}medium{% else %}low{% endif %}">{{ d.severity_text }}</span>
                             {% else %}
-                            <span class="d-severity low">অনুপস্থিত ✅</span>
+                            <span class="d-severity low">{{ dosha_labels.absent_label }}</span>
                             {% endif %}
                         </div>
                         {% if d.present %}
                         <div class="d-desc">{{ d.info.description[:200] if d.info else '' }}...</div>
                         {% if d.info and d.info.remedies %}
-                        <details class="d-remedies"><summary>🔧 প্ৰতিকাৰ চাওক</summary><ul>{% for r in d.info.remedies[:3] %}<li>{{ r }}</li>{% endfor %}</ul></details>
+                        <details class="d-remedies"><summary>{{ dosha_labels.remedies_heading }}</summary><ul>{% for r in d.info.remedies[:3] %}<li>{{ r }}</li>{% endfor %}</ul></details>
+                        {% elif d.present %}
+                        <details class="d-remedies"><summary>{{ dosha_labels.no_remedies }}</summary></details>
                         {% endif %}
                         {% endif %}
                     </div>
@@ -1285,11 +1289,12 @@
 
     <div id="tab-shani_sare_sati" class="tab-content">
         <div class="section"><div class="section-body">
+            <h3 class="section-heading" style="color:var(--deep-blue);margin-bottom:10px;">{{ shani_sare_sati_labels.title }}</h3>
             {% if shani_sare_sati_data %}
             <div style="background:#fff8f0;border:1px solid #ffd8b2;border-radius:8px;padding:12px 14px;margin-bottom:10px;">
-                <p style="font-size:0.8rem;color:#5d4037;margin-bottom:8px;line-height:1.5;">এই তালিকাখন শনিৰ প্ৰতি ৰাশীত প্ৰায় ২.৫ বছৰৰ চলাচলৰ ভিত্তিত অনুমান কৰা হৈছে। আসল সময়কাল বর্তমান গ্ৰহ গতিবিধি আৰু জন্মে থকা শনিৰ অবস্থানৰ ওপৰত নিৰ্ভৰ কৰে।</p>
+                <p style="font-size:0.8rem;color:#5d4037;margin-bottom:8px;line-height:1.5;">{{ shani_sare_sati_labels.intro }}</p>
                 <table style="width:100%;border-collapse:collapse;font-size:0.82rem;">
-                    <thead><tr style="background:#ffe0b2;color:#5d4037;font-weight:700;"><th>আনুমানিক বয়স</th><th>আনুমানিক চন</th><th>শনি ৰাশি</th><th>দশা</th></tr></thead>
+                    <thead><tr style="background:#ffe0b2;color:#5d4037;font-weight:700;"><th>{{ shani_sare_sati_labels.age_col }}</th><th>{{ shani_sare_sati_labels.year_col }}</th><th>{{ shani_sare_sati_labels.shani_rasi_col }}</th><th>{{ shani_sare_sati_labels.phase_col }}</th></tr></thead>
                     <tbody>
                         {% for e in shani_sare_sati_data %}
                         <tr>
@@ -1303,96 +1308,19 @@
                 </table>
             </div>
 
-            <!-- Sare Sati Detailed Analysis -->
+            <!-- Sare Sati Detailed Analysis (i18n) -->
             <div class="ss-analysis-web">
-                <h3 class="ss-analysis-heading-web">শনিৰ সাৰে সাতিৰ ৭.৫ বছৰীয়া সময়কালৰ বিতং বিশ্লেষণ:</h3>
-                <p class="ss-analysis-intro-web">শনিৰ সাৰে সাতটি মূলতঃ ২.৫ বছৰকৈ তিনিটা ভাগত বিভক্ত কৰা হয়। প্ৰতিটো ভাগৰ প্ৰভাৱ আৰু পৰিস্থিতি বেলেগ বেলেগ হয়।</p>
-
-                <div class="ss-phase-card-web">
-                    <div class="ss-phase-title-web">১. সাৰে সাতিৰ উদয় (১ম চৰণ - প্ৰথম ২.৫ বছৰ)</div>
-                    <div class="ss-phase-body-web">
-                        <p>এই সময়ছোৱাক সাৰে সাতিৰ <b>"আৰম্ভণিৰ দুৱাৰদলি"</b> বুলি ক'ব পাৰি। এই সময়ত শনি গ্ৰহ জন্ম ৰাশিৰ ঠিক আগৰ ঘৰত (দ্বাদশ স্থানত) থাকে।</p>
-                        <p class="ss-sub-heading-web">মুখ্য প্ৰভাৱ (সমস্যাসমূহ):</p>
-                        <ul>
-                            <li><b>আৰ্থিক চাপ:</b> উপাৰ্জনতকৈ খৰচৰ মাত্ৰা বহুগুণে বৃদ্ধি পায়। আৰ্থিক সংকটৰ সৃষ্টি হ'ব পাৰে।</li>
-                            <li><b>কৰ্মক্ষেত্ৰত বাধা:</b> অফিচ বা ব্যৱসায়ত সহকৰ্মীৰ সৈতে মতানৈক্য হ'ব পাৰে। শনিৰ গতি লেহেমীয়া হোৱাৰ বাবে যিকোনো কাম সম্পূৰ্ণ হওঁতে পলম হয়।</li>
-                            <li><b>গুপ্ত শত্ৰু:</b> আপোনাক সন্মুখৰ পৰা আক্ৰমণ নকৰিলেও, কিছুমান গুপ্ত শত্ৰুৱে পিছফালৰ পৰা লোকচান কৰাৰ চেষ্টা কৰিব পাৰে।</li>
-                        </ul>
-                        <p class="ss-sub-heading-web">ল'বলগীয়া সাৱধানতা:</p>
-                        <p>দুৰ্ঘটনাৰ আশংকা থকাৰ বাবে দূৰণিৰ যাত্ৰা পৰাপক্ষত এৰাই চলিব। টকা-পইচাৰ ক্ষেত্ৰত হিচাপী হ'ব আৰু ব্যৱসায়ত ডাঙৰ ৰিস্ক (Risk) একেবাৰেই নল'ব। খৰখেদা নকৰি উচিত সময়লৈকে ধৈৰ্য্য ধৰিলেহে কামত সফলতা মিলিব।</p>
-                    </div>
-                </div>
-
-                <div class="ss-phase-card-web">
-                    <div class="ss-phase-title-web">২. সাৰে সাতিৰ শিখৰ (২য় চৰণ - মাজৰ ২.৫ বছৰ)</div>
-                    <div class="ss-phase-body-web">
-                        <p>এই সময়ছোৱা সাৰে সাতিৰ <b>"চৰম বা আটাইতকৈ কঠিন"</b> পৰ্যায়। এই সময়ত শনি গ্ৰহ আপোনাৰ জন্ম ৰাশিতেই অৱস্থান কৰে।</p>
-                        <p class="ss-sub-heading-web">মুখ্য প্ৰভাৱ (সমস্যাসমূহ):</p>
-                        <ul>
-                            <li><b>মানসিক আৰু শাৰীৰিক কষ্ট:</b> মনত অকাৰণ ভয়, হতাশা আৰু তীব্ৰ মানসিক অশান্তি থাকে। স্বাস্থ্যৰ অৱনতি ঘটিব পাৰে। সৰু কাম এটাৰ বাবেও কঠোৰ সংগ্ৰাম কৰিবলগীয়া হয়।</li>
-                            <li><b>সম্পৰ্কত ফাট:</b> ভাতৃ-ভগ্নী, আত্মীয়-স্বজন আনকি পত্নীৰ সৈতেও বিনা কাৰণত কাজিয়া বা মনোমালিন্য হ'ব পাৰে।</li>
-                            <li><b>চৰিত্ৰত দাগ:</b> এই সময়ত শত্ৰুৱে আপোনাৰ বদনাম বা চৰিত্ৰ হনন কৰাৰ পূৰ্ণ চেষ্টা চলায়। লগতে পিতৃ-মাতৃৰ বাবেও সময়টো শুভ নহয়।</li>
-                        </ul>
-                        <p class="ss-sub-heading-web">ল'বলগীয়া সাৱধানতা:</p>
-                        <p>এই সময়ত মানসিকভাৱে অতিশয় দৃঢ় হোৱাৰ প্ৰয়োজন। কাৰো সৈতে তৰ্কত লিপ্ত নহ'ব আৰু নিজৰ চৰিত্ৰ সৱল কৰি ৰাখিব।</p>
-                    </div>
-                </div>
-
-                <div class="ss-phase-card-web">
-                    <div class="ss-phase-title-web">৩. সাৰে সাতিৰ অস্ত (৩য় চৰণ - শেষৰ ২.৫ বছৰ)</div>
-                    <div class="ss-phase-body-web">
-                        <p>এইটো সাৰে সাতিৰ <b>"বিদায় বেলা"</b>। আগৰ ৫ বছৰৰ ভয়ংকৰ কষ্টৰ পিছত এই সময়ছোৱাত ব্যক্তিয়ে কিছু সকাহ অনুভৱ কৰিবলৈ আৰম্ভ কৰে।</p>
-                        <p class="ss-sub-heading-web">মুখ্য প্ৰভাৱ (সমস্যাসমূহ):</p>
-                        <ul>
-                            <li><b>আৰ্থিক স্থিতি:</b> সকাহ পালেও টকা-পইচাৰ সম্পৰ্কীয় কিছুমান সমস্যা থাকি যায়। হঠাতে ধনহানি বা চুৰি হোৱাৰ সম্ভাৱনা থাকে।</li>
-                            <li><b>মানসিক অৱস্থা:</b> মনলৈ সঘনাই অশুভ বা নেতিবাচক চিন্তা আহিব পাৰে। বিদ্যাৰ্থীসকলে পঢ়া-শুনাত মনোযোগ দিলেও আশানুৰূপ ফলাফল পোৱাত বাধাৰ সৃষ্টি হয়।</li>
-                        </ul>
-                        <p class="ss-sub-heading-web">ল'বলগীয়া সাৱধানতা:</p>
-                        <p>আটাইতকৈ গুৰুত্বপূৰ্ণ কথাটো হ'ল নিজৰ কথা-বতৰা বা <b>বাণীৰ ওপৰত নিয়ন্ত্ৰণ ৰখা</b>। ভুল কথাৰ বাবে মানুহৰ লগত শত্ৰুতা হ'ব পাৰে। যান-বাহন চলোৱা আৰু সা-সম্পত্তিৰ লেনদেন কৰোঁতে অতিশয় সাৱধান হ'ব। পিতৃ-মাতৃৰ স্বাস্থ্যৰ প্ৰতি চকু ৰাখিব।</p>
-                    </div>
-                </div>
-
-                <div class="ss-note-box-web">
-                    <b>বিশেষ দ্ৰষ্টব্য:</b> শনিৰ সাৰে সাতিৰ প্ৰভাৱ মানুহৰ বয়সৰ ওপৰতো নিৰ্ভৰ কৰে। সৰুকালত (শৈশৱত) ইয়াৰ প্ৰভাৱ বৰ বেছি অনুভৱ নহয়, কিন্তু জীৱনৰ মাজভাগত (যৌৱন/কৰ্মজীৱনত) আৰু শেষ ভাগত (বাৰ্ধক্যত) ইয়াৰ প্ৰভাৱ অত্যন্ত গভীৰ আৰু নিৰ্ণায়ক হয়। শনি হৈছে ন্যায়াধীশ, সেয়ে সৎ কৰ্ম আৰু ধৈৰ্য্যৰে এই সময় পাৰ কৰিব পাৰি।
-                </div>
-
-                <h3 class="ss-analysis-heading-web">শনিৰ ধেয়া (ঢৈয়া) সময়ৰ বিশ্লেষণ:</h3>
-
-                <div class="ss-phase-card-web">
-                    <div class="ss-phase-title-web">১. শনিৰ ধেয়া: চতুৰ্থ স্থান (ৰাশিৰ পৰা চতুৰ্থত অৱস্থান)</div>
-                    <div class="ss-phase-body-web">
-                        <p>এই সময়ছোৱাত শনি গ্ৰহ জন্ম ৰাশিৰ পৰা চতুৰ্থ ঘৰত থাকে। ই ঘাইকৈ পাৰিবাৰিক সুখ, সম্পত্তি আৰু কৰ্মজীৱনত প্ৰভাৱ পেলায়।</p>
-                        <ul>
-                            <li><b>সম্পৰ্ক আৰু পৰিয়াল:</b> বন্ধু-বান্ধৱ বা আপোন মানুহৰ লগত মনোমালিন্য হোৱাৰ সম্ভাৱনা থাকে। পিতৃ-মাতৃৰ সৈতে সম্পৰ্কৰ অৱনতি ঘটিব পাৰে নাইবা তেওঁলোকৰ স্বাস্থ্যজনিত সমস্যাই দেখা দিব পাৰে। ভাতৃ-ভগ্নীৰ লগত যিকোনো ধৰণৰ লেনদেন কৰোঁতে সাৱধান হোৱা উচিত।</li>
-                            <li><b>সম্পত্তি আৰু বাহন:</b> মাটি-বাৰী, সম্পত্তি বা বন্ধুৰ লগত জড়িত কামবোৰত সতৰ্ক হোৱা প্ৰয়োজন। যদি নতুনকৈ ঘৰ নিৰ্মাণ কৰি আছে, তেন্তে বিভিন্ন দিশৰ পৰা বাধা বা সমস্যা আহিব পাৰে। যান-বাহন চলোৱাৰ ক্ষেত্ৰতো বিশেষ সাৱধানতা অৱলম্বন কৰিব লাগে।</li>
-                            <li><b>কৰ্মক্ষেত্ৰ:</b> অফিচ বা ব্যৱসায়ত পৰিস্থিতি কঠিন হ'ব পাৰে। কামৰ বাবে অত্যাধিক পৰিশ্ৰম কৰিবলগীয়া হয় আৰু আনৰ সৈতে প্ৰত্যক্ষ বা পৰোক্ষভাৱে বিবাদ বা মতানৈক্য হোৱাৰ শংকা থাকে।</li>
-                            <li><b>বয়সৰ প্ৰভাৱ:</b> সাৰে সাতিৰ দৰেই চতুৰ্থ স্থানৰ ধেয়াৰ প্ৰভাৱো সৰুকালত বিশেষভাৱে অনুভূত নহয় যদিও জীৱনৰ মাজভাগত আৰু শেষৰ ফালে ইয়াৰ প্ৰভাৱ যথেষ্ট বেছি হয়।</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="ss-phase-card-web">
-                    <div class="ss-phase-title-web">২. শনিৰ ধেয়া: অষ্টম স্থান (ৰাশিৰ পৰা অষ্টমত অৱস্থান)</div>
-                    <div class="ss-phase-body-web">
-                        <p>এই সময়ছোৱাত শনি জন্ম ৰাশিৰ পৰা অষ্টম ঘৰত থাকে। ইয়াক 'অষ্টম শনি' বুলিও কোৱা হয় আৰু ই সাধাৰণতে অধিক কষ্টদায়ক হ'ব পাৰে।</p>
-                        <ul>
-                            <li><b>কৰ্ম আৰু পাৰিবাৰিক জীৱন:</b> কৰ্মক্ষেত্ৰত কঠিন সংগ্ৰাম আৰু বিবাদৰ সৃষ্টি হ'ব পাৰে। ঠিক একেদৰে, পাৰিবাৰিক দিশতো সময়টো বৰ শুভ নহয়, অশান্তি আহিব পাৰে।</li>
-                            <li><b>বাণী বা কথা-বতৰা:</b> নিজৰ কথা-বতৰাৰ ওপৰত কঠোৰ নিয়ন্ত্ৰণ ৰখাটো অত্যন্ত গুৰুত্বপূৰ্ণ। আপুনি হয়তো কাৰোবাৰ ভালৰ বাবে কথা এটা ক'ব, কিন্তু সেয়া ভুল অৰ্থত লোৱা হ'ব পাৰে আৰু সম্পৰ্ক বেয়া হ'ব পাৰে।</li>
-                            <li><b>আৰ্থিক সংকট:</b> টকা-পইচাৰ তীব্ৰ অভাৱ বা আৰ্থিক সমস্যাই দেখা দিব পাৰে। ধাৰলৈ দিয়া ধন ঘূৰাই নোপোৱা, ঋণৰ সূত বা মূল ধন পৰিশোধ কৰিব নোৱাৰা, অথবা নতুন আঁচনিৰ বাবে প্ৰয়োজনীয় ধন গোটাব নোৱাৰা আদি সমস্যা হ'ব পাৰে। আত্মীয়ৰ লগত ধনৰ লেনদেন কৰোঁতে অতিশয় সাৱধান হ'ব।</li>
-                            <li><b>শাৰীৰিক আৰু আইনী বিপদ:</b> অষ্টম স্থানত শনি থকাৰ বাবে দুৰ্ঘটনা হোৱা বা আঘাত পোৱাৰ সম্ভাৱনা প্ৰবল থাকে। যাৰ জন্মকুণ্ডলীত অষ্টম স্থানত অশুভ গ্ৰহ থাকে বা অষ্টম পতি অশুভ হৈ থাকে, তেওঁলোকৰ এই সময়ত ডাঙৰ বিবাদ, আনকি ক'ৰ্ট-কাছাৰীৰ (Court Case) গোচৰ পৰ্যন্ত হ'ব পাৰে। কিছুমানে চৰকাৰীভাৱে নিষিদ্ধ বা বেআইনী কামতো হাত দিয়াৰ আশংকা থাকে।</li>
-                            <li><b>শিক্ষা:</b> বিদ্যাৰ্থীসকলৰ বাবে এই সময়ছোৱা প্ৰত্যাহ্বানজনক। পঢ়া-শুনাত বাধা আহিব পাৰে আৰু আশানুৰূপ ফলাফল লাভ কৰাত অসুবিধা হ'ব পাৰে।</li>
-                        </ul>
-                    </div>
-                </div>
+                {{ shani_sare_sati_analysis_html | safe }}
             </div>
             {% else %}
-            <div style="text-align:center;padding:30px;color:var(--text-light);"><span style="font-size:2rem;">🌑</span><p>শনি সাৰেসাতী বা ঢৈয়াৰ তথ্য উপলব্ধ নহয়।</p></div>
+            <div style="text-align:center;padding:30px;color:var(--text-light);"><span style="font-size:2rem;">🌑</span><p>{{ shani_sare_sati_labels.no_data }}</p></div>
             {% endif %}
         </div></div>
     </div>
 
     <div id="tab-yoga" class="tab-content">
         <div class="section"><div class="section-body">
+            <h3 class="section-heading" style="color:var(--deep-blue);margin-bottom:10px;">{{ yoga_labels.title }}</h3>
             {% if yoga_results %}
             <div class="yoga-list">
                 {% for y in yoga_results %}
@@ -1401,13 +1329,13 @@
                     <div class="d-content">
                         <div><span class="y-name">{{ y.name }}</span><span class="y-category">{{ y.category }}</span></div>
                         <div class="y-desc">{{ y.description[:250] }}...</div>
-                        <div style="font-size:0.78rem;color:var(--green);margin-top:4px;"><b>ফল:</b> {{ y.effect }}</div>
+                        <div style="font-size:0.78rem;color:var(--green);margin-top:4px;"><b>{{ yoga_labels.effect_label }}:</b> {{ y.effect }}</div>
                     </div>
                 </div>
                 {% endfor %}
             </div>
             {% else %}
-            <div style="text-align:center;padding:30px;color:var(--text-light);"><span style="font-size:2rem;">🔍</span><p>কোনো বিশেষ যোগ ধৰা পৰা নাই।</p></div>
+            <div style="text-align:center;padding:30px;color:var(--text-light);"><span style="font-size:2rem;">🔍</span><p>{{ yoga_labels.no_yoga }}</p></div>
             {% endif %}
         </div></div>
     </div>
@@ -1417,36 +1345,36 @@
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                 <!-- Left: Dasha Tree -->
                 <div>
-                    <h4 style="margin-bottom:10px;color:var(--deep-blue);">⏳ বিংশোত্তৰী দশা তালিকা</h4>
+                    <h4 style="margin-bottom:10px;color:var(--deep-blue);">{{ _('dasha_tree_title') }}</h4>
                     <div class="dasha-tree" id="dashaTree">
                         {% for md in dasa_data %}
                         <div class="md-node">
-                            <div class="md-header" onclick="toggleDasha(this)" data-expanded="false" data-maha="{{ md.md_lord }}">
+                            <div class="md-header" onclick="toggleDasha(this)" data-expanded="false" data-maha="{{ md.md_lord_en }}">
                                 <span class="md-arrow">▶</span>
                                 <span class="md-icon">★</span>
                                 <span class="md-info">
-                                    <strong>{{ md.md_lord }}</strong>
+                                    <strong>{{ md.md_lord_display or md.md_lord }}</strong>
                                     <span class="md-dates">{{ md.start }} → {{ md.end }}</span>
-                                    <span class="md-years">({{ md.years }} বছৰ)</span>
+                                    <span class="md-years">({{ md.years }} {{ _('years') }})</span>
                                 </span>
                             </div>
                             <div class="md-body" style="display:none;">
                                 {% for ad in md.sub_dasas %}
                                 <div class="ad-node">
-                                    <div class="ad-header" onclick="toggleDasha(this);showAntarPrediction(event, '{{ md.md_lord }}', '{{ ad.ad_lord }}')" data-expanded="false" data-maha="{{ md.md_lord }}" data-antar="{{ ad.ad_lord }}">
+                                    <div class="ad-header" onclick="toggleDasha(this);showAntarPrediction(event, '{{ md.md_lord_en }}', '{{ ad.ad_lord_en }}')" data-expanded="false" data-maha="{{ md.md_lord_en }}" data-antar="{{ ad.ad_lord_en }}">
                                         <span class="ad-arrow">▶</span>
                                         <span class="ad-icon">↳</span>
                                         <span class="ad-info">
-                                            <strong>{{ ad.ad_lord }}</strong>
+                                            <strong>{{ ad.ad_lord_display or ad.ad_lord }}</strong>
                                             <span class="ad-dates">{{ ad.start }} → {{ ad.end }}</span>
                                         </span>
                                     </div>
                                     <div class="ad-body" style="display:none;">
                                         {% for pd in ad.pratyantar %}
-                                        <div class="pd-row" onclick="showPratPrediction(event, '{{ md.md_lord }}', '{{ ad.ad_lord }}', '{{ pd.lord }}')" style="cursor:pointer;" data-maha="{{ md.md_lord }}" data-antar="{{ ad.ad_lord }}" data-prat="{{ pd.lord }}">
+                                        <div class="pd-row" onclick="showPratPrediction(event, '{{ md.md_lord_en }}', '{{ ad.ad_lord_en }}', '{{ pd.lord_en }}')" style="cursor:pointer;" data-maha="{{ md.md_lord_en }}" data-antar="{{ ad.ad_lord_en }}" data-prat="{{ pd.lord_en }}">
                                             <span class="pd-icon">•</span>
                                             <span class="pd-info">
-                                                <span>{{ pd.lord }}</span>
+                                                <span>{{ pd.lord_display or pd.lord }}</span>
                                                 <span class="pd-dates">{{ pd.start }} → {{ pd.end }}</span>
                                             </span>
                                         </div>
@@ -1461,7 +1389,7 @@
                 </div>
                 <!-- Right: Prediction Panel -->
                 <div>
-                    <h4 style="margin-bottom:10px;color:var(--orange);">📝 দশা ফলাফল</h4>
+                    <h4 style="margin-bottom:10px;color:var(--orange);">{{ _('dasha_prediction_title') }}</h4>
                     <div id="dashaPredictionPanel" style="background:linear-gradient(135deg,#f8f5ff,#fff8f0);border-radius:var(--radius-sm);border:1px solid #e8e0f0;line-height:1.8;font-size:0.85rem;white-space:pre-line;position:relative;">
                         {% if user_subscription_id == 1 %}
                         <!-- Free Plan: Show first ~10 lines, then fade + upgrade -->
@@ -1475,9 +1403,9 @@
                         </div>
                         <div class="upgrade-overlay" id="dashaUpgradeOverlay">
                             <div class="lock-icon">🔒</div>
-                            <div class="upgrade-title">দশা ফলাফল সম্পূৰ্ণৰূপে চাবলৈ আপগ্ৰেড কৰক</div>
-                            <div class="upgrade-sub">বিনামূলীয়া প্লেনত দশা ফলাফলৰ স্ক্ৰল সীমিত। সম্পূৰ্ণ ফলাফল পাবলৈ প্ৰিমিয়াম প্লেনলৈ আপগ্ৰেড কৰক।</div>
-                            <button class="btn-upgrade" onclick="openUpgradePlansModal()">💳 Upgrade to Other Plane</button>
+                            <div class="upgrade-title">{{ _('dasha_upgrade_title') }}</div>
+                            <div class="upgrade-sub">{{ _('dasha_upgrade_sub') }}</div>
+                            <button class="btn-upgrade" onclick="openUpgradePlansModal()">{{ _('dasha_upgrade_btn') }}</button>
                         </div>
                         {% else %}
                         <!-- Paid Plan: Full scrollable content -->
@@ -1501,11 +1429,11 @@
                     <div class="dasha-tree" id="antardashaTree">
                         {% for md in dasa_data %}
                         <div class="md-node">
-                            <div class="md-header" onclick="toggleDasha(this)" data-expanded="false" data-maha="{{ md.md_lord }}">
+                            <div class="md-header" onclick="toggleDasha(this)" data-expanded="false" data-maha="{{ md.md_lord_en }}">
                                 <span class="md-arrow">▶</span>
                                 <span class="md-icon">★</span>
                                 <span class="md-info">
-                                    <strong>{{ md.md_lord }}</strong>
+                                    <strong>{{ md.md_lord_display or md.md_lord }}</strong>
                                     <span class="md-dates">{{ md.start }} → {{ md.end }}</span>
                                     <span class="md-years">({{ md.years }} বছৰ)</span>
                                 </span>
@@ -1513,20 +1441,20 @@
                             <div class="md-body" style="display:none;">
                                 {% for ad in md.sub_dasas %}
                                 <div class="ad-node">
-                                    <div class="ad-header" onclick="toggleDasha(this);showAntarPhala(event, '{{ md.md_lord }}', '{{ ad.ad_lord }}')" data-expanded="false" data-maha="{{ md.md_lord }}" data-antar="{{ ad.ad_lord }}">
+                                    <div class="ad-header" onclick="toggleDasha(this);showAntarPhala(event, '{{ md.md_lord_en }}', '{{ ad.ad_lord_en }}')" data-expanded="false" data-maha="{{ md.md_lord_en }}" data-antar="{{ ad.ad_lord_en }}">
                                         <span class="ad-arrow">▶</span>
                                         <span class="ad-icon">↳</span>
                                         <span class="ad-info">
-                                            <strong>{{ ad.ad_lord }}</strong>
+                                            <strong>{{ ad.ad_lord_display or ad.ad_lord }}</strong>
                                             <span class="ad-dates">{{ ad.start }} → {{ ad.end }}</span>
                                         </span>
                                     </div>
                                     <div class="ad-body" style="display:none;">
                                         {% for pd in ad.pratyantar %}
-                                        <div class="pd-row" onclick="showPratPhala(event, '{{ md.md_lord }}', '{{ ad.ad_lord }}', '{{ pd.lord }}')" style="cursor:pointer;" data-maha="{{ md.md_lord }}" data-antar="{{ ad.ad_lord }}" data-prat="{{ pd.lord }}">
+                                        <div class="pd-row" onclick="showPratPhala(event, '{{ md.md_lord_en }}', '{{ ad.ad_lord_en }}', '{{ pd.lord_en }}')" style="cursor:pointer;" data-maha="{{ md.md_lord_en }}" data-antar="{{ ad.ad_lord_en }}" data-prat="{{ pd.lord_en }}">
                                             <span class="pd-icon">•</span>
                                             <span class="pd-info">
-                                                <span>{{ pd.lord }}</span>
+                                                <span>{{ pd.lord_display or pd.lord }}</span>
                                                 <span class="pd-dates">{{ pd.start }} → {{ pd.end }}</span>
                                             </span>
                                         </div>
@@ -1541,23 +1469,23 @@
                 </div>
                 <!-- Right: Antardasha Phala Panel -->
                 <div>
-                    <h4 style="margin-bottom:10px;color:var(--orange);">📖 অন্তৰদশা / প্ৰত্যান্তৰদশা ফলাফল</h4>
+                    <h4 style="margin-bottom:10px;color:var(--orange);">{{ _('antardasha_title') }}</h4>
                     <div id="antardashaPhalaPanel" style="background:linear-gradient(135deg,#f8f5ff,#fff8f0);border-radius:var(--radius-sm);border:1px solid #e8e0f0;line-height:1.8;font-size:0.85rem;white-space:pre-line;position:relative;">
                         {% if user_subscription_id == 1 %}
                         <!-- Free Plan: Show locked message -->
                         <div style="padding:16px 20px;text-align:center;">
-                            <p style="color:var(--text-light);">অন্তৰদশা আৰু প্ৰত্যান্তৰদশাৰ ফলাফল চাবলৈ বাওঁফালৰ দশা তালিকাৰ পৰা অন্তৰদশা বা প্ৰত্যান্তৰদশা বাছনি কৰক।</p>
+                            <p style="color:var(--text-light);">{{ _('antardasha_select') }}</p>
                         </div>
                         <div class="upgrade-overlay" id="antardashaUpgradeOverlay">
                             <div class="lock-icon">🔒</div>
-                            <div class="upgrade-title">অন্তৰদশা ফলাফল চাবলৈ আপগ্ৰেড কৰক</div>
-                            <div class="upgrade-sub">বিনামূলীয়া প্লেনত অন্তৰদশা আৰু প্ৰত্যান্তৰদশাৰ ফলাফল উপলব্ধ নহয়। সম্পূৰ্ণ ফলাফল পাবলৈ প্ৰিমিয়াম প্লেনলৈ আপগ্ৰেড কৰক।</div>
+                            <div class="upgrade-title">{{ _('antardasha_upgrade_title') }}</div>
+                            <div class="upgrade-sub">{{ _('antardasha_upgrade_sub') }}</div>
                             <button class="btn-upgrade" onclick="openUpgradePlansModal()">💳 Upgrade to Pro</button>
                         </div>
                         {% else %}
                         <!-- Paid Plan: Full content -->
                         <div style="padding:16px 20px;max-height:550px;overflow-y:auto;" id="antardashaPhalaContent">
-                            <p style="color:var(--text-light);text-align:center;">অন্তৰদশা আৰু প্ৰত্যান্তৰদশাৰ ফলাফল চাবলৈ বাওঁফালৰ দশা তালিকাৰ পৰা অন্তৰদশা বা প্ৰত্যান্তৰদশা বাছনি কৰক।</p>
+                            <p style="color:var(--text-light);text-align:center;">{{ _('antardasha_select') }}</p>
                         </div>
                         {% endif %}
                     </div>
@@ -1574,18 +1502,18 @@
         <div class="section"><div class="section-body">
             {% if tripap_data %}
             <div style="margin-bottom:16px;padding:12px 16px;background:linear-gradient(135deg,#fff3e0,#fce4ec);border-radius:8px;border:1px solid #ffcc80;">
-                <b>🌙 চন্দ্ৰৰ নক্ষত্ৰ:</b> {{ tripap_data.nakshatra }} ({{ tripap_data.nakshatra_index }})
+                <b>{{ _('tripap_moon_nak') }}:</b> {{ tripap_data.nakshatra }} ({{ tripap_data.nakshatra_index }})
             </div>
 
-            <h4 style="margin-top:20px;color:var(--deep-blue);">📋 সম্পূৰ্ণ ত্ৰিপাপ ৰিষ্ট তালিকা ({{ tripap_data.nakshatra }})</h4>
+            <h4 style="margin-top:20px;color:var(--deep-blue);">{{ _('tripap_full_table') }} ({{ tripap_data.nakshatra }})</h4>
             <div style="overflow-x:auto;">
                 <table style="font-size:0.75rem;min-width:900px;">
                     <thead>
                         <tr>
-                            <th>শাৰী</th>
-                            <th>বিৱৰণ</th>
+                            <th>{{ tripap_data.row_labels.row_label }}</th>
+                            <th>{{ tripap_data.row_labels.col_desc }}</th>
                             {% for h in range(1,13) %}
-                            <th>ঘৰ {{ h }}</th>
+                            <th>{{ tripap_data.row_labels.col_house.format(h) }}</th>
                             {% endfor %}
                         </tr>
                     </thead>
@@ -1611,21 +1539,21 @@
 
             {% if tripap_ages %}
             <div style="margin-top:24px;padding:16px 20px;background:linear-gradient(135deg,#fce4ec,#f3e5f5);border-radius:10px;border:2px solid #e91e63;">
-                <h4 style="color:#c62828;margin:0 0 10px 0;font-size:1.1rem;">⏳ ত্ৰিপাপ ৰিষ্ট হবলগীয়া বয়স</h4>
-                <p style="font-size:0.85rem;color:#555;margin-bottom:10px;">{{ tripap_data.nakshatra }} নক্ষত্ৰৰ বাবে তলত দিয়া বয়সসমূহত ত্ৰিপাপ ঋষ্ট হোৱাৰ সম্ভাৱনা থাকে:</p>
+                <h4 style="color:#c62828;margin:0 0 10px 0;font-size:1.1rem;">{{ _('tripap_ages_title') }}</h4>
+                <p style="font-size:0.85rem;color:#555;margin-bottom:10px;">{{ tripap_data.nakshatra }} {{ _('tripap_ages_desc') }}</p>
                 <div style="display:flex;flex-wrap:wrap;gap:8px;">
                     {% for age in tripap_ages %}
                     <span style="display:inline-block;padding:6px 14px;background:#c62828;color:#fff;border-radius:20px;font-weight:700;font-size:0.9rem;">{{ age }}</span>
                     {% endfor %}
                 </div>
-                <p style="font-size:0.75rem;color:#888;margin-top:12px;">মুঠ {{ tripap_ages|length }}টা বয়স • এই বয়সসমূহত সাৱধানতা অৱলম্বন কৰক।</p>
+                <p style="font-size:0.75rem;color:#888;margin-top:12px;">{{ _('tripap_caution') | replace('{count}', tripap_ages|length|string) }}</p>
             </div>
             {% endif %}
 
             {% else %}
             <div style="text-align:center;padding:30px;color:var(--text-light);">
                 <span style="font-size:2rem;">🔍</span>
-                <p>ত্ৰিপাপ ৰিষ্ট তথ্য উপলব্ধ নহয়।</p>
+                <p>{{ _('tripap_not_available') }}</p>
             </div>
             {% endif %}
         </div></div>
@@ -1635,12 +1563,12 @@
         <div class="section"><div class="section-body">
             {% if sannari_data %}
             <div style="text-align:center;">
-                <h4 style="color:var(--deep-blue);margin-bottom:12px;">🌀 সন্নাড়ী চক্ৰ — {{ moon_nak_name }} (নক্ষত্ৰ নং {{ sannari_data.nakshatra_number }})</h4>
+                <h4 style="color:var(--deep-blue);margin-bottom:12px;">{{ _('sannari_heading') }} — {{ moon_nak_name }} ({{ _('sannari_col_nak_no') }} {{ sannari_data.nakshatra_number }})</h4>
                 <div style="display:inline-block;max-width:600px;width:100%;">
                     {{ sannari_svg | safe }}
                 </div>
                 <table style="margin:16px auto;max-width:350px;">
-                    <thead><tr><th>বিভাগ</th><th>নক্ষত্ৰ নং</th></tr></thead>
+                    <thead><tr><th>{{ _('sannari_col_section') }}</th><th>{{ _('sannari_col_nak_no') }}</th></tr></thead>
                     <tbody>
                         {% for pos in sannari_data.positions %}
                         <tr><td><b>{{ pos.label }}</b></td><td>{{ pos.number }}</td></tr>
@@ -1648,14 +1576,13 @@
                     </tbody>
                 </table>
                 <p style="font-size:0.8rem;color:var(--text-light);margin-top:8px;">
-                    সন্নাড়ী চক্ৰত ৬টা ভাগ থাকে — জন্ম, কৰ্ম, সমুদয়, মানস, সাংঘাতিক আৰু বিনাশ।
-                    জন্ম নক্ষত্ৰৰ পৰা আৰম্ভ কৰি প্ৰত্যেক ভাগৰ নক্ষত্ৰ সংখ্যা গণনা কৰা হয়।
+                    {{ _('sannari_desc') }}
                 </p>
             </div>
             {% else %}
             <div style="text-align:center;padding:30px;color:var(--text-light);">
                 <span style="font-size:2rem;">🔍</span>
-                <p>সন্নাড়ী চক্ৰ তথ্য উপলব্ধ নহয়।</p>
+                <p>{{ _('sannari_not_available') }}</p>
             </div>
             {% endif %}
         </div></div>
@@ -1665,7 +1592,7 @@
         <div class="section"><div class="section-body">
             {% if navatara_data %}
             <div style="text-align:center;">
-                <h4 style="color:var(--deep-blue);margin-bottom:12px;">🌀 নৱতাৰা চক্ৰ — {{ navatara_data.nakshatra_name }} (নক্ষত্ৰ নং {{ navatara_data.nakshatra_number }})</h4>
+                <h4 style="color:var(--deep-blue);margin-bottom:12px;">{{ _('navatara_heading') }} — {{ navatara_data.nakshatra_name }} ({{ _('sannari_col_nak_no') }} {{ navatara_data.nakshatra_number }})</h4>
                 <div style="display:inline-block;max-width:700px;width:100%;">
                     {{ navatara_svg | safe }}
                 </div>
@@ -1698,7 +1625,7 @@
             {% else %}
             <div style="text-align:center;padding:30px;color:var(--text-light);">
                 <span style="font-size:2rem;">🔍</span>
-                <p>নৱতাৰা চক্ৰ তথ্য উপলব্ধ নহয়।</p>
+                <p>{{ _('navatara_not_available') }}</p>
             </div>
             {% endif %}
         </div></div>
@@ -1708,13 +1635,13 @@
         <div class="section"><div class="section-body">
             {% if nakshatra_phala_text %}
             <div style="max-width:800px;margin:0 auto;">
-                <h4 style="color:var(--deep-blue);margin-bottom:16px;text-align:center;">🌟 {{ moon_nak_name }} নক্ষত্ৰৰ ফলাফল</h4>
+                <h4 style="color:var(--deep-blue);margin-bottom:16px;text-align:center;">🌟 {{ moon_nak_name }} {{ _('nak_phala_heading') }}</h4>
                 <div style="font-size:1.1rem;line-height:2.2;text-align:justify;color:var(--text);white-space:pre-line;">
                     {{ nakshatra_phala_text }}
                 </div>
                 <div style="text-align:center;margin-top:24px;">
                     <button id="btnAdvNakshatra" class="btn-sm btn-fill" onclick="loadAdvNakshatra()" style="font-size:1rem;padding:12px 28px;border-radius:25px;">
-                        📖 নক্ষত্ৰ ফল বহলাই
+                        {{ _('nak_phala_expand') }}
                     </button>
                 </div>
                 <div id="advNakshatraContent" style="display:none;margin-top:24px;padding:20px;background:linear-gradient(135deg,#FFF8F0,#FFF3E0);border-radius:12px;border:1px solid #f0e0c8;font-size:1.15rem;line-height:2.4;text-align:justify;color:var(--text);white-space:pre-line;">
@@ -1723,7 +1650,7 @@
             {% else %}
             <div style="text-align:center;padding:30px;color:var(--text-light);">
                 <span style="font-size:2rem;">🔍</span>
-                <p>নক্ষত্ৰ ফলাফল উপলব্ধ নহয়।</p>
+                <p>{{ _('nak_not_available') }}</p>
             </div>
             {% endif %}
         </div></div>
@@ -1733,13 +1660,13 @@
         <div class="section"><div class="section-body">
             {% if lagna_phala_text %}
             <div style="max-width:800px;margin:0 auto;">
-                <h4 style="color:var(--deep-blue);margin-bottom:16px;text-align:center;">🌅 {{ asc_rasi }} লগ্নৰ ফলাফল</h4>
+                <h4 style="color:var(--deep-blue);margin-bottom:16px;text-align:center;">🌅 {{ asc_rasi }} {{ _('lagna_phala_heading') }}</h4>
                 <div style="font-size:1.1rem;line-height:2.2;text-align:justify;color:var(--text);white-space:pre-line;">
                     {{ lagna_phala_text }}
                 </div>
                 <div style="text-align:center;margin-top:24px;">
                     <button id="btnAdvLagna" class="btn-sm btn-fill" onclick="loadAdvLagna()" style="font-size:1rem;padding:12px 28px;border-radius:25px;">
-                        📖 লগ্নফল বহলাই
+                        {{ _('lagna_phala_expand') }}
                     </button>
                 </div>
                 <div id="advLagnaContent" style="display:none;margin-top:24px;padding:20px;background:linear-gradient(135deg,#FFF8F0,#FFF3E0);border-radius:12px;border:1px solid #f0e0c8;font-size:1.1rem;line-height:2.2;text-align:justify;color:var(--text);white-space:pre-line;">
@@ -1748,7 +1675,7 @@
             {% else %}
             <div style="text-align:center;padding:30px;color:var(--text-light);">
                 <span style="font-size:2rem;">🔍</span>
-                <p>লগ্ন ফলাফল উপলব্ধ নহয়।</p>
+                <p>{{ _('lagna_not_available') }}</p>
             </div>
             {% endif %}
         </div></div>
@@ -1758,7 +1685,7 @@
         <div class="section"><div class="section-body">
             {% if rashi_phala_text %}
             <div style="max-width:800px;margin:0 auto;">
-                <h4 style="color:var(--deep-blue);margin-bottom:16px;text-align:center;">🌙 {{ moon_rasi }} ৰাশিফল (চন্দ্ৰ ৰাশি)</h4>
+                <h4 style="color:var(--deep-blue);margin-bottom:16px;text-align:center;">🌙 {{ moon_rasi }} {{ _('rashi_phala_heading') }}</h4>
                 <div style="font-size:1.1rem;line-height:2.2;text-align:justify;color:var(--text);white-space:pre-line;">
                     {{ rashi_phala_text }}
                 </div>
@@ -1766,7 +1693,7 @@
             {% else %}
             <div style="text-align:center;padding:30px;color:var(--text-light);">
                 <span style="font-size:2rem;">🔍</span>
-                <p>ৰাশিফল উপলব্ধ নহয়।</p>
+                <p>{{ _('rashi_not_available') }}</p>
             </div>
             {% endif %}
         </div></div>
@@ -1776,13 +1703,13 @@
         <div class="section"><div class="section-body">
             {% if graha_bichar_html %}
             <div style="max-width:900px;margin:0 auto;">
-                <h4 style="color:var(--deep-blue);margin-bottom:16px;text-align:center;">🪐 সকলো গ্ৰহৰ বিচাৰ (ভাব অনুসৰি)</h4>
+                <h4 style="color:var(--deep-blue);margin-bottom:16px;text-align:center;">{{ _('graha_bichar_heading') }}</h4>
                 {{ graha_bichar_html | safe }}
             </div>
             {% else %}
             <div style="text-align:center;padding:30px;color:var(--text-light);">
                 <span style="font-size:2rem;">🔍</span>
-                <p>গ্ৰহ বিচাৰ উপলব্ধ নহয়।</p>
+                <p>{{ _('graha_not_available') }}</p>
             </div>
             {% endif %}
         </div></div>
@@ -1792,15 +1719,15 @@
         <div class="section"><div class="section-body">
             {% if dwadash_html %}
             <div style="max-width:1000px;margin:0 auto;">
-                <h4 style="color:var(--deep-blue);margin-bottom:20px;text-align:center;">🏠 দ্বাদশ ভাব ফল (12 House Results)</h4>
+                <h4 style="color:var(--deep-blue);margin-bottom:20px;text-align:center;">{{ _('dwadash_heading') }}</h4>
                 <div style="margin-bottom:20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;">
-                    <button id="dwadash-select-all" style="padding:8px 16px;border-radius:20px;border:2px solid var(--orange);background:var(--orange);color:white;cursor:pointer;font-weight:600;">সকলো নির্বাচন কৰক</button>
-                    <button id="dwadash-deselect-all" style="padding:8px 16px;border-radius:20px;border:2px solid var(--border);background:white;color:var(--orange);cursor:pointer;font-weight:600;">সকলো আনচিলেক্ট কৰক</button>
+                    <button id="dwadash-select-all" style="padding:8px 16px;border-radius:20px;border:2px solid var(--orange);background:var(--orange);color:white;cursor:pointer;font-weight:600;">{{ _('dwadash_select_all') }}</button>
+                    <button id="dwadash-deselect-all" style="padding:8px 16px;border-radius:20px;border:2px solid var(--border);background:white;color:var(--orange);cursor:pointer;font-weight:600;">{{ _('dwadash_deselect_all') }}</button>
                     <select id="dwadash-filter" style="padding:8px 14px;border:2px solid var(--border);border-radius:20px;font-family:inherit;cursor:pointer;">
-                        <option value="all">সকলো ভাব দেখাও</option>
-                        <option value="1">শুধুমাত্ৰ প্রথম 4 ভাব</option>
-                        <option value="2">শুধুমাত্ৰ মধ্য 4 ভাব</option>
-                        <option value="3">শুধুমাত্ৰ শেষ 4 ভাব</option>
+                        <option value="all">{{ _('dwadash_filter_all') }}</option>
+                        <option value="1">{{ _('dwadash_filter_first4') }}</option>
+                        <option value="2">{{ _('dwadash_filter_mid4') }}</option>
+                        <option value="3">{{ _('dwadash_filter_last4') }}</option>
                     </select>
                 </div>
                 <div id="dwadash-content">
@@ -1810,7 +1737,7 @@
             {% else %}
             <div style="text-align:center;padding:30px;color:var(--text-light);">
                 <span style="font-size:2rem;">🏠</span>
-                <p>দ্বাদশ ভাব ফল উপলব্ধ নহয়।</p>
+                <p>{{ _('dwadash_not_available') }}</p>
             </div>
             {% endif %}
         </div></div>
@@ -1822,7 +1749,7 @@
 <div class="modal-overlay" id="kartariModal">
     <div class="modal-box" style="max-width:650px;border-radius:16px;overflow:hidden;">
         <div class="modal-header" style="background:linear-gradient(135deg, #5B3E96, #7B5EA7);padding:18px 24px;">
-            <h3 style="color:white;font-size:1.1rem;display:flex;align-items:center;gap:10px;">🔮 কৰ্তৰী যোগ বিশ্লেষণ</h3>
+            <h3 style="color:white;font-size:1.1rem;display:flex;align-items:center;gap:10px;">{{ _('kartari_modal_title') }}</h3>
             <button class="modal-close" onclick="closeKartariModal()" style="color:white;font-size:1.5rem;">&times;</button>
         </div>
         <div class="modal-body" style="padding:24px;background:linear-gradient(180deg, #FAF8FF 0%, #FFF8F0 100%);">
@@ -1830,7 +1757,7 @@
             <div id="kartariReportError" style="display:none;color:#c62828;margin-top:12px;text-align:center;font-weight:600;"></div>
         </div>
         <div class="modal-footer" style="background:#FAF8FF;border-top:1px solid #E8E0F0;padding:14px 24px;display:flex;justify-content:flex-end;">
-            <button class="btn-modal btn-modal-cancel" onclick="closeKartariModal()" style="background:linear-gradient(135deg, #5B3E96, #7B5EA7);color:white;border:none;padding:10px 28px;border-radius:25px;font-weight:700;font-size:0.9rem;cursor:pointer;transition:all 0.25s ease;box-shadow:0 4px 12px rgba(91,62,150,0.25);">বন্ধ কৰক</button>
+            <button class="btn-modal btn-modal-cancel" onclick="closeKartariModal()" style="background:linear-gradient(135deg, #5B3E96, #7B5EA7);color:white;border:none;padding:10px 28px;border-radius:25px;font-weight:700;font-size:0.9rem;cursor:pointer;transition:all 0.25s ease;box-shadow:0 4px 12px rgba(91,62,150,0.25);">{{ _('kartari_close') }}</button>
         </div>
     </div>
 </div>
@@ -1839,7 +1766,7 @@
 <div class="modal-overlay" id="customPdfModal">
     <div class="modal-box">
         <div class="modal-header">
-            <h3>⚙️ নিজৰ মতে PDF সৃষ্টি কৰক</h3>
+            <h3>{{ _('custom_pdf_modal_title') }}</h3>
             <button class="modal-close" onclick="closeCustomPdfModal()">&times;</button>
         </div>
         <div class="modal-body">
@@ -1860,44 +1787,44 @@
                 <input type="hidden" name="lon" value="{{ lon }}">
                 <input type="hidden" name="timezone" value="{{ timezone }}">
 
-                <h4>📊 গ্ৰহ তথ্য</h4>
+                <h4>{{ _('cp_group_planets') }}</h4>
                 <div class="select-all-row">
-                    <button type="button" onclick="toggleGroup('group-planets', true)">সকলো বাছক</button>
-                    <button type="button" onclick="toggleGroup('group-planets', false)">সকলো বাদ দিয়ক</button>
+                    <button type="button" onclick="toggleGroup('group-planets', true)">{{ _('cp_select_all') }}</button>
+                    <button type="button" onclick="toggleGroup('group-planets', false)">{{ _('cp_deselect_all') }}</button>
                 </div>
-                <div class="cb-row"><input type="checkbox" class="group-planets" name="sections" value="planets_table" id="sec_planets_table" checked><label for="sec_planets_table">গ্ৰহ তালিকা</label></div>
-                <div class="cb-row"><input type="checkbox" class="group-planets" name="sections" value="kundli_chart" id="sec_kundli_chart" checked><label for="sec_kundli_chart">কুণ্ডলী চক্ৰ (D1)</label></div>
-                <div class="cb-row"><input type="checkbox" class="group-planets" name="sections" value="varga_charts" id="sec_varga_charts" checked><label for="sec_varga_charts">ষোড়শবৰ্গ কুণ্ডলী (D2-D60)</label></div>
+                <div class="cb-row"><input type="checkbox" class="group-planets" name="sections" value="planets_table" id="sec_planets_table" checked><label for="sec_planets_table">{{ _('cp_planets_table') }}</label></div>
+                <div class="cb-row"><input type="checkbox" class="group-planets" name="sections" value="kundli_chart" id="sec_kundli_chart" checked><label for="sec_kundli_chart">{{ _('cp_kundli_chart') }}</label></div>
+                <div class="cb-row"><input type="checkbox" class="group-planets" name="sections" value="varga_charts" id="sec_varga_charts" checked><label for="sec_varga_charts">{{ _('cp_varga_charts') }}</label></div>
 
-                <h4>🕉️ পঞ্চাঙ্গ</h4>
+                <h4>{{ _('cp_group_panchanga') }}</h4>
                 <div class="select-all-row">
-                    <button type="button" onclick="toggleGroup('group-panchanga', true)">সকলো বাছক</button>
-                    <button type="button" onclick="toggleGroup('group-panchanga', false)">সকলো বাদ দিয়ক</button>
+                    <button type="button" onclick="toggleGroup('group-panchanga', true)">{{ _('cp_select_all') }}</button>
+                    <button type="button" onclick="toggleGroup('group-panchanga', false)">{{ _('cp_deselect_all') }}</button>
                 </div>
-                <div class="cb-row"><input type="checkbox" class="group-panchanga" name="sections" value="panchanga" id="sec_panchanga" checked><label for="sec_panchanga">পঞ্চাঙ্গ</label></div>
+                <div class="cb-row"><input type="checkbox" class="group-panchanga" name="sections" value="panchanga" id="sec_panchanga" checked><label for="sec_panchanga">{{ _('cp_panchanga') }}</label></div>
 
-                <h4>⚠️ দোষ বিশ্লেষণ</h4>
-                <div class="cb-row"><input type="checkbox" name="sections" value="dosha" id="sec_dosha" checked><label for="sec_dosha">দোষ বিশ্লেষণ</label></div>
-                <div class="cb-row"><input type="checkbox" name="sections" value="shani_sare_sati" id="sec_shani_sare_sati" checked><label for="sec_shani_sare_sati">শনি সাৰেসাতী আৰু ঢৈয়া (০-১০০)</label></div>
+                <h4>{{ _('cp_group_dosha') }}</h4>
+                <div class="cb-row"><input type="checkbox" name="sections" value="dosha" id="sec_dosha" checked><label for="sec_dosha">{{ _('cp_dosha') }}</label></div>
+                <div class="cb-row"><input type="checkbox" name="sections" value="shani_sare_sati" id="sec_shani_sare_sati" checked><label for="sec_shani_sare_sati">{{ _('cp_sade_sati') }}</label></div>
 
-                <h4>✨ যোগ বিশ্লেষণ</h4>
-                <div class="cb-row"><input type="checkbox" name="sections" value="yoga" id="sec_yoga" checked><label for="sec_yoga">যোগ বিশ্লেষণ</label></div>
+                <h4>{{ _('cp_group_yoga') }}</h4>
+                <div class="cb-row"><input type="checkbox" name="sections" value="yoga" id="sec_yoga" checked><label for="sec_yoga">{{ _('cp_yoga') }}</label></div>
 
-                <h4>🌀 চক্ৰ</h4>
-                <div class="cb-row"><input type="checkbox" name="sections" value="sannari" id="sec_sannari" checked><label for="sec_sannari">সন্নাড়ী চক্ৰ</label></div>
-                <div class="cb-row"><input type="checkbox" name="sections" value="navatara" id="sec_navatara" checked><label for="sec_navatara">নৱতাৰা চক্ৰ</label></div>
+                <h4>{{ _('cp_group_chakra') }}</h4>
+                <div class="cb-row"><input type="checkbox" name="sections" value="sannari" id="sec_sannari" checked><label for="sec_sannari">{{ _('cp_sannari') }}</label></div>
+                <div class="cb-row"><input type="checkbox" name="sections" value="navatara" id="sec_navatara" checked><label for="sec_navatara">{{ _('cp_navatara') }}</label></div>
 
-                <h4>☠️ ত্ৰিপাপ ৰিষ্ট</h4>
-                <div class="cb-row"><input type="checkbox" name="sections" value="tripap" id="sec_tripap" checked><label for="sec_tripap">ত্ৰিপাপ ৰিষ্ট বিশ্লেষণ</label></div>
+                <h4>{{ _('cp_group_tripap') }}</h4>
+                <div class="cb-row"><input type="checkbox" name="sections" value="tripap" id="sec_tripap" checked><label for="sec_tripap">{{ _('cp_tripap') }}</label></div>
 
-                <h4>🌟 নক্ষত্ৰ ফল</h4>
-                <div class="cb-row"><input type="checkbox" name="sections" value="nakshatra_phala" id="sec_nakshatra_phala" checked><label for="sec_nakshatra_phala">নক্ষত্ৰ ফলাফল</label></div>
+                <h4>{{ _('cp_group_nakshatra') }}</h4>
+                <div class="cb-row"><input type="checkbox" name="sections" value="nakshatra_phala" id="sec_nakshatra_phala" checked><label for="sec_nakshatra_phala">{{ _('cp_nakshatra') }}</label></div>
 
-                <h4>🌅 লগ্ন ফল</h4>
-                <div class="cb-row"><input type="checkbox" name="sections" value="lagna_phala" id="sec_lagna_phala" checked><label for="sec_lagna_phala">লগ্ন ফলাফল</label></div>
+                <h4>{{ _('cp_group_lagna') }}</h4>
+                <div class="cb-row"><input type="checkbox" name="sections" value="lagna_phala" id="sec_lagna_phala" checked><label for="sec_lagna_phala">{{ _('cp_lagna') }}</label></div>
 
-                <h4>🌙 ৰাশিফল</h4>
-                <div class="cb-row"><input type="checkbox" name="sections" value="rashi_phala" id="sec_rashi_phala" checked><label for="sec_rashi_phala">ৰাশিফল (চন্দ্ৰ ৰাশি)</label></div>
+                <h4>{{ _('cp_group_rashi') }}</h4>
+                <div class="cb-row"><input type="checkbox" name="sections" value="rashi_phala" id="sec_rashi_phala" checked><label for="sec_rashi_phala">{{ _('cp_rashi') }}</label></div>
 
                 <h4>🪐 গ্ৰহ বিচাৰ</h4>
                 <div class="cb-row"><input type="checkbox" name="sections" value="graha_bichar" id="sec_graha_bichar" checked><label for="sec_graha_bichar">গ্ৰহ বিচাৰ (ভাব অনুসৰি)</label></div>
@@ -1921,7 +1848,7 @@
                     <select name="antardasha_maha" id="antardasha_maha">
                         <option value="">-- মহাদশা বাছক --</option>
                         {% for md in dasa_data %}
-                        <option value="{{ md.md_lord }}">{{ md.md_lord }} ({{ md.start }} → {{ md.end }})</option>
+                        <option value="{{ md.md_lord_en }}">{{ md.md_lord_display or md.md_lord }} ({{ md.start }} → {{ md.end }})</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -2365,7 +2292,7 @@
         if (!panel) return;
         panel.innerHTML = '<div style="text-align:center;padding:20px;color:var(--orange);">⏳ ফলাফল অনুসন্ধান কৰি আছে...</div>';
 
-        fetch('/api/important-antardasha-phala', {
+        fetch('/api/important-antardasha-phala?lang=' + '{{ lang }}', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -2408,17 +2335,23 @@
         if (!panel) return;
         panel.innerHTML = '<div style="text-align:center;padding:20px;color:var(--orange);">⏳ প্ৰত্যান্তৰদশাৰ ফলাফল অনুসন্ধান কৰি আছে...</div>';
 
-        // Get the graha's rashi and house from the planets data
+        // Get the graha's rashi and house from the planets data (use name_en for language-neutral matching)
         const planetsData = {{ planets | tojson }};
-        let grahaRasi = '';
+        let grahaRasi = '';  // For display purposes (localized)
         let grahaHouse = 0;
 
         for (const p of planetsData) {
-            if (p.name === grahaName) {
-                grahaRasi = p.rasi;
-                const rasiIdx = rasiNamesList.indexOf(p.rasi);
-                if (rasiIdx >= 0) {
-                    grahaHouse = ((rasiIdx - {{ asc_rasi_index }} + 12) % 12) + 1;
+            if (p.name_en === grahaName) {
+                grahaRasi = p.rasi;  // localized rashi name for display
+                // Use rasi_idx directly (0-11) — works for any language since p.rasi may be localized
+                if (typeof p.rasi_idx === 'number') {
+                    grahaHouse = ((p.rasi_idx - {{ asc_rasi_index }} + 12) % 12) + 1;
+                } else {
+                    // Fallback: try to find in ASM rashi list
+                    const rasiIdx = rasiNamesList.indexOf(p.rasi);
+                    if (rasiIdx >= 0) {
+                        grahaHouse = ((rasiIdx - {{ asc_rasi_index }} + 12) % 12) + 1;
+                    }
                 }
                 break;
             }
@@ -2429,7 +2362,7 @@
             return;
         }
 
-        fetch('/api/antardasha-phala', {
+        fetch('/api/antardasha-phala?lang=' + '{{ lang }}', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -2889,7 +2822,8 @@
             nakshatra_name: '{{ panchanga.nakshatra.name if panchanga and panchanga.nakshatra else "" }}',
             nakshatra_idx: {{ panchanga.nakshatra.index if panchanga and panchanga.nakshatra else 0 }},
             nakshatra_pada: {{ panchanga.nakshatra.pada if panchanga and panchanga.nakshatra else 1 }},
-            gender: '{{ gender }}'
+            gender: '{{ gender }}',
+            lang: '{{ lang }}'
         };
 
         fetch('/generate-patrika', {

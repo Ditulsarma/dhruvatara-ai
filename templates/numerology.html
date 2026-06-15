@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="as">
+<html lang="{{ lang }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>অংক জ্যোতিষ | ধ্ৰুৱতৰা AI — প্ৰথম অসমীয়া জ্যোতিষ চফ্টৱেৰ</title>
+    <title>{{ _('numerology_title') }}</title>
     <meta name="description" content="ধ্ৰুৱতৰা AI ত অংক জ্যোতিষ (Numerology) — আপোনাৰ জন্ম তাৰিখৰ পৰা মূলাংক, ভাগ্যাংক, নামাংক গণনা কৰক। দিতুল শৰ্মাৰ দ্বাৰা নিৰ্মিত প্ৰথম অসমীয়া জ্যোতিষ চফ্টৱেৰ। dhrubataraai.com" />
     <meta name="keywords" content="অংক জ্যোতিষ, Numerology, ধ্ৰুৱতৰা AI, Dhrubatara AI, দিতুল শৰ্মা, Ditul Sarma, মূলাংক, Moolank, ভাগ্যাংক, Bhagyank, নামাংক, Namank, অসমীয়া জ্যোতিষ, Assamese Astrology, dhrubataraai.com" />
     <meta name="author" content="দিতুল শৰ্মা, Ditul Sarma" />
@@ -300,16 +300,17 @@
 <body>
 
 <nav class="top-nav">
-    <div class="brand">🔢 ধ্ৰুৱতৰা <span>AI</span></div>
+    <div class="brand">🔢 {{ _('app_name') }}</div>
     <div class="nav-actions">
+        {% include 'lang_selector.html' %}
         {% if user_sub_info %}
         <span class="user-plan-badge {% if user_sub_info.is_pro %}pro{% else %}free{% endif %}">
-            {% if user_sub_info.is_pro %}⭐ PRO{% else %}🆓 FREE{% endif %}
+            {{ _('pro_badge') if user_sub_info.is_pro else _('free_badge') }}
         </span>
         {% endif %}
-        <a href="/dashboard" class="btn btn-outline">📊 ডেশ্ববৰ্ড</a>
-        <a href="/kundli" class="btn btn-outline">🔮 বৈদিক জ্যোতিষ</a>
-        <a href="/logout" class="btn btn-outline">🚪 লগআউট</a>
+        <a href="/dashboard" class="btn btn-outline">📊 {{ _('nav_dashboard') }}</a>
+        <a href="/kundli" class="btn btn-outline">🔮 {{ _('vedic_astrology_platform') }}</a>
+        <a href="/logout" class="btn btn-outline">🚪 {{ _('nav_logout') }}</a>
     </div>
 </nav>
 

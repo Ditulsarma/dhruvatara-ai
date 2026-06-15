@@ -23,6 +23,16 @@ NAKSHATRAS = [
     "মূল", "পূৰ্বাষাঢ়া", "উত্তৰাষাঢ়া", "শ্ৰৱণা", "ধনিষ্ঠা", "শতভিষা", "পূৰ্বভাদ্ৰপদ", "উত্তৰভাদ্ৰপদ", "ৰেৱতী"
 ]
 
+# Normalize to NFC form for consistent matching
+import unicodedata
+RASHIS = [unicodedata.normalize('NFC', r) for r in RASHIS]
+NAKSHATRAS = [unicodedata.normalize('NFC', n) for n in NAKSHATRAS]
+
+def _find_idx(lst, item):
+    """Find index with NFC normalization."""
+    n = unicodedata.normalize('NFC', item)
+    return lst.index(n)
+
 # ─── Varna (বৰ্ণ) by Rashi ───
 # Brahmin=1, Kshatriya=2, Vaishya=3, Shudra=4
 VARNA_BY_RASHI = {
@@ -284,8 +294,8 @@ def calculate_tara(boy_nakshatra, girl_nakshatra):
        - One good, one bad = 1.5 points (Madhyam)
        - Both bad = 0 points (Ashubh)
     """
-    boy_idx = NAKSHATRAS.index(boy_nakshatra)
-    girl_idx = NAKSHATRAS.index(girl_nakshatra)
+    boy_idx = _find_idx(NAKSHATRAS, boy_nakshatra)
+    girl_idx = _find_idx(NAKSHATRAS, girl_nakshatra)
 
     # Direction 1: Girl → Boy (count from girl to boy)
     dist_girl_to_boy = (boy_idx - girl_idx) % 27
@@ -438,8 +448,8 @@ def calculate_bhakoot(boy_rashi, girl_rashi):
         result = "মধ্যম"
     else:
         # Determine which dosha
-        boy_idx = RASHIS.index(boy_rashi)
-        girl_idx = RASHIS.index(girl_rashi)
+        boy_idx = _find_idx(RASHIS, boy_rashi)
+        girl_idx = _find_idx(RASHIS, girl_rashi)
         distance = (boy_idx - girl_idx) % 12
         if distance == 2:
             dosha_name = "২-১২ দোষ (দ্বি-দ্বাদশ)"

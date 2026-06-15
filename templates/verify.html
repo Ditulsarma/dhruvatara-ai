@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="as">
+<html lang="{{ lang }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ভেৰিফিকেচন | ধ্ৰুৱতৰা AI</title>
+    <title>{{ _('verify_title') }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -88,10 +88,10 @@
 <div class="container">
     <div class="logo">
         <span class="icon">🌟</span>
-        <h1>ধ্ৰুৱতৰা AI</h1>
+        <h1>{{ _('app_name') }}</h1>
     </div>
     <div class="card">
-        <h2>📧 ভেৰিফিকেচন</h2>
+        <h2>📧 {{ _('verify_title') }}</h2>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -104,46 +104,46 @@
         <!-- Email Verification -->
         {% if not user.is_verified_email %}
         <div style="margin-bottom:20px;padding:16px;background:#FFF8F0;border-radius:var(--radius-sm);border:1px solid var(--border);">
-            <h4 style="margin-bottom:8px;">📧 ইমেইল ভেৰিফিকেচন</h4>
-            <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:12px;">আপোনাৰ ইমেইল {{ user.email }} লৈ এটা OTP পঠিওৱা হৈছে।</p>
+            <h4 style="margin-bottom:8px;">📧 {{ _('verify_email') }}</h4>
+            <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:12px;">{{ _('otp_sent_email') }} {{ user.email }}</p>
             <form method="POST" action="/verify/email">
                 <div class="form-group">
-                    <label>OTP লিখক</label>
+                    <label>{{ _('verify_otp') }}</label>
                     <input type="text" name="email_otp" required placeholder="------" maxlength="6" pattern="[0-9]{6}">
                 </div>
-                <button type="submit" class="btn btn-primary">✅ ইমেইল ভেৰিফাই কৰক</button>
+                <button type="submit" class="btn btn-primary">✅ {{ _('verify_email') }}</button>
             </form>
             <form method="POST" action="/verify/resend-otp" style="margin-top:8px;">
-                <button type="submit" class="btn btn-outline">📤 OTP পুনৰ পঠিয়াওক</button>
+                <button type="submit" class="btn btn-outline">📤 {{ _('verify_resend') }}</button>
             </form>
         </div>
         {% else %}
         <div style="margin-bottom:16px;text-align:center;">
-            <span class="verified-badge">✅ ইমেইল ভেৰিফাইড</span>
+            <span class="verified-badge">✅ {{ _('email_verified') }}</span>
         </div>
         {% endif %}
 
         <!-- Mobile Verification -->
         {% if user.mobile and not user.is_verified_mobile %}
         <div style="padding:16px;background:#FFF8F0;border-radius:var(--radius-sm);border:1px solid var(--border);">
-            <h4 style="margin-bottom:8px;">📱 মোবাইল ভেৰিফিকেচন</h4>
-            <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:12px;">আপোনাৰ মোবাইল {{ user.mobile }} লৈ এটা OTP পঠিওৱা হৈছে।</p>
+            <h4 style="margin-bottom:8px;">📱 {{ _('verify_mobile') }}</h4>
+            <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:12px;">{{ _('otp_sent_mobile') }} {{ user.mobile }}</p>
             <form method="POST" action="/verify/mobile">
                 <div class="form-group">
-                    <label>OTP লিখক</label>
+                    <label>{{ _('verify_otp') }}</label>
                     <input type="text" name="mobile_otp" required placeholder="------" maxlength="6" pattern="[0-9]{6}">
                 </div>
-                <button type="submit" class="btn btn-primary">✅ মোবাইল ভেৰিফাই কৰক</button>
+                <button type="submit" class="btn btn-primary">✅ {{ _('verify_mobile') }}</button>
             </form>
         </div>
         {% elif user.mobile and user.is_verified_mobile %}
         <div style="text-align:center;">
-            <span class="verified-badge">✅ মোবাইল ভেৰিফাইড</span>
+            <span class="verified-badge">✅ {{ _('mobile_verified') }}</span>
         </div>
         {% endif %}
 
         <div class="links" style="margin-top:20px;">
-            <a href="/dashboard">← ডেশ্ববৰ্ডলৈ উভতক</a>
+            <a href="/dashboard">← {{ _('back_to_dashboard') }}</a>
         </div>
     </div>
 </div>

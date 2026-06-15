@@ -104,3 +104,82 @@ def get_graha_bichar_html(planet_houses: dict) -> str:
         html_parts.append('</div>')
     html_parts.append('</div>')
     return '\n'.join(html_parts)
+
+
+def get_graha_bichar_html_from_data(data: dict, planet_houses: dict, lang: str = 'as') -> str:
+    """i18n-aware version: uses provided data dict instead of default JSON.
+    data format: {planet_name_in_lang: {house_index_str: phala_text}}
+    planet_houses keys are in Assamese; they get converted to target language for lookup.
+    """
+    # Inline conversion helpers to avoid circular import with prediction_i18n
+    _ASM_TO_ENG = {
+        'ৰবি': 'Sun', 'চন্দ্ৰ': 'Moon', 'মংগল': 'Mars', 'বুধ': 'Mercury',
+        'বৃহস্পতি': 'Jupiter', 'শুক্ৰ': 'Venus', 'শনি': 'Saturn',
+        'ৰাহু': 'Rahu', 'কেতু': 'Ketu',
+    }
+    _PLANET_I18N = {
+        # Maps English planet names to their actual JSON file key names
+        'as': {'Sun': 'ৰবি', 'Moon': 'চন্দ্ৰ', 'Mars': 'মংগল', 'Mercury': 'বুধ', 'Jupiter': 'বৃহস্পতি', 'Venus': 'শুক্ৰ', 'Saturn': 'শনি', 'Rahu': 'ৰাহু', 'Ketu': 'কেতু'},
+        'bn': {'Sun': 'রবি', 'Moon': 'চন্দ্র', 'Mars': 'মঙ্গল', 'Mercury': 'বুধ', 'Jupiter': 'বৃহস্পতি', 'Venus': 'শুক্র', 'Saturn': 'শনি', 'Rahu': 'রাহু', 'Ketu': 'কেতু'},
+        'hi': {'Sun': 'रवि', 'Moon': 'चंद्र', 'Mars': 'मंगल', 'Mercury': 'बुध', 'Jupiter': 'बृहस्पति', 'Venus': 'शुक्र', 'Saturn': 'शनि', 'Rahu': 'राहु', 'Ketu': 'केतु'},
+        'en': {'Sun': 'Ravi', 'Moon': 'Chandra', 'Mars': 'Mangal', 'Mercury': 'Budh', 'Jupiter': 'Brihaspati', 'Venus': 'Shukra', 'Saturn': 'Shani', 'Rahu': 'Rahu', 'Ketu': 'Ketu'},
+    }
+    _BHAVA_I18N = {
+        'as': {1: "প্ৰথম ভাব", 2: "দ্বিতীয় ভাব", 3: "তৃতীয় ভাব", 4: "চতুৰ্থ ভাব", 5: "পঞ্চম ভাব", 6: "ষষ্ঠ ভাব", 7: "সপ্তম ভাব", 8: "অষ্টম ভাব", 9: "নবম ভাব", 10: "দশম ভাব", 11: "একাদশ ভাব", 12: "দ্বাদশ ভাব"},
+        'bn': {1: "প্রথম ভাব", 2: "দ্বিতীয় ভাব", 3: "তৃতীয় ভাব", 4: "চতুর্থ ভাব", 5: "পঞ্চম ভাব", 6: "ষষ্ঠ ভাব", 7: "সপ্তম ভাব", 8: "অষ্টম ভাব", 9: "নবম ভাব", 10: "দশম ভাব", 11: "একাদশ ভাব", 12: "দ্বাদশ ভাব"},
+        'hi': {1: "प्रथम भाव", 2: "द्वितीय भाव", 3: "तृतीय भाव", 4: "चतुर्थ भाव", 5: "पंचम भाव", 6: "षष्ठ भाव", 7: "सप्तम भाव", 8: "अष्टम भाव", 9: "नवम भाव", 10: "दशम भाव", 11: "एकादश भाव", 12: "द्वादश भाव"},
+        'en': {1: "1st House", 2: "2nd House", 3: "3rd House", 4: "4th House", 5: "5th House", 6: "6th House", 7: "7th House", 8: "8th House", 9: "9th House", 10: "10th House", 11: "11th House", 12: "12th House"},
+    }
+    _KARAKATWA_LABEL_I18N = {
+        'as': "কাৰকতা:",
+        'bn': "কারকতা:",
+        'hi': "कारकता:",
+        'en': "Karakatwa:",
+    }
+    _PHALA_LABEL_I18N = {
+        'as': "ফলাফল:",
+        'bn': "ফলাফল:",
+        'hi': "फलাফल:",
+        'en': "Result:",
+    }
+    _KARAKATWA_I18N = {
+        'as': {},
+        'bn': {"Sun": "পিতা, সরকার, আত্মা, স্বাস্থ্য, নেতৃত্ব, রাজকীয় সম্মান", "Moon": "মাতা, মন, আবেগ, শান্তি, জনসাধারণ, জল, দুগ্ধ", "Mars": "ভাই, সাহস, ভূমি, স্থাবর সম্পত্তি, শক্তি, ক্রীড়া, দুর্ঘটনা", "Mercury": "বুদ্ধি, ব্যবসা, বাকশক্তি, লেখালেখি, গণনা, যোগাযোগ, স্নায়ু", "Jupiter": "সন্তান, গুরু, পিতা, শিক্ষা, ধন, ধর্ম, জ্ঞান, স্বামী, ভাগ্য", "Venus": "পত্নী, বিবাহ, বিলাসিতা, কলা, সংগীত, সৌন্দর্য, বাহন, প্রেম", "Saturn": "কর্ম, আয়ু, দুঃখ-কষ্ট, দীর্ঘমেয়াদী পরিকল্পনা, চাকর, রোগ", "Rahu": "হঠাৎ ঘটনা, বিভ্রান্তি, বিদেশ, উচ্চাকাঙ্ক্ষা, মায়া, অপ্রচলিত চিন্তা", "Ketu": "আধ্যাত্মিকতা, বিচ্ছেদ, মোক্ষ, গবেষণা, পূর্বজন্মের কর্মফল, একাকিত্ব"},
+        'hi': {"Sun": "पिता, सरकार, आत्मा, स्वास्थ्य, नेतृत्व, राजकीय सम्मान", "Moon": "माता, मन, भावना, शांति, जनता, जल, दूध", "Mars": "भाई, साहस, भूमि, अचल संपत्ति, शक्ति, खेल, दुर्घटना", "Mercury": "बुद्धि, व्यापार, वाक्शक्ति, लेखन, गणना, संचार, तंत्रिका", "Jupiter": "संतान, गुरु, पिता, शिक्षा, धन, धर्म, ज्ञान, पति, भाग्य", "Venus": "पत्नी, विवाह, विलासिता, कला, संगीत, सौंदर्य, वाहन, प्रेम", "Saturn": "कर्म, आयु, दुःख-कष्ट, दीर्घकालिक योजना, नौकर, रोग", "Rahu": "अचानक घटना, भ्रम, विदेश, महत्वाकांक्षा, माया, अपरंपरागत विचार", "Ketu": "आध्यात्मिकता, विच्छेद, मोक्ष, अनुसंधान, पूर्वजन्म का कर्मफल, एकाकीपन"},
+        'en': {"Sun": "Father, Government, Soul, Health, Leadership, Royal Honor", "Moon": "Mother, Mind, Emotions, Peace, Public, Water, Milk", "Mars": "Brother, Courage, Land, Fixed Property, Energy, Sports, Accident", "Mercury": "Intelligence, Business, Speech, Writing, Calculation, Communication, Nerves", "Jupiter": "Children, Guru, Father, Education, Wealth, Religion, Knowledge, Husband, Fortune", "Venus": "Wife, Marriage, Luxury, Art, Music, Beauty, Vehicle, Love", "Saturn": "Work, Longevity, Sorrow-Difficulty, Long-term Planning, Job, Disease", "Rahu": "Sudden Events, Confusion, Foreign, Ambition, Illusion, Unconventional Thoughts", "Ketu": "Spirituality, Separation, Moksha, Research, Past Life Karma, Solitude"},
+    }
+
+    def _convert_planet(planet_asm, lng):
+        if lng == 'as':
+            return planet_asm
+        eng = _ASM_TO_ENG.get(planet_asm, planet_asm)
+        return _PLANET_I18N.get(lng, {}).get(eng, planet_asm)
+
+    def _get_karakattwa(planet_asm, lng):
+        """Get karakattwa text in the target language."""
+        if lng == 'as':
+            return GRAHA_KARAKATTWA.get(planet_asm, "")
+        eng = _ASM_TO_ENG.get(planet_asm, planet_asm)
+        return _KARAKATWA_I18N.get(lng, {}).get(eng, "")
+
+    html_parts = ['<div class="graha-bichar-container">']
+    for planet_name_asm, house_idx in planet_houses.items():
+        if planet_name_asm not in GRAHA_KARAKATTWA:
+            continue
+
+        planet_name_lang = _convert_planet(planet_name_asm, lang)
+        bhava_name = _BHAVA_I18N.get(lang, _BHAVA_I18N['as']).get(house_idx + 1, BHAVA_NAMES[house_idx])
+        karakattwa = _get_karakattwa(planet_name_asm, lang)
+        phala = ""
+        if planet_name_lang in data:
+            phala = data[planet_name_lang].get(str(house_idx), "")
+        phala_text = phala.replace('\n', '<br>') if phala else ""
+        html_parts.append(f'<div class="graha-card" style="background:#fff;border-radius:12px;padding:20px;margin:16px 0;box-shadow:0 2px 12px rgba(0,0,0,0.06);border-left:4px solid #FF6600;">')
+        html_parts.append(f'<h3 style="color:#1a237e;margin:0 0 12px 0;">{planet_name_lang} — {bhava_name}</h3>')
+        karakattwa_label = _KARAKATWA_LABEL_I18N.get(lang, "কাৰকতা:")
+        html_parts.append(f'<div style="background:#f5f0ff;padding:12px;border-radius:8px;margin-bottom:12px;"><strong>{karakattwa_label}</strong> {karakattwa}</div>')
+        phala_label = _PHALA_LABEL_I18N.get(lang, "ফলাফল:")
+        html_parts.append(f'<div><strong>{phala_label}</strong><p style="line-height:1.8;">{phala_text}</p></div>')
+        html_parts.append('</div>')
+    html_parts.append('</div>')
+    return '\n'.join(html_parts)

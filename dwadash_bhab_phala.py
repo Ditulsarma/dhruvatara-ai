@@ -49,36 +49,32 @@ HOUSE_NAMES = [
 ]
 
 # Short Assamese names for house lords (used in direct titles)
-HOUSE_LORD_SHORT = [
-    "লগ্নপতি",
-    "ধনপতি",
-    "সহজপতি",
-    "চতুৰ্থপতি",
-    "পঞ্চমপতি",
-    "ষষ্ঠপতি",
-    "সপ্তমপতি",
-    "অষ্টমপতি",
-    "নবমপতি",
-    "দশমপতি",
-    "একাদশপতি",
-    "দ্বাদশপতি"
-]
+HOUSE_LORD_SHORT_I18N = {
+    'as': ["লগ্নপতি","ধনপতি","সহজপতি","চতুৰ্থপতি","পঞ্চমপতি","ষষ্ঠপতি","সপ্তমপতি","অষ্টমপতি","নবমপতি","দশমপতি","একাদশপতি","দ্বাদশপতি"],
+    'bn': ["লগ্নপতি","ধনপতি","সহজপতি","চতুৰ্থপতি","পঞ্চমপতি","ষষ্ঠপতি","সপ্তমপতি","অষ্টমপতি","নবমপতি","দশমপতি","একাদশপতি","দ্বাদশপতি"],
+    'hi': ["लग्नपति","धनपति","सहजपति","चतुर्थपति","पंचमपति","षष्ठपति","सप्तमपति","अष्टमपति","नवमपति","दशमपति","एकादशपति","द्वादशपति"],
+    'en': ["Lagnapati","Dhanapati","Sahajapati","Chaturthpati","Panchampati","Shasthpati","Saptampati","Ashtampati","Navampati","Dashampati","Ekadashpati","Dwadashpati"],
+}
 
-# Short Assamese names for house placements (used in direct titles)
-HOUSE_PLACEMENT_SHORT = [
-    "লগ্নত",
-    "দ্বিতীয়ত",
-    "তৃতীয়ত",
-    "চতুৰ্থত",
-    "পঞ্চমত",
-    "ষষ্ঠত",
-    "সপ্তমত",
-    "অষ্টমত",
-    "নবমত",
-    "দশমত",
-    "একাদশত",
-    "দ্বাদশত"
-]
+# Short names for house placements (used in direct titles)
+HOUSE_PLACEMENT_SHORT_I18N = {
+    'as': ["লগ্নত","দ্বিতীয়ত","তৃতীয়ত","চতুৰ্থত","পঞ্চমত","ষষ্ঠত","সপ্তমত","অষ্টমত","নবমত","দশমত","একাদশত","দ্বাদশত"],
+    'bn': ["লগ্নত","দ্বিতীয়ত","তৃতীয়ত","চতুৰ্থত","পঞ্চমত","ষষ্ঠত","সপ্তমত","অষ্টমত","নবমত","দশমত","একাদশত","দ্বাদশত"],
+    'hi': ["लग्न में","द्वितीय में","तृतीय में","चतुर्थ में","पंचम में","षष्ठ में","सप्तम में","अष्टम में","नवम में","दशम में","एकादश में","द्वादश में"],
+    'en': ["in Lagna","in 2nd","in 3rd","in 4th","in 5th","in 6th","in 7th","in 8th","in 9th","in 10th","in 11th","in 12th"],
+}
+
+# i18n titles and labels
+_DWADASH_TITLES_I18N = {
+    'as': {"result_of": "ৰ বিভিন্ন স্থানত ফলাফল", "placed_in": " অৱস্থিত হলে:"},
+    'bn': {"result_of": "ৰ বিভিন্ন স্থানত ফলাফল", "placed_in": " অৱস্থিত হলে:"},
+    'hi': {"result_of": " के विभिन्न स्थानों में फल", "placed_in": " में स्थित होने पर:"},
+    'en': {"result_of": " - Results in Various Positions", "placed_in": " placed in:"},
+}
+
+# Fallback Assamese (keep original)
+HOUSE_LORD_SHORT = HOUSE_LORD_SHORT_I18N['as']
+HOUSE_PLACEMENT_SHORT = HOUSE_PLACEMENT_SHORT_I18N['as']
 
 HOUSE_LORDS = [
     "1stHouse_Lord",
@@ -221,6 +217,81 @@ def get_dwadash_html(planet_houses=None, asc_rasi_idx=None, selected_houses=None
             </div>
         </div>'''
     
+    html += '</div>'
+    return html
+
+def get_dwadash_html_from_data(data: dict, planet_houses=None, asc_rasi_idx=None, selected_houses=None, lang='as'):
+    """i18n-aware version: uses provided data dict instead of default JSON.
+    data format: {house_lord_key: {position_key: phala_text}}
+    e.g. {"1stHouse_Lord": {"1": "...", "2": "..."}, ...}
+    """
+    if selected_houses is None:
+        selected_houses = list(range(12))
+
+    lords = HOUSE_LORD_SHORT_I18N.get(lang, HOUSE_LORD_SHORT_I18N['as'])
+    places = HOUSE_PLACEMENT_SHORT_I18N.get(lang, HOUSE_PLACEMENT_SHORT_I18N['as'])
+    titles = _DWADASH_TITLES_I18N.get(lang, _DWADASH_TITLES_I18N['as'])
+
+    if planet_houses is None or asc_rasi_idx is None:
+        # Fallback: show all positions from the provided data
+        html = '<div class="dwadash-phala-container">'
+        for house_idx in selected_houses:
+            if house_idx < 0 or house_idx > 11:
+                continue
+            house_key = HOUSE_LORDS[house_idx]
+            if house_key not in data:
+                continue
+            house_lord_results = data[house_key]
+            lord_short = lords[house_idx]
+            result_of = titles['result_of']
+            html += f'''<div class="dwadash-house-section">
+                <div class="dwadash-house-title">
+                    <span class="dwadash-icon">🏠</span>
+                    <h4>{lord_short}{result_of}</h4>
+                </div>
+                <div class="dwadash-positions">'''
+            for pos_idx in range(12):
+                phala = house_lord_results.get(str(pos_idx + 1), "")
+                if phala:
+                    place_short = places[pos_idx]
+                    html += f'''<div class="dwadash-position-item">
+                        <div class="position-label">➤ {lord_short} {place_short}:</div>
+                        <div class="position-phala">{phala}</div>
+                    </div>'''
+            html += '</div></div>'
+        html += '</div>'
+        return html
+
+    # Normal mode: show only actual placements
+    html = '<div class="dwadash-phala-container">'
+    for house_idx in selected_houses:
+        if house_idx < 0 or house_idx > 11:
+            continue
+        lord_name, placement_house = _compute_house_lord_placement(house_idx, asc_rasi_idx, planet_houses)
+        if lord_name is None:
+            continue
+        house_key = HOUSE_LORDS[house_idx]
+        if house_key not in data:
+            continue
+        phala = data[house_key].get(str(placement_house + 1), "")
+        if not phala:
+            continue
+        lord_short = lords[house_idx]
+        place_short = places[placement_house]
+        placed_in = titles['placed_in']
+        direct_title = f"{lord_short} {place_short}{placed_in}"
+        html += f'''<div class="dwadash-house-section">
+            <div class="dwadash-house-title">
+                <span class="dwadash-icon">🏠</span>
+                <h4>{direct_title}</h4>
+                <span class="dwadash-badge">{lord_name}</span>
+            </div>
+            <div class="dwadash-positions">
+                <div class="dwadash-position-item">
+                    <div class="position-phala">{phala}</div>
+                </div>
+            </div>
+        </div>'''
     html += '</div>'
     return html
 

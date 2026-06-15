@@ -532,22 +532,43 @@ NAKSHATRA_NAMES_TRIPAP = [
 ]
 
 
-def get_tripap_rista(nak_index: int) -> dict:
+def get_tripap_rista(nak_index: int, lang: str = 'as') -> dict:
     """
     Get Tripap Rista data for a given nakshatra index (1-27).
+    Args:
+        nak_index: 1-27
+        lang: language code (as/bn/hi/en)
     Returns a dict with all 15 rows, each containing 12 values.
     """
     if nak_index < 1 or nak_index > 27:
         return None
 
     data = TRIPAP_DATA.get(nak_index, {})
+    # Get i18n row labels and planet map
+    try:
+        from prediction_i18n import (
+            get_tripap_row_label_i18n, get_tripap_planet_map_i18n,
+            get_nakshatra_name_i18n, convert_tripap_data_to_lang
+        )
+        # Include all i18n label keys (r1-r15 plus col_house, col_desc, row_label)
+        all_label_keys = list(ROW_LABELS.keys()) + ["col_house", "col_desc", "row_label"]
+        row_labels = {k: get_tripap_row_label_i18n(k, lang) for k in all_label_keys}
+        planet_map = get_tripap_planet_map_i18n(lang)
+        nakshatra_name = get_nakshatra_name_i18n(nak_index - 1, lang)  # 0-based index
+        # Convert data values to English digits for hi/en languages (fix language mixing)
+        data = convert_tripap_data_to_lang(data, lang)
+    except ImportError:
+        row_labels = dict(ROW_LABELS)
+        planet_map = PLANET_MAP
+        nakshatra_name = NAKSHATRA_NAMES_TRIPAP[nak_index]
+
     return {
-        "nakshatra": NAKSHATRA_NAMES_TRIPAP[nak_index],
+        "nakshatra": nakshatra_name,
         "nakshatra_index": nak_index,
         "rows": data,
-        "row_labels": ROW_LABELS,
+        "row_labels": row_labels,
         "row_categories": ROW_CATEGORY,
-        "planet_map": PLANET_MAP
+        "planet_map": planet_map
     }
 
 

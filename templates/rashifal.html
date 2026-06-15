@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="as">
+<html lang="{{ lang }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ৰাশিফল | ধ্ৰুৱতৰা AI — দৈনিক, মাহেকীয়া, বছেৰেকীয়া ৰাশিফল</title>
+    <title>{{ _('rashifal_title') }}</title>
     <meta name="description" content="ধ্ৰুৱতৰা AI ত আপোনাৰ ৰাশি অনুসৰি দৈনিক, মাহেকীয়া আৰু বছেৰেকীয়া ৰাশিফল চাওক। ১২ ৰাশিৰ সম্পূৰ্ণ ৰাশিফল অসমীয়াত।" />
     <meta name="keywords" content="ৰাশিফল, দৈনিক ৰাশিফল, মাহেকীয়া ৰাশিফল, বছেৰেকীয়া ৰাশিফল, Rashifal, Daily Horoscope, Monthly Horoscope, Yearly Horoscope, ধ্ৰুৱতৰা AI, Dhrubatara AI, অসমীয়া ৰাশিফল" />
     <meta name="author" content="দিতুল শৰ্মা, Ditul Sarma" />
@@ -309,21 +309,22 @@
 <!-- ─── Header ─── -->
 <div class="header">
     <span class="logo-icon">🌟</span>
-    <h1>ধ্ৰুৱতৰা AI ৰাশিফল</h1>
-    <p class="subtitle">দৈনিক • মাহেকীয়া • বছেৰেকীয়া ৰাশিফল</p>
+    <h1>{{ _('app_name') }} {{ _('rashifal_daily') }}</h1>
+    <p class="subtitle">{{ _('rashifal_daily') }} • {{ _('rashifal_monthly') }} • {{ _('rashifal_yearly') }}</p>
 </div>
 
 <!-- ─── Navigation ─── -->
 <div class="nav-bar">
-    <a href="/dashboard">🏠 ডেশ্বব'ৰ্ড</a>
-    <a href="/kundli">🔮 কুণ্ডলী</a>
-    <a href="/rashifal" class="active">⭐ ৰাশিফল</a>
+    {% include 'lang_selector.html' %}
+    <a href="/dashboard">🏠 {{ _('nav_dashboard') }}</a>
+    <a href="/kundli">🔮 {{ _('kundli_title') }}</a>
+    <a href="/rashifal" class="active">⭐ {{ _('rashifal_daily') }}</a>
     {% if user_sub_info %}
     <span class="nav-plan-badge {% if user_sub_info.is_pro %}pro{% else %}free{% endif %}">
-        {% if user_sub_info.is_pro %}⭐ PRO{% else %}🆓 FREE{% endif %}
+        {{ _('pro_badge') if user_sub_info.is_pro else _('free_badge') }}
     </span>
     {% endif %}
-    <a href="/logout">🚪 লগআউট</a>
+    <a href="/logout">🚪 {{ _('nav_logout') }}</a>
 </div>
 
 <!-- ─── Main Container ─── -->

@@ -306,6 +306,7 @@ def generate_ai_interpretation(
     tripap_ages: list = None,
     navatara_data: dict = None,
     sannari_data: dict = None,
+    lang: str = "as",  # Accepted for compatibility; original function always uses Assamese
 ) -> str:
     """
     Generate a compact AI-powered interpretation in Assamese (fits ~3 PDF pages).

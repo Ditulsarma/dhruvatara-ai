@@ -15,10 +15,9 @@ from panchanga import (
     get_rahu_kalam, get_yama_gandam, get_gulika_kalam,
     get_abhijit_muhurta, get_yama_kaal, get_kaal_bela, get_rar_bela, get_bara_bela,
     get_divaman, get_ratriman, get_nakshatra_attributes, get_rashi_lord,
-    get_julian_day, TITHI_NAMES, NAKSHATRA_NAMES, YOGA_NAMES, KARANA_NAMES,
-    VAAR_NAMES, RITU_NAMES, MASA_NAMES, PAKSHA_NAMES,
-    VARNA_NAMES, GANA_NAMES, NADI_NAMES, RASHI_LORDS
+    get_julian_day
 )
+from prediction_i18n import get_panchanga_names_i18n, get_panchanga_planet_name_i18n, get_panchanga_rashi_name_i18n, get_panchanga_yogini_direction_i18n
 
 # ─── Planet names in Assamese ───────────────────────────────────
 PLANET_NAMES_ASM = {
@@ -248,32 +247,32 @@ def _find_element_boundary(dt, lat, lon, tz_offset, calc_func, current_idx, dire
         return dt - timedelta(hours=12)
 
 
-def _find_tithi_boundary(dt, lat, lon, tz_offset, current_idx, direction='forward'):
+def _find_tithi_boundary(dt, lat, lon, tz_offset, current_idx, direction='forward', lang='as'):
     """Find tithi boundary time."""
     def calc_tithi_idx(sun_lon, moon_lon):
-        return calculate_tithi(sun_lon, moon_lon)
+        return calculate_tithi(sun_lon, moon_lon, lang)
     return _find_element_boundary(dt, lat, lon, tz_offset, calc_tithi_idx, current_idx, direction)
 
 
-def _find_nakshatra_boundary(dt, lat, lon, tz_offset, current_idx, direction='forward'):
+def _find_nakshatra_boundary(dt, lat, lon, tz_offset, current_idx, direction='forward', lang='as'):
     """Find nakshatra boundary time."""
     def calc_nak_idx(sun_lon, moon_lon):
-        return calculate_nakshatra(moon_lon)
+        return calculate_nakshatra(moon_lon, lang)
     return _find_element_boundary(dt, lat, lon, tz_offset, calc_nak_idx, current_idx, direction)
 
 
-def _find_yoga_boundary(dt, lat, lon, tz_offset, current_idx, direction='forward'):
+def _find_yoga_boundary(dt, lat, lon, tz_offset, current_idx, direction='forward', lang='as'):
     """Find yoga boundary time."""
     def calc_yoga_idx(sun_lon, moon_lon):
-        return calculate_yoga(sun_lon, moon_lon)
+        return calculate_yoga(sun_lon, moon_lon, lang)
     return _find_element_boundary(dt, lat, lon, tz_offset, calc_yoga_idx, current_idx, direction)
 
 
-def _find_karana_boundary(dt, lat, lon, tz_offset, current_idx, direction='forward'):
+def _find_karana_boundary(dt, lat, lon, tz_offset, current_idx, direction='forward', lang='as'):
     """Find karana boundary time."""
     def calc_karana_idx(sun_lon, moon_lon):
-        tithi = calculate_tithi(sun_lon, moon_lon)
-        karana = calculate_karana(tithi["index"], tithi["remaining_pct"])
+        tithi = calculate_tithi(sun_lon, moon_lon, lang)
+        karana = calculate_karana(tithi["index"], tithi["remaining_pct"], lang)
         return karana
     return _find_element_boundary(dt, lat, lon, tz_offset, calc_karana_idx, current_idx, direction)
 
@@ -305,10 +304,11 @@ def _get_next_element_name(current_idx, names_list, prefix=""):
     return f"{prefix}{names_list[next_idx]}"
 
 
-def get_all_planet_positions(dt: datetime) -> list:
+def get_all_planet_positions(dt: datetime, lang: str = 'as') -> list:
     """
     Get current planetary positions (sidereal, Lahiri ayanamsa).
     Returns list of dicts with planet name, longitude, rashi, degree, etc.
+    lang: language code ('as', 'bn', 'hi', 'en')
     """
     jd = get_julian_day(dt)
     swe.set_sid_mode(swe.SIDM_LAHIRI)
@@ -338,23 +338,23 @@ def get_all_planet_positions(dt: datetime) -> list:
 
             planets.append({
                 "name": name,
-                "name_asm": PLANET_NAMES_ASM.get(name, name),
+                "name_asm": get_panchanga_planet_name_i18n(name, lang),
                 "icon": PLANET_ICONS.get(name, "⭐"),
                 "longitude": round(lon, 4),
                 "rashi_index": rashi_idx,
-                "rashi_name": RASHI_NAMES_ASM[rashi_idx],
+                "rashi_name": get_panchanga_rashi_name_i18n(rashi_idx, lang),
                 "rashi_icon": RASHI_ICONS[rashi_idx],
                 "degree": deg,
                 "minutes": minutes,
                 "seconds": seconds,
                 "degree_str": f"{deg}°{minutes}'{seconds}\"",
                 "retrograde": retro,
-                "rashi_lord": RASHI_LORDS[rashi_idx],
+                "rashi_lord": get_rashi_lord(rashi_idx, lang),
             })
         except Exception as e:
             planets.append({
                 "name": name,
-                "name_asm": PLANET_NAMES_ASM.get(name, name),
+                "name_asm": get_panchanga_planet_name_i18n(name, lang),
                 "icon": PLANET_ICONS.get(name, "⭐"),
                 "error": str(e),
             })
@@ -370,31 +370,39 @@ def get_all_planet_positions(dt: datetime) -> list:
             ks = int((((ketu_deg_in_rashi - kd) * 60) - km) * 60)
             planets.append({
                 "name": "Ketu",
-                "name_asm": PLANET_NAMES_ASM.get("Ketu", "কেতু"),
+                "name_asm": get_panchanga_planet_name_i18n("Ketu", lang),
                 "icon": PLANET_ICONS.get("Ketu", "🐍"),
                 "longitude": round(ketu_lon, 4),
                 "rashi_index": ketu_rashi,
-                "rashi_name": RASHI_NAMES_ASM[ketu_rashi],
+                "rashi_name": get_panchanga_rashi_name_i18n(ketu_rashi, lang),
                 "rashi_icon": RASHI_ICONS[ketu_rashi],
                 "degree": kd,
                 "minutes": km,
                 "seconds": ks,
                 "degree_str": f"{kd}°{km}'{ks}\"",
                 "retrograde": False,
-                "rashi_lord": RASHI_LORDS[ketu_rashi],
+                "rashi_lord": get_rashi_lord(ketu_rashi, lang),
             })
             break
 
     return planets
 
 
-def get_panchanga_with_times(dt: datetime, lat: float, lon: float, tz_offset: float = 5.5) -> dict:
+def get_panchanga_with_times(dt: datetime, lat: float, lon: float, tz_offset: float = 5.5, lang: str = 'as') -> dict:
     """
     Calculate complete Panchanga with precise From-To time ranges.
     Also includes planetary positions.
+    lang: language code ('as', 'bn', 'hi', 'en')
     """
+    names = get_panchanga_names_i18n(lang)
+    TITHI_NAMES = names['TITHI_NAMES']
+    NAKSHATRA_NAMES = names['NAKSHATRA_NAMES']
+    YOGA_NAMES = names['YOGA_NAMES']
+    KARANA_NAMES = names['KARANA_NAMES']
+    PAKSHA_NAMES = names['PAKSHA_NAMES']
+
     # Get base panchanga
-    panchanga = get_full_panchanga(dt, lat, lon, tz_offset)
+    panchanga = get_full_panchanga(dt, lat, lon, tz_offset, lang)
 
     # Get current indices
     tithi_idx = panchanga["tithi"]["index"]
@@ -405,8 +413,8 @@ def get_panchanga_with_times(dt: datetime, lat: float, lon: float, tz_offset: fl
     # Find boundaries for each element
     # ─── Tithi ───
     try:
-        tithi_start = _find_tithi_boundary(dt, lat, lon, tz_offset, tithi_idx, 'backward')
-        tithi_end = _find_tithi_boundary(dt, lat, lon, tz_offset, tithi_idx, 'forward')
+        tithi_start = _find_tithi_boundary(dt, lat, lon, tz_offset, tithi_idx, 'backward', lang)
+        tithi_end = _find_tithi_boundary(dt, lat, lon, tz_offset, tithi_idx, 'forward', lang)
         panchanga["tithi"]["time_from"] = _format_boundary_time(tithi_start, tz_offset)
         panchanga["tithi"]["time_to"] = _format_boundary_time(tithi_end, tz_offset)
         panchanga["tithi"]["datetime_from"] = _format_boundary_date_time(tithi_start, tz_offset)
@@ -426,8 +434,8 @@ def get_panchanga_with_times(dt: datetime, lat: float, lon: float, tz_offset: fl
 
     # ─── Nakshatra ───
     try:
-        nak_start = _find_nakshatra_boundary(dt, lat, lon, tz_offset, nak_idx, 'backward')
-        nak_end = _find_nakshatra_boundary(dt, lat, lon, tz_offset, nak_idx, 'forward')
+        nak_start = _find_nakshatra_boundary(dt, lat, lon, tz_offset, nak_idx, 'backward', lang)
+        nak_end = _find_nakshatra_boundary(dt, lat, lon, tz_offset, nak_idx, 'forward', lang)
         panchanga["nakshatra"]["time_from"] = _format_boundary_time(nak_start, tz_offset)
         panchanga["nakshatra"]["time_to"] = _format_boundary_time(nak_end, tz_offset)
         panchanga["nakshatra"]["datetime_from"] = _format_boundary_date_time(nak_start, tz_offset)
@@ -446,8 +454,8 @@ def get_panchanga_with_times(dt: datetime, lat: float, lon: float, tz_offset: fl
 
     # ─── Yoga ───
     try:
-        yoga_start = _find_yoga_boundary(dt, lat, lon, tz_offset, yoga_idx, 'backward')
-        yoga_end = _find_yoga_boundary(dt, lat, lon, tz_offset, yoga_idx, 'forward')
+        yoga_start = _find_yoga_boundary(dt, lat, lon, tz_offset, yoga_idx, 'backward', lang)
+        yoga_end = _find_yoga_boundary(dt, lat, lon, tz_offset, yoga_idx, 'forward', lang)
         panchanga["yoga"]["time_from"] = _format_boundary_time(yoga_start, tz_offset)
         panchanga["yoga"]["time_to"] = _format_boundary_time(yoga_end, tz_offset)
         panchanga["yoga"]["datetime_from"] = _format_boundary_date_time(yoga_start, tz_offset)
@@ -466,8 +474,8 @@ def get_panchanga_with_times(dt: datetime, lat: float, lon: float, tz_offset: fl
 
     # ─── Karana ───
     try:
-        karana_start = _find_karana_boundary(dt, lat, lon, tz_offset, karana_idx, 'backward')
-        karana_end = _find_karana_boundary(dt, lat, lon, tz_offset, karana_idx, 'forward')
+        karana_start = _find_karana_boundary(dt, lat, lon, tz_offset, karana_idx, 'backward', lang)
+        karana_end = _find_karana_boundary(dt, lat, lon, tz_offset, karana_idx, 'forward', lang)
         panchanga["karana"]["time_from"] = _format_boundary_time(karana_start, tz_offset)
         panchanga["karana"]["time_to"] = _format_boundary_time(karana_end, tz_offset)
         panchanga["karana"]["datetime_from"] = _format_boundary_date_time(karana_start, tz_offset)
@@ -499,24 +507,24 @@ def get_panchanga_with_times(dt: datetime, lat: float, lon: float, tz_offset: fl
     # ─── Next Nakshatra Attributes (for days with 2 nakshatras) ───
     if panchanga["nakshatra"].get("to_next_day") and panchanga["nakshatra"].get("next_name"):
         next_nak_idx = (panchanga["nakshatra"]["index"] + 1) % 27
-        next_attrs = get_nakshatra_attributes(next_nak_idx)
+        next_attrs = get_nakshatra_attributes(next_nak_idx, lang)
         panchanga["next_varna"] = next_attrs["varna"]
         panchanga["next_gana"] = next_attrs["gana"]
         panchanga["next_yoni"] = next_attrs["yoni"]
         panchanga["next_nadi"] = next_attrs["nadi"]
         # Next nakshatra attributes start after current nakshatra ends
         panchanga["next_varna_time_from"] = panchanga["nakshatra"].get("time_to", "--:--")
-        panchanga["next_varna_time_to"] = "--:-- (পৰদিন)"
+        panchanga["next_varna_time_to"] = "--:--" + names['next_day_suffix']
         panchanga["next_gana_time_from"] = panchanga["nakshatra"].get("time_to", "--:--")
-        panchanga["next_gana_time_to"] = "--:-- (পৰদিন)"
+        panchanga["next_gana_time_to"] = "--:--" + names['next_day_suffix']
         panchanga["next_yoni_time_from"] = panchanga["nakshatra"].get("time_to", "--:--")
-        panchanga["next_yoni_time_to"] = "--:-- (পৰদিন)"
+        panchanga["next_yoni_time_to"] = "--:--" + names['next_day_suffix']
         panchanga["next_nadi_time_from"] = panchanga["nakshatra"].get("time_to", "--:--")
-        panchanga["next_nadi_time_to"] = "--:-- (পৰদিন)"
+        panchanga["next_nadi_time_to"] = "--:--" + names['next_day_suffix']
 
     # Add planetary positions
     try:
-        panchanga["planets"] = get_all_planet_positions(dt)
+        panchanga["planets"] = get_all_planet_positions(dt, lang)
     except:
         panchanga["planets"] = []
 

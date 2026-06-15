@@ -43,3 +43,21 @@ debug-logs/
 temp/
 tmp/
 *.tmp
+
+# ─── Project-specific: one-off / scratch / backup scripts (not part of the app) ───
+test_*.py
+fix_*.py
+replace_*.py
+update_template.py
+view_pattern.py
+scripts/
+
+# ─── Project-specific: backup / duplicate / generated note files ───
+*.bak
+*_backup.py
+*_backup.*
+translate_func.txt
+shani_labels.txt
+
+# ─── Project-specific: Image dump folder ───
+Image/

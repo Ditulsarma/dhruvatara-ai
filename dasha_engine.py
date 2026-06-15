@@ -750,8 +750,10 @@ def get_all_maha_antar_predictions(dasa_data: list, planet_degrees: dict, lagna_
 
             all_predictions.append({
                 "maha_lord": md["md_lord"],
+                "maha_eng": maha_eng,
                 "maha_asm": maha_asm,
                 "antar_lord": ad["ad_lord"],
+                "antar_eng": antar_eng,
                 "antar_asm": antar_asm,
                 "start": ad["start"],
                 "end": ad["end"],

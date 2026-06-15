@@ -11,6 +11,7 @@ import json
 import subprocess
 import tempfile
 import sys
+import unicodedata
 from datetime import datetime, timedelta
 import base64
 
@@ -48,32 +49,18 @@ def _get_ganesh_base64():
 
 # ─── SVG Kundli Chart Generator (Bengali Style) ─────────────────
 
-def _svg_chart(chart_data: dict, size: int = 400, title: str = "", show_rasi_names: bool = True) -> str:
+def _svg_chart(chart_data: dict, size: int = 400, title: str = "", show_rasi_names: bool = True, lang: str = "as") -> str:
     """Generate an SVG kundli chart in Bengali (fixed rasi) style.
     Uses a 4x4 grid layout with proper cell-based positioning to prevent
     planet overlap. Each house gets its own rectangular cell with centered content.
     chart_data: dict mapping rasi_index (0-11) -> list of planet short codes
+    lang: language code for rasi names
     """
-    S = size
-    # Grid: 4 columns x 4 rows, center 4 cells are empty (diamond shape)
-    # Bengali fixed rasi layout mapped to grid positions:
-    # Row 0: [1-বৃষ] [0-মেষ] [11-মীন]
-    # Row 1: [2-মিথুন] [empty] [10-কুম্ভ]
-    # Row 2: [3-কৰ্কট] [empty] [9-মকৰ]
-    # Row 3: [4-সিংহ] [5-কন্যা] [6-তুলা] ... wait, standard is:
-    # Actually Bengali layout:
-    # Row 0: col0=1(বৃষ) col1=0(মেষ) col2=11(মীন)
-    # Row 1: col0=2(মিথুন) col1=empty col2=10(কুম্ভ)
-    # Row 2: col0=3(কৰ্কট) col1=empty col2=9(মকৰ)
-    # Row 3: col0=4(সিংহ) col1=5(কন্যা) col2=6(তুলা) col3=7(বৃশ্চিক) ... 
-    # Actually the standard Bengali diamond has 12 houses around a center:
-    # Top row: 1, 0, 11
-    # Left col: 2, 3, 4
-    # Bottom row: 5, 6, 7
-    # Right col: 10, 9, 8
-    
-    rasi_names = ["মেষ", "বৃষ", "মিথুন", "কৰ্কট", "সিংহ", "কন্যা", "তুলা", "বৃশ্চিক", "ধনু", "মকৰ", "কুম্ভ", "মীন"]
+    from prediction_i18n import get_panchanga_names_i18n
+    pnames = get_panchanga_names_i18n(lang)
+    rasi_names = pnames['RASHI_NAMES']
 
+    S = size
     # Use a 4x4 grid. Each cell is S/4 x S/4.
     # Grid positions (row, col) for each rasi:
     grid_pos = {
@@ -149,26 +136,34 @@ def _svg_chart(chart_data: dict, size: int = 400, title: str = "", show_rasi_nam
 
 # ─── HTML Template ──────────────────────────────────────────────
 
-def get_shani_sare_sati_data(moon_rasi: str, planets_data: list, user_dob: str = "", max_age: float = 100.0) -> list:
+def get_shani_sare_sati_data(moon_rasi: str, planets_data: list, user_dob: str = "", max_age: float = 100.0, lang: str = "as") -> list:
     """
     Compute Saturn Sare Sati / Dhaiya periods from birth to max_age.
     Returns a list of dicts with keys: age_start, age_end, year_start, year_end, rasi, phase
     
     Uses the full birth date for accurate year calculations.
     Saturn takes approximately 2.5 years per rashi transit.
+    lang: language code for phase names
     """
-    rasi_names = ["মেষ", "বৃষ", "মিথুন", "কৰ্কট", "সিংহ", "কন্যা", "তুলা", "বৃশ্চিক", "ধনু", "মকৰ", "কুম্ভ", "মীন"]
+    from prediction_i18n import get_panchanga_names_i18n
+    from translations import get_text
+    pnames = get_panchanga_names_i18n(lang)
+    rasi_names = pnames['RASHI_NAMES']
+    # Normalize to NFC for consistent matching
+    rasi_names_n = [unicodedata.normalize('NFC', r) for r in rasi_names]
+    moon_rasi_n = unicodedata.normalize('NFC', moon_rasi) if moon_rasi else ''
 
-    if not moon_rasi or moon_rasi not in rasi_names:
+    if not moon_rasi_n or moon_rasi_n not in rasi_names_n:
         return []
 
-    moon_idx = rasi_names.index(moon_rasi)
-    shani_planet = next((p for p in planets_data if p.get('name') == 'শনি'), None)
+    moon_idx = rasi_names_n.index(moon_rasi_n)
+    shani_planet = next((p for p in planets_data if p.get('name_asm') == 'শনি'), None)
     if not shani_planet:
         return []
 
-    shani_rasi = shani_planet.get('rasi')
-    if shani_rasi not in rasi_names:
+    shani_rasi = shani_planet.get('rasi', '')
+    shani_rasi_n = unicodedata.normalize('NFC', shani_rasi) if shani_rasi else ''
+    if shani_rasi_n not in rasi_names_n:
         return []
 
     # Parse full birth date from user_dob (format: YYYY-MM-DD)
@@ -179,7 +174,7 @@ def get_shani_sare_sati_data(moon_rasi: str, planets_data: list, user_dob: str =
         except (ValueError, IndexError):
             pass
 
-    sat_idx = rasi_names.index(shani_rasi)
+    sat_idx = rasi_names_n.index(shani_rasi_n)
     step_years = 2.5  # Saturn takes ~2.5 years per rashi
     step_days = step_years * 365.25  # approximate days per step
     events = []
@@ -192,15 +187,15 @@ def get_shani_sare_sati_data(moon_rasi: str, planets_data: list, user_dob: str =
         relation = (rasi_idx - moon_idx) % 12
 
         if relation == 11:
-            phase = "সাড়ে সাতীৰ প্ৰথম চৰণ (১২ষ্ঠ ভাৱ)"
+            phase = get_text('pdf_sare_sati_phase1', lang)
         elif relation == 0:
-            phase = "সাড়ে সাতীৰ মধ্য চৰণ (১ম ভাৱ)"
+            phase = get_text('pdf_sare_sati_phase2', lang)
         elif relation == 1:
-            phase = "সাড়ে সাতীৰ শেষ চৰণ (২য় ভাৱ)"
+            phase = get_text('pdf_sare_sati_phase3', lang)
         elif relation == 3:
-            phase = "ঢৈয়া (৪র্থ ভাৱ)"
+            phase = get_text('pdf_dhaiya_4', lang)
         elif relation == 7:
-            phase = "ঢৈয়া (৮ম ভাৱ)"
+            phase = get_text('pdf_dhaiya_8', lang)
         else:
             continue
 
@@ -227,116 +222,129 @@ def get_shani_sare_sati_data(moon_rasi: str, planets_data: list, user_dob: str =
     return events
 
 
-def _render_shani_sare_sati_html(moon_rasi: str, planets_data: list, user_dob: str = "", max_age: float = 100.0) -> str:
-    events = get_shani_sare_sati_data(moon_rasi, planets_data, user_dob, max_age)
+def _render_shani_sare_sati_html(moon_rasi: str, planets_data: list, user_dob: str = "", max_age: float = 100.0, lang: str = "as") -> str:
+    """Render the Sade Sati section in the user's selected language.
+
+    Uses language-specific templates from shani_sare_sati_pdf_templates.
+    """
+    from translations import get_text
+    t = lambda k: get_text(k, lang)
+    events = get_shani_sare_sati_data(moon_rasi, planets_data, user_dob, max_age, lang)
 
     if not events:
-        return '<div class="empty-msg">এই জন্ম কুণ্ডলীৰ বাবে ১০০ বছৰত কোনো শনি সাড়ে সাতী বা ঢৈয়া ঘটনাৰ পূৰ্ণ তালিকা নাথাকে।</div>'
+        return f'<div class="empty-msg">{t("pdf_sare_sati_empty")}</div>'
 
     rows = ""
     for e in events:
         year_col = ""
         if e["year_start"] is not None and e["year_end"] is not None:
-            year_col = f"<td>{e['year_start']} - {e['year_end']}</td>"
+            year_col = "<td>{}-{}</td>".format(e["year_start"], e["year_end"])
         else:
-            year_col = "<td>—</td>"
-        rows += f"""
+            year_col = "<td>\xe2\x80\x94</td>"
+        rows += """
             <tr>
-                <td>{e['age_start']:.1f} - {e['age_end']:.1f}</td>
+                <td>{:.1f} - {:.1f}</td>
                 {year_col}
-                <td>{e['rasi']}</td>
-                <td>{e['phase']}</td>
-            </tr>"""
+                <td>{rasi}</td>
+                <td>{phase}</td>
+            </tr>""".format(
+                e["age_start"],
+                e["age_end"],
+                year_col=year_col,
+                rasi=e["rasi"],
+                phase=e["phase"],
+            )
 
-    return f"""
-        <div class=\"sare-sati-box\">
-            <p class=\"sare-sati-note\">এই তালিকাখন শনিৰ প্ৰতি ৰাশীত প্ৰায় ২.৫ বছৰৰ চলাচলৰ ভিত্তিত অনুমান কৰা হৈছে। আসল সময়কাল বর্তমান গ্ৰহ গতিবিধি আৰু জন্মে থকা শনিৰ অবস্থানৰ ওপৰত নিৰ্ভৰ কৰে।</p>
-            <table class=\"sare-sati-table\">
-                <thead><tr><th>আনুমানিক বয়স</th><th>আনুমানিক চন</th><th>শনি ৰাশি</th><th>দশা</th></tr></thead>
-                <tbody>{rows}</tbody>
-            </table>
-        </div>
-        <div class=\"sare-sati-analysis\">
-            <h3 class=\"ss-analysis-heading\">শনিৰ সাৰে সাতিৰ ৭.৫ বছৰীয়া সময়কালৰ বিতং বিশ্লেষণ:</h3>
-            <p class=\"ss-analysis-intro\">শনিৰ সাৰে সাতটি মূলতঃ ২.৫ বছৰকৈ তিনিটা ভাগত বিভক্ত কৰা হয়। প্ৰতিটো ভাগৰ প্ৰভাৱ আৰু পৰিস্থিতি বেলেগ বেলেগ হয়।</p>
+    # Use language-specific templates
+    from shani_sare_sati_pdf_templates import get_sare_sati_template
+    template = get_sare_sati_template(lang)
 
-            <div class=\"ss-phase-card\">
-                <div class=\"ss-phase-title\">১. সাৰে সাতিৰ উদয় (১ম চৰণ - প্ৰথম ২.৫ বছৰ)</div>
-                <div class=\"ss-phase-body\">
-                    <p>এই সময়ছোৱাক সাৰে সাতিৰ <b>\"আৰম্ভণিৰ দুৱাৰদলি\"</b> বুলি ক'ব পাৰি। এই সময়ত শনি গ্ৰহ জন্ম ৰাশিৰ ঠিক আগৰ ঘৰত (দ্বাদশ স্থানত) থাকে।</p>
-                    <p class=\"ss-sub-heading\">মুখ্য প্ৰভাৱ (সমস্যাসমূহ):</p>
-                    <ul>
-                        <li><b>আৰ্থিক চাপ:</b> উপাৰ্জনতকৈ খৰচৰ মাত্ৰা বহুগুণে বৃদ্ধি পায়। আৰ্থিক সংকটৰ সৃষ্টি হ'ব পাৰে।</li>
-                        <li><b>কৰ্মক্ষেত্ৰত বাধা:</b> অফিচ বা ব্যৱসায়ত সহকৰ্মীৰ সৈতে মতানৈক্য হ'ব পাৰে। শনিৰ গতি লেহেমীয়া হোৱাৰ বাবে যিকোনো কাম সম্পূৰ্ণ হওঁতে পলম হয়।</li>
-                        <li><b>গুপ্ত শত্ৰু:</b> আপোনাক সন্মুখৰ পৰা আক্ৰমণ নকৰিলেও, কিছুমান গুপ্ত শত্ৰুৱে পিছফালৰ পৰা লোকচান কৰাৰ চেষ্টা কৰিব পাৰে।</li>
-                    </ul>
-                    <p class=\"ss-sub-heading\">ল'বলগীয়া সাৱধানতা:</p>
-                    <p>দুৰ্ঘটনাৰ আশংকা থকাৰ বাবে দূৰণিৰ যাত্ৰা পৰাপক্ষত এৰাই চলিব। টকা-পইচাৰ ক্ষেত্ৰত হিচাপী হ'ব আৰু ব্যৱসায়ত ডাঙৰ ৰিস্ক (Risk) একেবাৰেই নল'ব। খৰখেদা নকৰি উচিত সময়লৈকে ধৈৰ্য্য ধৰিলেহে কামত সফলতা মিলিব।</p>
-                </div>
-            </div>
+    # Build Sade Sati phase cards (3 phases)
+    phase_cards_list = []
+    for phase in template["phases"]:
+        bullets_html = ""
+        for bold, text in phase["main_effects"]:
+            bullets_html += "<li><b>{}</b> {}</li>".format(bold, text)
+        phase_card = (
+            '<div class="ss-phase-card">'
+            '<div class="ss-phase-title">{title}</div>'
+            '<div class="ss-phase-body">'
+            '<p>{intro}</p>'
+            '<p class="ss-sub-heading">{main_label}</p>'
+            '<ul>{bullets}</ul>'
+            '<p class="ss-sub-heading">{precautions_label}</p>'
+            '<p>{precautions}</p>'
+            '</div>'
+            '</div>'
+        ).format(
+            title=phase["title"],
+            intro=phase["intro"],
+            main_label=t("pdf_ss_main_effects"),
+            bullets=bullets_html,
+            precautions_label=t("pdf_ss_precautions"),
+            precautions=phase["precautions_text"],
+        )
+        phase_cards_list.append(phase_card)
+    phase_cards = "".join(phase_cards_list)
 
-            <div class=\"ss-phase-card\">
-                <div class=\"ss-phase-title\">২. সাৰে সাতিৰ শিখৰ (২য় চৰণ - মাজৰ ২.৫ বছৰ)</div>
-                <div class=\"ss-phase-body\">
-                    <p>এই সময়ছোৱা সাৰে সাতিৰ <b>\"চৰম বা আটাইতকৈ কঠিন\"</b> পৰ্যায়। এই সময়ত শনি গ্ৰহ আপোনাৰ জন্ম ৰাশিতেই অৱস্থান কৰে।</p>
-                    <p class=\"ss-sub-heading\">মুখ্য প্ৰভাৱ (সমস্যাসমূহ):</p>
-                    <ul>
-                        <li><b>মানসিক আৰু শাৰীৰিক কষ্ট:</b> মনত অকাৰণ ভয়, হতাশা আৰু তীব্ৰ মানসিক অশান্তি থাকে। স্বাস্থ্যৰ অৱনতি ঘটিব পাৰে। সৰু কাম এটাৰ বাবেও কঠোৰ সংগ্ৰাম কৰিবলগীয়া হয়।</li>
-                        <li><b>সম্পৰ্কত ফাট:</b> ভাতৃ-ভগ্নী, আত্মীয়-স্বজন আনকি পত্নীৰ সৈতেও বিনা কাৰণত কাজিয়া বা মনোমালিন্য হ'ব পাৰে।</li>
-                        <li><b>চৰিত্ৰত দাগ:</b> এই সময়ত শত্ৰুৱে আপোনাৰ বদনাম বা চৰিত্ৰ হনন কৰাৰ পূৰ্ণ চেষ্টা চলায়। লগতে পিতৃ-মাতৃৰ বাবেও সময়টো শুভ নহয়।</li>
-                    </ul>
-                    <p class=\"ss-sub-heading\">ল'বলগীয়া সাৱধানতা:</p>
-                    <p>এই সময়ত মানসিকভাৱে অতিশয় দৃঢ় হোৱাৰ প্ৰয়োজন। কাৰো সৈতে তৰ্কত লিপ্ত নহ'ব আৰু নিজৰ চৰিত্ৰ সৱল কৰি ৰাখিব।</p>
-                </div>
-            </div>
+    # Build Dhaiya phase cards (2 phases)
+    dhaiya_cards_list = []
+    for dphase in template["dhaiya_phases"]:
+        bullets_html = ""
+        for bold, text in dphase["bullets"]:
+            bullets_html += "<li><b>{}</b> {}</li>".format(bold, text)
+        dhaiya_card = (
+            '<div class="ss-phase-card">'
+            '<div class="ss-phase-title">{title}</div>'
+            '<div class="ss-phase-body">'
+            '<p>{intro}</p>'
+            '<ul>{bullets}</ul>'
+            '</div>'
+            '</div>'
+        ).format(
+            title=dphase["title"],
+            intro=dphase["intro"],
+            bullets=bullets_html,
+        )
+        dhaiya_cards_list.append(dhaiya_card)
+    dhaiya_cards = "".join(dhaiya_cards_list)
 
-            <div class=\"ss-phase-card\">
-                <div class=\"ss-phase-title\">৩. সাৰে সাতিৰ অস্ত (৩য় চৰণ - শেষৰ ২.৫ বছৰ)</div>
-                <div class=\"ss-phase-body\">
-                    <p>এইটো সাৰে সাতিৰ <b>\"বিদায় বেলা\"</b>। আগৰ ৫ বছৰৰ ভয়ংকৰ কষ্টৰ পিছত এই সময়ছোৱাত ব্যক্তিয়ে কিছু সকাহ অনুভৱ কৰিবলৈ আৰম্ভ কৰে।</p>
-                    <p class=\"ss-sub-heading\">মুখ্য প্ৰভাৱ (সমস্যাসমূহ):</p>
-                    <ul>
-                        <li><b>আৰ্থিক স্থিতি:</b> সকাহ পালেও টকা-পইচাৰ সম্পৰ্কীয় কিছুমান সমস্যা থাকি যায়। হঠাতে ধনহানি বা চুৰি হোৱাৰ সম্ভাৱনা থাকে।</li>
-                        <li><b>মানসিক অৱস্থা:</b> মনলৈ সঘনাই অশুভ বা নেতিবাচক চিন্তা আহিব পাৰে। বিদ্যাৰ্থীসকলে পঢ়া-শুনাত মনোযোগ দিলেও আশানুৰূপ ফলাফল পোৱাত বাধাৰ সৃষ্টি হয়।</li>
-                    </ul>
-                    <p class=\"ss-sub-heading\">ল'বলগীয়া সাৱধানতা:</p>
-                    <p>আটাইতকৈ গুৰুত্বপূৰ্ণ কথাটো হ'ল নিজৰ কথা-বতৰা বা <b>বাণীৰ ওপৰত নিয়ন্ত্ৰণ ৰখা</b>। ভুল কথাৰ বাবে মানুহৰ লগত শত্ৰুতা হ'ব পাৰে। যান-বাহন চলোৱা আৰু সা-সম্পত্তিৰ লেনদেন কৰোঁতে অতিশয় সাৱধান হ'ব। পিতৃ-মাতৃৰ স্বাস্থ্যৰ প্ৰতি চকু ৰাখিব।</p>
-                </div>
-            </div>
+    return (
+        '<div class="sare-sati-box">'
+        '<p class="sare-sati-note">{note}</p>'
+        '<table class="sare-sati-table">'
+        '<thead><tr><th>{age_col}</th><th>{year_col}</th><th>{rashi_col}</th><th>{phase_col}</th></tr></thead>'
+        '<tbody>{tbody}</tbody>'
+        '</table>'
+        '</div>'
+        '<div class="sare-sati-analysis">'
+        '<h3 class="ss-analysis-heading">{analysis_heading}</h3>'
+        '<p class="ss-analysis-intro">{analysis_intro}</p>'
+        '{phase_cards}'
+        '<div class="ss-note-box">'
+        '<b>{special_note_label}:</b> {special_note}'
+        '</div>'
+        '<h3 class="ss-analysis-heading">{dhaiya_heading}</h3>'
+        '{dhaiya_cards}'
+        '</div>'
+    ).format(
+        note=t("pdf_sare_sati_note"),
+        age_col=t("pdf_sare_sati_age_col"),
+        year_col=t("pdf_sare_sati_year_col"),
+        rashi_col=t("pdf_sare_sati_rashi_col"),
+        phase_col=t("pdf_sare_sati_phase_col"),
+        tbody=rows,
+        analysis_heading=t("pdf_ss_analysis_heading"),
+        analysis_intro=t("pdf_ss_analysis_intro"),
+        phase_cards=phase_cards,
+        special_note_label=t("pdf_ss_special_note"),
+        special_note=template["special_note"],
+        dhaiya_heading=t("pdf_ss_dhaiya_heading"),
+        dhaiya_cards=dhaiya_cards,
+    )
 
-            <div class=\"ss-note-box\">
-                <b>বিশেষ দ্ৰষ্টব্য:</b> শনিৰ সাৰে সাতিৰ প্ৰভাৱ মানুহৰ বয়সৰ ওপৰতো নিৰ্ভৰ কৰে। সৰুকালত (শৈশৱত) ইয়াৰ প্ৰভাৱ বৰ বেছি অনুভৱ নহয়, কিন্তু জীৱনৰ মাজভাগত (যৌৱন/কৰ্মজীৱনত) আৰু শেষ ভাগত (বাৰ্ধক্যত) ইয়াৰ প্ৰভাৱ অত্যন্ত গভীৰ আৰু নিৰ্ণায়ক হয়। শনি হৈছে ন্যায়াধীশ, সেয়ে সৎ কৰ্ম আৰু ধৈৰ্য্যৰে এই সময় পাৰ কৰিব পাৰি।
-            </div>
 
-            <h3 class=\"ss-analysis-heading\">শনিৰ ধেয়া (ঢৈয়া) সময়ৰ বিশ্লেষণ:</h3>
 
-            <div class=\"ss-phase-card\">
-                <div class=\"ss-phase-title\">১. শনিৰ ধেয়া: চতুৰ্থ স্থান (ৰাশিৰ পৰা চতুৰ্থত অৱস্থান)</div>
-                <div class=\"ss-phase-body\">
-                    <p>এই সময়ছোৱাত শনি গ্ৰহ জন্ম ৰাশিৰ পৰা চতুৰ্থ ঘৰত থাকে। ই ঘাইকৈ পাৰিবাৰিক সুখ, সম্পত্তি আৰু কৰ্মজীৱনত প্ৰভাৱ পেলায়।</p>
-                    <ul>
-                        <li><b>সম্পৰ্ক আৰু পৰিয়াল:</b> বন্ধু-বান্ধৱ বা আপোন মানুহৰ লগত মনোমালিন্য হোৱাৰ সম্ভাৱনা থাকে। পিতৃ-মাতৃৰ সৈতে সম্পৰ্কৰ অৱনতি ঘটিব পাৰে নাইবা তেওঁলোকৰ স্বাস্থ্যজনিত সমস্যাই দেখা দিব পাৰে। ভাতৃ-ভগ্নীৰ লগত যিকোনো ধৰণৰ লেনদেন কৰোঁতে সাৱধান হোৱা উচিত।</li>
-                        <li><b>সম্পত্তি আৰু বাহন:</b> মাটি-বাৰী, সম্পত্তি বা বন্ধুৰ লগত জড়িত কামবোৰত সতৰ্ক হোৱা প্ৰয়োজন। যদি নতুনকৈ ঘৰ নিৰ্মাণ কৰি আছে, তেন্তে বিভিন্ন দিশৰ পৰা বাধা বা সমস্যা আহিব পাৰে। যান-বাহন চলোৱাৰ ক্ষেত্ৰতো বিশেষ সাৱধানতা অৱলম্বন কৰিব লাগে।</li>
-                        <li><b>কৰ্মক্ষেত্ৰ:</b> অফিচ বা ব্যৱসায়ত পৰিস্থিতি কঠিন হ'ব পাৰে। কামৰ বাবে অত্যাধিক পৰিশ্ৰম কৰিবলগীয়া হয় আৰু আনৰ সৈতে প্ৰত্যক্ষ বা পৰোক্ষভাৱে বিবাদ বা মতানৈক্য হোৱাৰ শংকা থাকে।</li>
-                        <li><b>বয়সৰ প্ৰভাৱ:</b> সাৰে সাতিৰ দৰেই চতুৰ্থ স্থানৰ ধেয়াৰ প্ৰভাৱো সৰুকালত বিশেষভাৱে অনুভূত নহয় যদিও জীৱনৰ মাজভাগত আৰু শেষৰ ফালে ইয়াৰ প্ৰভাৱ যথেষ্ট বেছি হয়।</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class=\"ss-phase-card\">
-                <div class=\"ss-phase-title\">২. শনিৰ ধেয়া: অষ্টম স্থান (ৰাশিৰ পৰা অষ্টমত অৱস্থান)</div>
-                <div class=\"ss-phase-body\">
-                    <p>এই সময়ছোৱাত শনি জন্ম ৰাশিৰ পৰা অষ্টম ঘৰত থাকে। ইয়াক 'অষ্টম শনি' বুলিও কোৱা হয় আৰু ই সাধাৰণতে অধিক কষ্টদায়ক হ'ব পাৰে।</p>
-                    <ul>
-                        <li><b>কৰ্ম আৰু পাৰিবাৰিক জীৱন:</b> কৰ্মক্ষেত্ৰত কঠিন সংগ্ৰাম আৰু বিবাদৰ সৃষ্টি হ'ব পাৰে। ঠিক একেদৰে, পাৰিবাৰিক দিশতো সময়টো বৰ শুভ নহয়, অশান্তি আহিব পাৰে।</li>
-                        <li><b>বাণী বা কথা-বতৰা:</b> নিজৰ কথা-বতৰাৰ ওপৰত কঠোৰ নিয়ন্ত্ৰণ ৰখাটো অত্যন্ত গুৰুত্বপূৰ্ণ। আপুনি হয়তো কাৰোবাৰ ভালৰ বাবে কথা এটা ক'ব, কিন্তু সেয়া ভুল অৰ্থত লোৱা হ'ব পাৰে আৰু সম্পৰ্ক বেয়া হ'ব পাৰে।</li>
-                        <li><b>আৰ্থিক সংকট:</b> টকা-পইচাৰ তীব্ৰ অভাৱ বা আৰ্থিক সমস্যাই দেখা দিব পাৰে। ধাৰলৈ দিয়া ধন ঘূৰাই নোপোৱা, ঋণৰ সূত বা মূল ধন পৰিশোধ কৰিব নোৱাৰা, অথবা নতুন আঁচনিৰ বাবে প্ৰয়োজনীয় ধন গোটাব নোৱাৰা আদি সমস্যা হ'ব পাৰে। আত্মীয়ৰ লগত ধনৰ লেনদেন কৰোঁতে অতিশয় সাৱধান হ'ব।</li>
-                        <li><b>শাৰীৰিক আৰু আইনী বিপদ:</b> অষ্টম স্থানত শনি থকাৰ বাবে দুৰ্ঘটনা হোৱা বা আঘাত পোৱাৰ সম্ভাৱনা প্ৰবল থাকে। যাৰ জন্মকুণ্ডলীত অষ্টম স্থানত অশুভ গ্ৰহ থাকে বা অষ্টম পতি অশুভ হৈ থাকে, তেওঁলোকৰ এই সময়ত ডাঙৰ বিবাদ, আনকি ক'ৰ্ট-কাছাৰীৰ (Court Case) গোচৰ পৰ্যন্ত হ'ব পাৰে। কিছুমানে চৰকাৰীভাৱে নিষিদ্ধ বা বেআইনী কামতো হাত দিয়াৰ আশংকা থাকে।</li>
-                        <li><b>শিক্ষা:</b> বিদ্যাৰ্থীসকলৰ বাবে এই সময়ছোৱা প্ৰত্যাহ্বানজনক। পঢ়া-শুনাত বাধা আহিব পাৰে আৰু আশানুৰূপ ফলাফল লাভ কৰাত অসুবিধা হ'ব পাৰে।</li>
-                    </ul>
-                </div>
-            </div>
-        </div>"""
 
 
 
@@ -363,11 +371,20 @@ def _build_html(
     gender: str = "male",
     astrologer_profile: dict = None,
     patrika_text: str = "",
-    pratyantar_dasha_html: str = ""
+    pratyantar_dasha_html: str = "",
+    lang: str = "as"
 ) -> str:
     """Build complete HTML for the PDF report.
     selected_sections: list of section keys to include. If None, include all.
+    lang: language code ('as', 'bn', 'hi', 'en')
     """
+    from prediction_i18n import get_panchanga_labels_i18n, get_panchanga_names_i18n
+    from translations import get_text
+
+    plabels = get_panchanga_labels_i18n(lang)
+    pnames = get_panchanga_names_i18n(lang)
+    t = lambda k: get_text(k, lang)  # shorthand for PDF i18n
+
     # Convert DOB from YYYY-MM-DD to DD-MM-YYYY format
     def _format_dob(dob_str):
         """Convert YYYY-MM-DD to DD-MM-YYYY"""
@@ -390,53 +407,93 @@ def _build_html(
             return True
         return key in selected_sections
 
-    rasi_names = ["মেষ", "বৃষ", "মিথুন", "কৰ্কট", "সিংহ", "কন্যা", "তুলা", "বৃশ্চিক", "ধনু", "মকৰ", "কুম্ভ", "মীন"]
+    rasi_names = pnames['RASHI_NAMES']
     varga_names = {
-        "D1": "ৰাশি", "D2": "হোৰা", "D3": "দ্ৰেক্কান", "D4": "চতুৰ্থাংশ",
-        "D7": "সপ্তমাংশ", "D9": "নৱাংশ", "D10": "দশমাংশ", "D12": "দ্বাদশাংশ",
-        "D16": "ষোড়শাংশ", "D20": "বিংশাংশ", "D24": "চতুৰ্বিংশাংশ",
-        "D27": "সপ্তবিংশাংশ", "D30": "ত্ৰিংশাংশ", "D40": "খবেদাংশ",
-        "D45": "অক্ষবেদাংশ", "D60": "ষষ্ট্যাংশ"
+        "D1": get_text('varga_d1', lang), "D2": get_text('varga_d2', lang),
+        "D3": get_text('varga_d3', lang), "D4": get_text('varga_d4', lang),
+        "D7": get_text('varga_d7', lang), "D9": get_text('varga_d9', lang),
+        "D10": get_text('varga_d10', lang), "D12": get_text('varga_d12', lang),
+        "D16": get_text('varga_d16', lang), "D20": get_text('varga_d20', lang),
+        "D24": get_text('varga_d24', lang), "D27": get_text('varga_d27', lang),
+        "D30": get_text('varga_d30', lang), "D40": get_text('varga_d40', lang),
+        "D45": get_text('varga_d45', lang), "D60": get_text('varga_d60', lang)
     }
 
     # ── Planet Table Rows ──
+    from prediction_i18n import (
+        get_kundli_rashi_name_i18n, get_nakshatra_name_i18n, get_planet_name_i18n,
+    )
+    from app import get_eng_planet
     planet_rows = ""
     for p in planets_data:
+        # Get planet name in target language
+        # name_en (English) is the language-neutral key for get_planet_name_i18n
+        p_eng = p.get('name_en', '')
+        if p_eng:
+            p_name = get_planet_name_i18n(p_eng, lang)
+        else:
+            # No English name (e.g., for Lagna); just use name_asm or name as-is
+            p_name = p.get('name_asm', '') or p.get('name', '')
+
+        # Get rashi name in target language
+        # Prefer rasi_idx (numeric, language-agnostic); fall back to rashi (already in user's lang)
+        if 'rasi_idx' in p:
+            p_rasi = get_kundli_rashi_name_i18n(p['rasi_idx'], lang)
+        else:
+            p_rasi = p.get('rasi', '')
+
+        # Get nakshatra name in target language
+        if 'nak_idx' in p:
+            p_nak = get_nakshatra_name_i18n(p['nak_idx'], lang)
+        else:
+            p_nak = p.get('nakshatra', '')
+
+        # Get nakshatra lord in target language
+        # lord field is in user's lang from get_nakshatra_details
+        # If for some reason it's in another lang, convert via English
+        lord_val = p.get('lord', '')
+        if lord_val:
+            lord_eng = get_eng_planet(lord_val)
+            p_lord = get_planet_name_i18n(lord_eng, lang)
+        else:
+            p_lord = ''
+
         planet_rows += f"""
         <tr>
-            <td><b>{p['name']}</b></td>
-            <td>{p['rasi']}</td>
+            <td><b>{p_name}</b></td>
+            <td>{p_rasi}</td>
             <td>{p['degree']}°</td>
-            <td>{p['nakshatra']}</td>
-            <td>{p['lord']}</td>
+            <td>{p_nak}</td>
+            <td>{p_lord}</td>
         </tr>"""
 
     # ── Panchanga Items ──
+    pada_label = get_text('panchanga_pada', lang)
     panchanga_items = [
-        ('তিথি', panchanga.get('tithi', {}).get('name', '—'), panchanga.get('paksha', '')),
-        ('নক্ষত্ৰ', panchanga.get('nakshatra', {}).get('name', '—'), f"পাদ: {panchanga.get('nakshatra', {}).get('pada', '—')}"),
-        ('যোগ', panchanga.get('yoga', {}).get('name', '—'), ''),
-        ('কৰণ', panchanga.get('karana', {}).get('name', '—'), ''),
-        ('বাৰ', panchanga.get('vaar', {}).get('name', '—'), ''),
-        ('ঋতু', panchanga.get('ritu', {}).get('name', '—'), ''),
-        ('অসমীয়া মাহ', panchanga.get('masa', {}).get('name', '—'), ''),
-        ('অয়নাংশ', f"{panchanga.get('ayanamsa', '—')}°", 'লাহিড়ী'),
-        ('সূৰ্য্যোদয়', panchanga.get('sunrise', '—'), ''),
-        ('সূৰ্য্যাস্ত', panchanga.get('sunset', '—'), ''),
-        ('ৰাহুকাল', panchanga.get('rahu_kalam', '—'), ''),
-        ('যমগণ্ড', panchanga.get('yama_gandam', '—'), ''),
-        ('গুলিক কাল', panchanga.get('gulika_kalam', '—'), ''),
-        ('অভিজিৎ মুহূৰ্ত', panchanga.get('abhijit_muhurta', '—'), ''),
-        ('যমকাল', panchanga.get('yama_kaal', '—'), ''),
-        ('কালবেলা', panchanga.get('kaal_bela', '—'), ''),
-        ('বাৰবেলা', panchanga.get('bara_bela', '—'), ''),
-        ('দিবামান', panchanga.get('divaman', '—'), ''),
-        ('ৰাত্ৰিমান', panchanga.get('ratriman', '—'), ''),
-        ('জাতদণ্ড', panchanga.get('jata_danda', '—'), ''),
-        ('বৰ্ণ', panchanga.get('varna', '—'), ''),
-        ('গণ', panchanga.get('gana', '—'), ''),
-        ('যোনি', panchanga.get('yoni', '—'), ''),
-        ('নাড়ী', panchanga.get('nadi', '—'), ''),
+        (plabels['tithi'], panchanga.get('tithi', {}).get('name', '—'), panchanga.get('paksha', '')),
+        (plabels['nakshatra'], panchanga.get('nakshatra', {}).get('name', '—'), f"{pada_label}: {panchanga.get('nakshatra', {}).get('pada', '—')}"),
+        (plabels['yoga'], panchanga.get('yoga', {}).get('name', '—'), ''),
+        (plabels['karana'], panchanga.get('karana', {}).get('name', '—'), ''),
+        (plabels['vaar'], panchanga.get('vaar', {}).get('name', '—'), ''),
+        (plabels['ritu'], panchanga.get('ritu', {}).get('name', '—'), ''),
+        (plabels['masa'], panchanga.get('masa', {}).get('name', '—'), ''),
+        (plabels['ayan'], f"{panchanga.get('ayanamsa', '—')}°", get_text('panchanga_lahiri', lang)),
+        (plabels['sunrise'], panchanga.get('sunrise', '—'), ''),
+        (plabels['sunset'], panchanga.get('sunset', '—'), ''),
+        (get_text('panchanga_rahu_kalam', lang), panchanga.get('rahu_kalam', '—'), ''),
+        (get_text('panchanga_yama_gandam', lang), panchanga.get('yama_gandam', '—'), ''),
+        (get_text('panchanga_gulika', lang), panchanga.get('gulika_kalam', '—'), ''),
+        (get_text('panchanga_abhijit', lang), panchanga.get('abhijit_muhurta', '—'), ''),
+        (get_text('panchanga_yama_kaal', lang), panchanga.get('yama_kaal', '—'), ''),
+        (get_text('panchanga_kaal_bela', lang), panchanga.get('kaal_bela', '—'), ''),
+        (get_text('panchanga_bara_bela', lang), panchanga.get('bara_bela', '—'), ''),
+        (get_text('panchanga_divaman', lang), panchanga.get('divaman', '—'), ''),
+        (get_text('panchanga_ratriman', lang), panchanga.get('ratriman', '—'), ''),
+        (get_text('panchanga_jata_danda', lang), panchanga.get('jata_danda', '—'), ''),
+        (get_text('panchanga_varna', lang), panchanga.get('varna', '—'), ''),
+        (get_text('panchanga_gana', lang), panchanga.get('gana', '—'), ''),
+        (get_text('panchanga_yoni', lang), panchanga.get('yoni', '—'), ''),
+        (get_text('panchanga_nadi', lang), panchanga.get('nadi', '—'), ''),
     ]
     panchanga_html = ""
     for label, value, sub in panchanga_items:
@@ -455,7 +512,7 @@ def _build_html(
         icon = info.get('icon', '•')
         name = info.get('name', d.get('key', ''))
         if d.get('present'):
-            sev = d.get('severity_text', 'উপস্থিত')
+            sev = d.get('severity_text', t('pdf_dosha_present'))
             sev_class = 'high' if d.get('severity', 0) >= 3 else ('medium' if d.get('severity', 0) >= 2 else 'low')
             desc = info.get('description', '')[:200]
             remedies_html = ""
@@ -475,7 +532,7 @@ def _build_html(
             <div class="dosha-card safe">
                 <div class="d-icon">{icon}</div>
                 <div class="d-content">
-                    <div><span class="d-name">{name}</span><span class="d-severity low">অনুপস্থিত ✅</span></div>
+                    <div><span class="d-name">{name}</span><span class="d-severity low">{t('pdf_dosha_absent')}</span></div>
                 </div>
             </div>"""
 
@@ -489,68 +546,89 @@ def _build_html(
                 <div class="y-content">
                     <div><span class="y-name">{y.get('name', '')}</span><span class="y-category">{y.get('category', '')}</span></div>
                     <div class="y-desc">{y.get('description', '')[:250]}...</div>
-                    <div class="y-effect"><b>ফল:</b> {y.get('effect', '')}</div>
+                    <div class="y-effect"><b>{t('pdf_yoga_effect')}:</b> {y.get('effect', '')}</div>
                 </div>
             </div>"""
     else:
-        yoga_html = '<div class="empty-msg">🔍 কোনো বিশেষ যোগ ধৰা পৰা নাই।</div>'
+        yoga_html = f'<div class="empty-msg">{t("pdf_yoga_none")}</div>'
 
     # ── Dasha Summary ──
+    # Use localized *_display fields for planet names in the user's language
     dasha_rows = ""
     for md in dasa_data[:5]:
-        ad_names = ', '.join(ad['ad_lord'] for ad in md.get('sub_dasas', [])[:3])
+        maha_display = md.get('md_lord_display') or md.get('md_lord', '')
+        ad_names_list = []
+        for ad in md.get('sub_dasas', [])[:3]:
+            ad_names_list.append(ad.get('ad_lord_display') or ad.get('ad_lord', ''))
+        ad_names = ', '.join(ad_names_list)
         dasha_rows += f"""
         <tr>
-            <td>{md['md_lord']}</td>
+            <td>{maha_display}</td>
             <td>{md['start']}</td>
             <td>{md['end']}</td>
             <td>{ad_names}</td>
         </tr>"""
 
     # ── Full Dasha (All Mahadasa + Antardasa with predictions) ──
+    # Use localized *_display fields for planet names in the user's language
     full_dasha_html = ""
     for md in dasa_data:
+        maha_display = md.get('md_lord_display') or md.get('md_lord', '')
         ad_rows = ""
         for ad in md.get('sub_dasas', []):
+            ad_display = ad.get('ad_lord_display') or ad.get('ad_lord', '')
             ad_rows += f"""
             <tr>
-                <td>{ad['ad_lord']}</td>
+                <td>{ad_display}</td>
                 <td>{ad['start']}</td>
                 <td>{ad['end']}</td>
             </tr>"""
         full_dasha_html += f"""
         <div class="md-block">
-            <div class="md-title">★ {md['md_lord']} ({md['start']} → {md['end']}) — {md.get('years', '')} বছৰ</div>
+            <div class="md-title">★ {maha_display} ({md['start']} → {md['end']}) — {md.get('years', '')} {t('pdf_dasha_years')}</div>
             <table class="small-table">
-                <thead><tr><th>অন্তৰ্দশা</th><th>আৰম্ভ</th><th>সমাপ্তি</th></tr></thead>
+                <thead><tr><th>{t('pdf_dasha_antardasha')}</th><th>{t('pdf_dasha_start')}</th><th>{t('pdf_dasha_end')}</th></tr></thead>
                 <tbody>{ad_rows}</tbody>
             </table>
         </div>"""
 
     # ── All Dasha Predictions (81 combinations) ──
+    # Get language-specific dasha terms
+    from prediction_i18n import PLANET_NAMES_I18N
+    # Use translation keys for Mahadasha and Antardasha labels
+    maha_dasha_label = t('pdf_dasha_mahadasha')
+    antar_dasha_label = t('pdf_dasha_antardasha')
+
     dasha_predictions_html = ""
     if all_dasha_predictions:
         for dp in all_dasha_predictions:
             pred_text = dp.get('prediction', '').replace('\n', '<br>')
+            # Get language-specific planet names for the header
+            maha_planet_name = PLANET_NAMES_I18N.get(lang, PLANET_NAMES_I18N['as']).get(dp.get('maha_eng', ''), dp.get('maha_asm', ''))
+            antar_planet_name = PLANET_NAMES_I18N.get(lang, PLANET_NAMES_I18N['as']).get(dp.get('antar_eng', ''), dp.get('antar_asm', ''))
             dasha_predictions_html += f"""
             <div class="dasha-pred-block">
-                <div class="dp-header">★ {dp['maha_asm']} মহাদশা → {dp['antar_asm']} অন্তৰ্দশা <span class="dp-dates">({dp['start']} → {dp['end']})</span></div>
+                <div class="dp-header">★ {maha_planet_name} {maha_dasha_label} → {antar_planet_name} {antar_dasha_label} <span class="dp-dates">({dp['start']} → {dp['end']})</span></div>
                 <div class="dp-body">{pred_text}</div>
             </div>"""
 
     # ── Divisional Charts (prefer server-rendered PNGs to ensure font shaping)
     # Large D1 chart (embed PNG generated by kundli_chart.py if available)
     d1_svg = ""
+    # Normalize rashi names and ascendant for NFC-consistent matching
+    rasi_names_n = [unicodedata.normalize('NFC', r) for r in rasi_names]
+    asc_rasi_n = unicodedata.normalize('NFC', asc_rasi) if asc_rasi else ''
     try:
         from kundli_chart import draw_kundli_chart
 
         def _embed_chart_png(chart_dict, asc_rasi_str=asc_rasi, w=450, h=450, style='bengali'):
             # determine ascendant index from string if possible
             try:
-                asc_index = rasi_names.index(asc_rasi_str) if asc_rasi_str in rasi_names else 0
+                asc_str_n = unicodedata.normalize('NFC', asc_rasi_str) if asc_rasi_str else ''
+                asc_index = rasi_names_n.index(asc_str_n) if asc_str_n in rasi_names_n else 0
             except Exception:
                 asc_index = 0
-            buf = draw_kundli_chart(style=style, ascendant_index=asc_index, planet_data=chart_dict, width=w, height=h)
+            buf = draw_kundli_chart(style=style, ascendant_index=asc_index, planet_data=chart_dict, width=w, height=h, lang=lang)
             img_bytes = buf.getvalue() if hasattr(buf, 'getvalue') else buf.read()
             b64 = base64.b64encode(img_bytes).decode('ascii')
             return f'<img src="data:image/png;base64,{b64}" alt="kundli" style="width:100%;height:auto;border-radius:8px;"/>'
@@ -560,7 +638,7 @@ def _build_html(
     except Exception:
         # Fallback to SVG generator if PIL/kundli_chart isn't available
         if all_vargas and "D1" in all_vargas:
-            d1_svg = _svg_chart(all_vargas["D1"], size=450, title="D1 - ৰাশি চক্ৰ (Rashi)", show_rasi_names=True)
+            d1_svg = _svg_chart(all_vargas["D1"], size=450, title=t('pdf_d1_title'), show_rasi_names=True, lang=lang)
 
     # Small divisional charts (D2-D60)
     small_charts_html = ""
@@ -571,14 +649,14 @@ def _build_html(
                 if v_code not in all_vargas:
                     continue
                 vname = varga_names.get(v_code, v_code)
-                # render small png for divisional chart
+                # render small png for divisional chart (with lang parameter for i18n)
                 try:
-                    buf = draw_kundli_chart(style='bengali', ascendant_index=(rasi_names.index(asc_rasi) if asc_rasi in rasi_names else 0), planet_data=all_vargas[v_code], width=260, height=260)
+                    buf = draw_kundli_chart(style='bengali', ascendant_index=(rasi_names_n.index(asc_rasi_n) if asc_rasi_n in rasi_names_n else 0), planet_data=all_vargas[v_code], width=260, height=260, lang=lang)
                     img_bytes = buf.getvalue() if hasattr(buf, 'getvalue') else buf.read()
                     b64 = base64.b64encode(img_bytes).decode('ascii')
                     img_tag = f'<img src="data:image/png;base64,{b64}" alt="{v_code}" style="width:100%;height:auto;border:1px solid #e0e0e0;border-radius:4px;"/>'
                 except Exception:
-                    img_tag = _svg_chart(all_vargas[v_code], size=140, title=f"{v_code}", show_rasi_names=False)
+                    img_tag = _svg_chart(all_vargas[v_code], size=140, title=f"{v_code}", show_rasi_names=False, lang=lang)
 
                 small_charts_html += f"""
                 <div class="small-chart-card">
@@ -591,7 +669,7 @@ def _build_html(
                 if v_code not in all_vargas:
                     continue
                 vname = varga_names.get(v_code, v_code)
-                svg = _svg_chart(all_vargas[v_code], size=140, title=f"{v_code}", show_rasi_names=False)
+                svg = _svg_chart(all_vargas[v_code], size=140, title=f"{v_code}", show_rasi_names=False, lang=lang)
                 small_charts_html += f"""
                 <div class="small-chart-card">
                     {svg}
@@ -601,14 +679,17 @@ def _build_html(
     # ── Tripap Rista ──
     tripap_html = ""
     if tripap_data:
+        # Use localized "No." prefix based on language
+        no_prefix_map = {'as': 'নং', 'bn': 'নং', 'hi': 'क्र.', 'en': 'No.'}
+        no_prefix = no_prefix_map.get(lang, 'নং')
         tripap_html += f"""
         <div class="tripap-header">
-            <b>🌙 চন্দ্ৰৰ নক্ষত্ৰ:</b> {tripap_data.get('nakshatra', '—')} (নং {tripap_data.get('nakshatra_index', '—')})
+            <b>🌙 {t('pdf_tripap_moon_nak')}:</b> {tripap_data.get('nakshatra', '—')} ({no_prefix} {tripap_data.get('nakshatra_index', '—')})
         </div>
         <table class="small-table tripap-table">
-            <thead><tr><th>শাৰী</th><th>বিৱৰণ</th>"""
+            <thead><tr><th>{tripap_data.get('row_labels', {}).get('row_label', 'Row')}</th><th>{tripap_data.get('row_labels', {}).get('col_desc', 'Desc')}</th>"""
         for h in range(1, 13):
-            tripap_html += f"<th>ঘৰ {h}</th>"
+            tripap_html += f"<th>{tripap_data.get('row_labels', {}).get('col_house', 'House {}').format(h)}</th>"
         tripap_html += "</tr></thead><tbody>"
         for rk in ['r1','r2','r3','r4','r5','r6','r7','r8','r9','r10','r11','r12','r13','r14','r15']:
             tripap_html += f"<tr><td><b>{rk}</b></td><td>{tripap_data.get('row_labels', {}).get(rk, '')}</td>"
@@ -625,63 +706,97 @@ def _build_html(
             ages_str = ', '.join(str(a) for a in tripap_ages)
             tripap_html += f"""
             <div class="tripap-ages">
-                <b>⏳ ত্ৰিপাপ ৰিষ্ট হবলগীয়া বয়স ({tripap_data.get('nakshatra', '')}):</b><br>
+                <b>⏳ {t('pdf_tripap_ages_note')} ({tripap_data.get('nakshatra', '')}):</b><br>
                 {ages_str}
-                <br><span class="small-note">মুঠ {len(tripap_ages)}টা বয়স • এই বয়সসমূহত সাৱধানতা অৱলম্বন কৰক।</span>
+                <br><span class="small-note">{t('pdf_tripap_total_ages').format(n=len(tripap_ages))}</span>
             </div>"""
 
-    # ── AI Section ──
+    # ââ AI Section ââ
     ai_html = ""
     if ai_interpretation:
-        # Parse AI text into sections based on numbered points or double newlines
-        ai_paragraphs = [line.strip() for line in ai_interpretation.strip().split('\n') if line.strip()]
+        # Parse AI text - handles **Header:** markdown style
+        import re as _re_ai
+        raw_text = ai_interpretation.strip()
+        lines = [l for l in raw_text.split(chr(10)) if l.strip() != ""]
+        
+        # Find intro greeting (e.g., "প্ৰিয় <name>,") at the start
+        intro_greeting = ""
+        intro_body_lines = []
+        i = 0
+        if lines and (lines[0].startswith("প্ৰিয়") or lines[0].startswith("প্রিয়") or "প্ৰিয়" in lines[0][:6]):
+            intro_greeting = lines[0]
+            i = 1
+        
+        def _is_md_header(ln):
+            # Header from ai_engine.py is "**Title:**" - starts with ** and ends with **
+            if not ln.startswith("**"):
+                return False
+            if ln.endswith(":**") or ln.endswith("ঃ**"):
+                return True
+            return False
+        
+        while i < len(lines):
+            ln = lines[i].strip()
+            if _is_md_header(ln):
+                break
+            intro_body_lines.append(ln)
+            i += 1
+        
+        intro_body = " ".join(intro_body_lines).strip()
+        
         ai_cards = ""
-        for para in ai_paragraphs:
-            # Detect if it's a heading-like line (starts with number, emoji, or contains colon)
-            is_heading = False
-            heading_text = ""
-            body_text = para
-            
-            # Check for patterns like "1.", "1)", "【", "★", or lines ending with ":" or "ঃ"
-            if para and (para[0].isdigit() and ('.' in para[:4] or ')' in para[:4])):
-                # Numbered point: "1. Something" or "1) Something"
-                parts = para.split('.', 1) if '.' in para[:4] else para.split(')', 1)
-                if len(parts) > 1:
-                    heading_text = parts[0].strip() + '.'
-                    body_text = parts[1].strip()
-                    is_heading = True
-            elif para.startswith('【') and '】' in para:
-                heading_text = para
-                body_text = ""
-                is_heading = True
-            elif 'ঃ' in para[:60] or ':' in para[:60]:
-                parts = para.split('ঃ', 1) if 'ঃ' in para[:60] else para.split(':', 1)
-                if len(parts) > 1 and len(parts[0]) < 50:
-                    heading_text = parts[0].strip() + 'ঃ'
-                    body_text = parts[1].strip()
-                    is_heading = True
-            
-            if is_heading and heading_text:
-                ai_cards += f'<div class="ai-card"><div class="ai-card-head">{heading_text}</div>'
-                if body_text:
-                    ai_cards += f'<div class="ai-card-body">{body_text}</div>'
-                ai_cards += '</div>'
-            else:
-                ai_cards += f'<div class="ai-card"><div class="ai-card-body">{para}</div></div>'
+        
+        # Add intro card
+        if intro_greeting or intro_body:
+            ai_cards += "<div class=\"ai-card ai-card-intro\">"
+            if intro_greeting:
+                ai_cards += "<div class=\"ai-card-greeting\">" + intro_greeting + "</div>"
+            if intro_body:
+                ai_cards += "<div class=\"ai-card-body\">" + intro_body + "</div>"
+            ai_cards += "</div>"
+        
+        # Process remaining - split by **Header:** markers
+        remaining = chr(10).join(lines[i:]) if i < len(lines) else ""
+        
+        section_pattern = _re_ai.compile(r"\*\*([^*]+?:)\*\*\s*(.*?)(?=\*\*[^*]+?:\*\*|\Z)", _re_ai.DOTALL)
+        sections_found = section_pattern.findall(remaining) if remaining else []
+        
+        if sections_found:
+            for header_text, body_text in sections_found:
+                header_clean = header_text.strip()
+                body_clean = body_text.strip()
+                if not header_clean:
+                    continue
+                ai_cards += "<div class=\"ai-card\">"
+                ai_cards += "<div class=\"ai-card-head\">" + header_clean + "</div>"
+                if body_clean:
+                    body_html = body_clean.replace(chr(10), "<br>")
+                    ai_cards += "<div class=\"ai-card-body\">" + body_html + "</div>"
+                ai_cards += "</div>"
+        elif remaining:
+            body_html = remaining.replace(chr(10), "<br>")
+            ai_cards += "<div class=\"ai-card\"><div class=\"ai-card-body\">" + body_html + "</div></div>"
+        
+        # Closing signature card
+        closing_text = t("pdf_ai_closing")
+        ai_cards += "<div class=\"ai-card ai-card-closing\"><div class=\"ai-card-signature\">" + closing_text + "</div></div>"
+        
+        # Disclaimer footer
+        ai_footer = "<div class=\"ai-footer-note\"><span class=\"ai-note-icon\">â ï¸</span><span>" + t("pdf_ai_disclaimer") + "</span></div>"
         
         ai_html = f"""
         <div class="ai-section-wrapper">
             <div class="ai-section-header">
-                <div class="ai-header-icon">🤖</div>
+                <div class="ai-header-icon">ð¤</div>
                 <div class="ai-header-text">
-                    <div class="ai-header-title">AI বিশ্লেষণ আৰু পৰামৰ্শ</div>
-                    <div class="ai-header-subtitle">কৃত্ৰিম বুদ্ধিমত্তাৰ দ্বাৰা বিশ্লেষিত জন্মকুণ্ডলীৰ সম্পূৰ্ণ ফলাফল</div>
+                    <div class="ai-header-title">{t('pdf_ai_section_title')}</div>
+                    <div class="ai-header-subtitle">{t('pdf_ai_section_subtitle')}</div>
                 </div>
             </div>
             <div class="ai-divider"></div>
             <div class="ai-cards-container">{ai_cards}</div>
+            {ai_footer}
         </div>"""
-
     # ── Top-Right Astrologer Header (Full Details - First Page) ──
     top_right_html = ""
     if astrologer_profile:
@@ -860,21 +975,49 @@ def _build_html(
     .ai-card:last-child {{ margin-bottom: 0; }}
     .ai-card-head {{
         background: linear-gradient(135deg, #FFF8F0, #FFE0B2);
-        padding: 8px 14px; font-weight: 700; font-size: 9.5pt;
+        padding: 10px 16px; font-weight: 700; font-size: 10pt;
         color: {DEEP_BLUE}; border-bottom: 1px solid #f0e0c8;
+        letter-spacing: 0.2px;
     }}
     .ai-card-body {{
-        padding: 10px 14px; font-size: 9pt; line-height: 1.9;
+        padding: 12px 16px; font-size: 9pt; line-height: 1.9;
         color: #333; background: #fefefe;
+        text-align: justify;
+    }}
+    .ai-card-intro {{
+        background: linear-gradient(135deg, #E3F2FD, #F3E5F5);
+        border: 1px solid #BBDEFB;
+    }}
+    .ai-card-intro .ai-card-greeting {{
+        padding: 12px 16px 4px 16px;
+        font-size: 12pt; font-weight: 700;
+        color: {DEEP_BLUE};
+        background: none;
+    }}
+    .ai-card-intro .ai-card-body {{
+        padding: 4px 16px 12px 16px;
+        background: transparent;
+        font-style: italic;
+        color: #444;
+    }}
+    .ai-card-closing {{
+        background: linear-gradient(135deg, #F1F8E9, #DCEDC8);
+        border: 1px solid #C5E1A5;
+        text-align: center;
+    }}
+    .ai-card-signature {{
+        padding: 12px 16px; font-size: 9.5pt;
+        color: {DEEP_BLUE}; font-weight: 600;
+        font-style: italic;
     }}
     .ai-footer-note {{
-        margin-top: 10px; padding: 8px 14px;
+        margin-top: 12px; padding: 8px 14px;
         background: #FFF3E0; border-left: 3px solid {ORANGE};
         border-radius: 0 6px 6px 0; font-size: 7.5pt;
         color: #E65100; display: flex; align-items: center; gap: 6px;
+        line-height: 1.6;
     }}
     .ai-note-icon {{ font-size: 10pt; flex-shrink: 0; }}
-
     .empty-msg {{ text-align: center; padding: 20px; color: #999; font-size: 10pt; }}
 
     /* Small tables for Dasha/Varga/Tripap */
@@ -1339,62 +1482,52 @@ def _build_html(
 
 <div class="header">
     {top_right_html}
-    <h1>🌟 জন্মকুণ্ডলী</h1>
-    <div class="sub">বৈদিক জ্যোতিষ সম্পূৰ্ণ ৰিপৰ্ট</div>
+    <h1>🌟 {t('pdf_title')}</h1>
+    <div class="sub">{t('pdf_subtitle')}</div>
 </div>
 <hr class="divider">
 
-<!-- ═══════════════ INVOCATORY SHLOKAS ═══════════════ -->
+<!-- ═══════════════ <!-- ═════════════ INVOCATORY SHLOKAS ═════════════ -->
 <div class="shloka-section">
     <div class="shloka-outer-box">
         <div class="ganesh-image-container">
             {ganesh_image_html}
         </div>
-        <div class="shloka-title">॥ আৰম্ভণি ॥</div>
+        <div class="shloka-title">{t('pdf_shloka_title')}</div>
 
         <div class="shloka-block">
             <div class="shloka-text">
-                অপ্ৰত্যক্ষানি শাস্ত্ৰানি বিবাদস্তেষু কেৱলম্<br>
-                প্ৰত্যক্ষং জ্যোতিষং শাস্ত্ৰং চন্দ্ৰাকৌ যত্ৰ সাক্ষিণৌ<br>
-                অন্যান্য শাস্ত্ৰেষু বিনোদমাত্ৰং ন তেষু কিঞ্চিদ্ভুবি দৃষ্টমস্তি<br>
-                চিকিৎসিতং জ্যোতিষতন্ত্ৰ বাদো পদে পদে ॥
+                {t('pdf_shloka_block1')}
             </div>
         </div>
 
-        <div class="shloka-divider">॥ ॐ ॥</div>
+        <div class="shloka-divider">{t('pdf_shloka_om')}</div>
 
         <div class="shloka-block">
             <div class="shloka-text">
-                ওঁ সৰ্ববিঘ্ন বিনাশায় সৰ্বকল্যাণহেতবে<br>
-                পাৰ্বতী প্ৰিয় পুত্ৰায় গণেশায় নমো নমঃ ॥<br><br>
-                যস্য নাস্তি খলু জন্ম পত্ৰিকা যা শুভাশুভ ফলপ্ৰকাশিনী<br>
-                অন্ধবদ্ভবতি তস্য জীৱনং দীপ হীনমিব মন্দিৰং নিশি<br><br>
-                গৌৰ্য্যাদি মাতৰাঃ সৰ্বে আদিত্যাদি নৱগ্ৰহাঃ<br>
-                ইন্দ্ৰাদি লোক পালাশ্চ কুৰ্বন্তু কুশলং সদা ॥<br><br>
-                আদিত্যাদি গ্ৰহাঃ সৰ্বে নক্ষত্ৰাণি চৰাশয়ঃ<br>
-                দীৰ্ঘমায়ুঃ প্ৰকুৰ্বন্তু যস্যেয়ং জন্ম পত্ৰিকা ॥
+                {t('pdf_shloka_block2')}
             </div>
         </div>
 
-        <div class="shloka-footer-text">॥ শুভমস্তু ॥</div>
+        <div class="shloka-footer-text">{t('pdf_shloka_footer')}</div>
     </div>
 </div>
-<!-- ═══════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════ -->
 
 <!-- ═══════════════ জন্মপত্ৰিকা TITLE ═══════════════ -->
 <div class="patrika-title-section">
     <div class="patrika-ornament">❖  ॐ  ❖</div>
-    <div class="patrika-main-title">জন্মপত্ৰিকা</div>
+    <div class="patrika-main-title">{t('pdf_patrika_title')}</div>
 </div>
 
 <!-- ═══════════ প্ৰকাশিত নাম ও তথ্য ═══════════ -->
 <div style="text-align:center;">
     <div class="patrika-info-card">
-        <div class="patrika-published-label">প্ৰকাশিত নাম</div>
+        <div class="patrika-published-label">{t('pdf_patrika_published')}</div>
         <div class="patrika-name">{user_name}</div>
         <div class="patrika-details">
-            <b>জন্ম তাৰিখঃ</b> <span>{user_dob_formatted}</span> &nbsp;&nbsp;|&nbsp;&nbsp; <b>জন্মৰ সময়ঃ</b> <span>{user_tob}</span><br>
-            <b>জন্ম স্থানঃ</b> <span>{user_place}</span>
+            <b>{t('pdf_patrika_dob_label')}</b> <span>{user_dob_formatted}</span> &nbsp;&nbsp;|&nbsp;&nbsp; <b>{t('pdf_patrika_tob_label')}</b> <span>{user_tob}</span><br>
+            <b>{t('pdf_patrika_place_label')}</b> <span>{user_place}</span>
         </div>
     </div>
 </div>
@@ -1403,38 +1536,38 @@ def _build_html(
 <!-- ═══════════════ PAGE BREAK → ২য় পৃষ্ঠা ═══════════════ -->
 <div style="page-break-before: always;"></div>
 
-<h2 class="section-heading">📋 ব্যক্তিগত তথ্য</h2>
+<h2 class="section-heading">📋 {t('pdf_personal_info')}</h2>
 <div class="info-grid">
-    <div class="info-item"><b>নাম:</b> {user_name}</div>
-    <div class="info-item"><b>লিংগ:</b> {"মহিলা (জাতিকা)" if gender == "female" else "পুৰুষ (জাতক)"}</div>
-    <div class="info-item"><b>জন্মৰ স্থান:</b> {user_place}</div>
-    <div class="info-item"><b>জন্মৰ তাৰিখ:</b> {user_dob_formatted}</div>
-    <div class="info-item"><b>জন্মৰ সময়:</b> {user_tob}</div>
-    <div class="info-item"><b>লগ্ন:</b> {asc_rasi}</div>
-    <div class="info-item"><b>লগ্নৰ অধিপতি:</b> {lagna_lord}</div>
-    <div class="info-item"><b>জন্ম ৰাশি:</b> {moon_rasi}</div>
-    <div class="info-item"><b>জন্ম ৰাশিৰ অধিপতি:</b> {moon_rashi_lord}</div>
-    <div class="info-item"><b>বৰ্ণ:</b> {panchanga.get('varna', '—')}</div>
-    <div class="info-item"><b>গণ:</b> {panchanga.get('gana', '—')}</div>
-    <div class="info-item"><b>যোনি:</b> {panchanga.get('yoni', '—')}</div>
-    <div class="info-item"><b>নাড়ী:</b> {panchanga.get('nadi', '—')}</div>
-    <div class="info-item"><b>জাতদণ্ড:</b> {panchanga.get('jata_danda', '—')}</div>
-    <div class="info-item"><b>দিবামান:</b> {panchanga.get('divaman', '—')}</div>
-    <div class="info-item"><b>ৰাত্ৰিমান:</b> {panchanga.get('ratriman', '—')}</div>
+    <div class="info-item"><b>{t('pdf_name')}:</b> {user_name}</div>
+    <div class="info-item"><b>{t('pdf_gender')}:</b> {t('pdf_gender_female') if gender == "female" else t('pdf_gender_male')}</div>
+    <div class="info-item"><b>{t('pdf_birth_place')}:</b> {user_place}</div>
+    <div class="info-item"><b>{t('pdf_birth_date')}:</b> {user_dob_formatted}</div>
+    <div class="info-item"><b>{t('pdf_birth_time')}:</b> {user_tob}</div>
+    <div class="info-item"><b>{t('pdf_lagna')}:</b> {asc_rasi}</div>
+    <div class="info-item"><b>{t('pdf_lagna_lord')}:</b> {lagna_lord}</div>
+    <div class="info-item"><b>{t('pdf_moon_rashi')}:</b> {moon_rasi}</div>
+    <div class="info-item"><b>{t('pdf_moon_rashi_lord')}:</b> {moon_rashi_lord}</div>
+    <div class="info-item"><b>{t('panchanga_varna')}:</b> {panchanga.get('varna', '—')}</div>
+    <div class="info-item"><b>{t('panchanga_gana')}:</b> {panchanga.get('gana', '—')}</div>
+    <div class="info-item"><b>{t('panchanga_yoni')}:</b> {panchanga.get('yoni', '—')}</div>
+    <div class="info-item"><b>{t('panchanga_nadi')}:</b> {panchanga.get('nadi', '—')}</div>
+    <div class="info-item"><b>{t('panchanga_jata_danda')}:</b> {panchanga.get('jata_danda', '—')}</div>
+    <div class="info-item"><b>{t('panchanga_divaman')}:</b> {panchanga.get('divaman', '—')}</div>
+    <div class="info-item"><b>{t('panchanga_ratriman')}:</b> {panchanga.get('ratriman', '—')}</div>
 </div>
 """
 
     # Build body sections using string concatenation (not f-string inline conditionals)
     if _include('panchanga'):
-        html += '<h2 class="section-heading">🕉️ পঞ্চাঙ্গ</h2><div class="p-grid">' + panchanga_html + '</div>'
+        html += '<h2 class="section-heading">🕉️ ' + t('pdf_panchanga_section') + '</h2><div class="p-grid">' + panchanga_html + '</div>'
 
     if _include('planets_table'):
-        html += '<h2 class="section-heading">🪐 গ্ৰহৰ অৱস্থান</h2><table><thead><tr><th>গ্ৰহ</th><th>ৰাশি</th><th>ডিগ্ৰী</th><th>নক্ষত্ৰ</th><th>নক্ষত্ৰ পতি</th></tr></thead><tbody>' + planet_rows + '</tbody></table>'
+        html += '<h2 class="section-heading">🪐 ' + t('pdf_planets_section') + '</h2><table><thead><tr><th>' + t('pdf_planet_col') + '</th><th>' + t('pdf_rashi_col') + '</th><th>' + t('pdf_degree_col') + '</th><th>' + t('pdf_nakshatra_col') + '</th><th>' + t('pdf_nak_lord_col') + '</th></tr></thead><tbody>' + planet_rows + '</tbody></table>'
 
     # ═══════════════ PAGE BREAK → ৩য় পৃষ্ঠা (জন্ম কুণ্ডলী) ═══════════════
     if _include('kundli_chart'):
         html += '<div style="page-break-before: always;"></div>'
-        html += '<h2 class="section-heading">📊 জন্ম কুণ্ডলী (D1 - ৰাশি চক্ৰ)</h2>'
+        html += '<h2 class="section-heading">📊 ' + t('pdf_kundli_section') + '</h2>'
         html += '<div class="chart-large-page3">' + d1_svg + '</div>'
         # Patrika text below D1 chart
         if patrika_text:
@@ -1444,64 +1577,74 @@ def _build_html(
     # ═══════════════ PAGE BREAK → ৪ৰ্থ পৃষ্ঠা (বিভাগীয় কুণ্ডলী) ═══════════════
     if _include('varga_charts'):
         html += '<div style="page-break-before: always;"></div>'
-        html += '<h2 class="section-heading">📊 ষোড়শবৰ্গ বিভাগীয় কুণ্ডলী (D2 - D60)</h2><div class="charts-grid">' + small_charts_html + '</div>'
+        html += '<h2 class="section-heading">📊 ' + t('pdf_varga_section') + '</h2><div class="charts-grid">' + small_charts_html + '</div>'
 
-    shani_sare_sati_html = _render_shani_sare_sati_html(moon_rasi, planets_data, user_dob)
+    shani_sare_sati_html = _render_shani_sare_sati_html(moon_rasi, planets_data, user_dob, lang=lang)
     if _include('shani_sare_sati'):
         html += '<div style="page-break-before: always;"></div>'
-        html += '<h2 class="section-heading">🌑 শনি সাৰেসাতী আৰু ঢৈয়া (০-১০০ বছৰ)</h2>' + shani_sare_sati_html
+        html += '<h2 class="section-heading">🌑 ' + t('pdf_shani_section') + '</h2>' + shani_sare_sati_html
 
     if _include('dosha'):
         html += '<div style="page-break-before: always;"></div>'
-        html += '<h2 class="section-heading">⚠️ দোষ বিশ্লেষণ</h2>' + dosha_html
+        html += '<h2 class="section-heading">⚠️ ' + t('pdf_dosha_section') + '</h2>' + dosha_html
 
     if _include('yoga'):
-        html += '<h2 class="section-heading">✨ যোগ বিশ্লেষণ</h2>' + yoga_html
+        html += '<h2 class="section-heading">✨ ' + t('pdf_yoga_section') + '</h2>' + yoga_html
 
     if _include('sannari'):
-        html += '<h2 class="section-heading">🌀 সন্নাড়ী চক্ৰ</h2>' + sannari_html
+        html += '<h2 class="section-heading">🌀 ' + t('pdf_sannari_section') + '</h2>' + sannari_html
 
     if _include('navatara'):
-        html += '<h2 class="section-heading">🌀 নৱতাৰা চক্ৰ</h2>' + navatara_html
+        html += '<h2 class="section-heading">🌀 ' + t('pdf_navatara_section') + '</h2>' + navatara_html
 
     if _include('tripap'):
         html += '<div style="page-break-before: always;"></div>'
-        html += '<h2 class="section-heading">☠️ ত্ৰিপাপ ৰিষ্ট বিশ্লেষণ</h2>' + tripap_html
+        html += '<h2 class="section-heading">☠️ ' + t('pdf_tripap_section') + '</h2>' + tripap_html
 
     if _include('nakshatra_phala'):
-        html += '<h2 class="section-heading">🌟 নক্ষত্ৰ ফলাফল</h2>' + nakshatra_phala_html
+        html += '<h2 class="section-heading">🌟 ' + t('pdf_nakshatra_phala_section') + '</h2>' + nakshatra_phala_html
 
     if _include('lagna_phala'):
-        html += '<h2 class="section-heading">🌅 লগ্ন ফলাফল</h2>' + lagna_phala_html
+        html += '<h2 class="section-heading">🌅 ' + t('pdf_lagna_phala_section') + '</h2>' + lagna_phala_html
 
     if _include('rashi_phala'):
-        html += '<h2 class="section-heading">🌙 ৰাশিফল (চন্দ্ৰ ৰাশি)</h2>' + rashi_phala_html
+        html += '<h2 class="section-heading">🌙 ' + t('pdf_rashi_phala_section') + '</h2>' + rashi_phala_html
 
     if _include('graha_bichar'):
-        html += '<h2 class="section-heading">🪐 গ্ৰহ বিচাৰ (ভাব অনুসৰি)</h2>' + graha_bichar_html
+        html += '<h2 class="section-heading">🪐 ' + t('pdf_graha_bichar_section') + '</h2>' + graha_bichar_html
 
     if _include('dwadash_bhab_phala'):
         html += '<div style="page-break-before: always;"></div>'
-        html += '<h2 class="section-heading">🏠 দ্বাদশ ভাব ফল (12 House Results)</h2>' + dwadash_html
+        html += '<h2 class="section-heading">🏠 ' + t('pdf_dwadash_section') + '</h2>' + dwadash_html
 
     if vimsottari_summary and _include('dasha_summary'):
-        html += '<h2 class="section-heading">📊 বিংশোত্তৰী দশা সাৰাংশ</h2><div style="background:#FFF8F0;border-left:4px solid #FF6600;padding:12px 16px;font-size:9pt;line-height:1.8;border-radius:6px;margin-bottom:10px;text-align:justify;font-family:\'Noto Sans Bengali\',\'Nirmala UI\',sans-serif;">' + vimsottari_summary.replace('\n', '<br>') + '</div>'
-        html += '<table class="dasha-table"><thead><tr><th>মহাদশা</th><th>আৰম্ভ</th><th>সমাপ্তি</th><th>অন্তৰ্দশা (প্ৰথম ৩)</th></tr></thead><tbody>' + dasha_rows + '</tbody></table>'
+        html += '<h2 class="section-heading">📊 ' + t('pdf_dasha_summary_section') + '</h2><div style="background:#FFF8F0;border-left:4px solid #FF6600;padding:12px 16px;font-size:9pt;line-height:1.8;border-radius:6px;margin-bottom:10px;text-align:justify;font-family:\'Noto Sans Bengali\',\'Nirmala UI\',sans-serif;">' + vimsottari_summary.replace('\n', '<br>') + '</div>'
+        html += '<table class="dasha-table"><thead><tr><th>' + t('pdf_dasha_mahadasha') + '</th><th>' + t('pdf_dasha_start') + '</th><th>' + t('pdf_dasha_end') + '</th><th>' + t('pdf_dasha_first3') + '</th></tr></thead><tbody>' + dasha_rows + '</tbody></table>'
     elif _include('dasha_summary'):
-        html += '<h2 class="section-heading">⏳ বিংশোত্তৰী দশা সাৰাংশ</h2><table class="dasha-table"><thead><tr><th>মহাদশা</th><th>আৰম্ভ</th><th>সমাপ্তি</th><th>অন্তৰ্দশা (প্ৰথম ৩)</th></tr></thead><tbody>' + dasha_rows + '</tbody></table>'
+        html += '<h2 class="section-heading">⏳ ' + t('pdf_dasha_summary_section') + '</h2><table class="dasha-table"><thead><tr><th>' + t('pdf_dasha_mahadasha') + '</th><th>' + t('pdf_dasha_start') + '</th><th>' + t('pdf_dasha_end') + '</th><th>' + t('pdf_dasha_first3') + '</th></tr></thead><tbody>' + dasha_rows + '</tbody></table>'
 
     if _include('dasha_full'):
-        html += '<h2 class="section-heading">⏳ সম্পূৰ্ণ মহাদশা আৰু অন্তৰ্দশা</h2>' + full_dasha_html
+        html += '<h2 class="section-heading">⏳ ' + t('pdf_dasha_full_section') + '</h2>' + full_dasha_html
 
     if _include('dasha_predictions'):
-        html += '<h2 class="section-heading">📝 মহাদশা-অন্তৰ্দশাৰ সম্পূৰ্ণ ফলাফল</h2>' + dasha_predictions_html
+        html += '<h2 class="section-heading">📝 ' + t('pdf_dasha_predictions_section') + '</h2>' + dasha_predictions_html
+
+    # Language-specific font for content text
+    if lang == 'hi':
+        content_font = "'Noto Sans Devanagari', 'Noto Sans Bengali', sans-serif"
+    elif lang == 'bn':
+        content_font = "'Noto Sans Bengali', 'Nirmala UI', sans-serif"
+    else:
+        content_font = "'Noto Sans Bengali', 'Nirmala UI', sans-serif"
 
     if _include('antardasha_phala'):
-        html += '<h2 class="section-heading">📖 অন্তৰদশা ফলাফল (বিস্তৃত)</h2>' + antardasha_phala_html
-
+        html += '<h2 class="section-heading">📖 ' + t('pdf_antardasha_section') + '</h2>'
+        html += f'<div style="font-family:{content_font};font-size:8.5pt;line-height:1.6;">' + antardasha_phala_html + '</div>'
+    
     if _include('pratyantar_dasha'):
         html += '<div style="page-break-before: always;"></div>'
-        html += '<h2 class="section-heading">🔮 প্ৰত্যন্তৰ দশা ফলাফল</h2>' + pratyantar_dasha_html
+        html += '<h2 class="section-heading">🔮 ' + t('pdf_pratyantar_section') + '</h2>'
+        html += f'<div style="font-family:{content_font};font-size:8.5pt;line-height:1.6;">' + pratyantar_dasha_html + '</div>'
 
     if _include('ai'):
         html += ai_html
@@ -1552,12 +1695,14 @@ def generate_pdf_report(
     gender: str = "male",
     astrologer_profile: dict = None,
     patrika_text: str = "",
-    pratyantar_dasha_html: str = ""
+    pratyantar_dasha_html: str = "",
+    lang: str = "as"
 ) -> bytes:
     """
-    Generate a complete professional PDF astrology report in Assamese.
-    Uses Playwright (Chromium) via subprocess for perfect Assamese text rendering.
+    Generate a complete professional PDF astrology report.
+    Uses Playwright (Chromium) via subprocess for perfect text rendering.
     Returns PDF as bytes.
+    lang: language code ('as', 'bn', 'hi', 'en')
     """
     html_content, astro_footer_html = _build_html(
         user_name, user_dob, user_tob, user_place,
@@ -1577,7 +1722,8 @@ def generate_pdf_report(
         gender=gender,
         astrologer_profile=astrologer_profile,
         patrika_text=patrika_text,
-        pratyantar_dasha_html=pratyantar_dasha_html
+        pratyantar_dasha_html=pratyantar_dasha_html,
+        lang=lang
     )
 
     # Write HTML to temp file, call pdf_worker.py in subprocess, read PDF back

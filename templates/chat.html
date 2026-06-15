@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="as">
+<html lang="{{ lang }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ধ্ৰুৱতৰা AI | জ্যোতিষ চেট — অসমীয়াত AI জ্যোতিষীৰ সৈতে কথা</title>
+    <title>{{ _('chat_title') }}</title>
     <meta name="description" content="ধ্ৰুৱতৰা AI ৰ জ্যোতিষ চেট — অসমীয়াত AI জ্যোতিষীৰ সৈতে কথা পাতক। ৰাশিফল, নক্ষত্ৰ ফল, পঞ্চাঙ্গ, দ্বাদশ ভাব ফল, কুণ্ডলী সম্পৰ্কীয় প্ৰশ্নৰ উত্তৰ। দিতুল শৰ্মাৰ দ্বাৰা নিৰ্মিত প্ৰথম অসমীয়া জ্যোতিষ চফ্টৱেৰ। dhrubataraai.com" />
     <meta name="keywords" content="ধ্ৰুৱতৰা AI, Dhrubatara AI, দিতুল শৰ্মা, Ditul Sarma, জ্যোতিষ চেট, Astrology Chat, AI জ্যোতিষী, AI Astrologer, অসমীয়া জ্যোতিষ, Assamese Astrology, ৰাশিফল, Rashi Phal, নক্ষত্ৰ ফল, পঞ্চাঙ্গ, Panchanga, দ্বাদশ ভাব ফল, Dwadash Bhab Phal, কুণ্ডলী, Kundli, dhrubataraai.com" />
     <meta name="author" content="দিতুল শৰ্মা, Ditul Sarma" />
@@ -186,15 +186,16 @@
 <body>
 
 <nav class="top-nav">
-    <div class="brand">🌟 ধ্ৰুৱতৰা<span> AI</span></div>
+    <div class="brand">🌟 {{ _('app_name') }}</div>
     <div class="nav-actions">
+        {% include 'lang_selector.html' %}
         {% if user_sub_info %}
         <span class="user-plan-badge {% if user_sub_info.is_pro %}pro{% else %}free{% endif %}">
-            {% if user_sub_info.is_pro %}⭐ PRO{% else %}🆓 FREE{% endif %}
+            {{ _('pro_badge') if user_sub_info.is_pro else _('free_badge') }}
         </span>
         {% endif %}
-        <a href="/" class="btn-sm btn-outline">🏠 হোম</a>
-        <a href="/dashboard" class="btn-sm btn-outline">📊 ডেশ্ববৰ্ড</a>
+        <a href="/" class="btn-sm btn-outline">🏠 {{ _('home') }}</a>
+        <a href="/dashboard" class="btn-sm btn-outline">📊 {{ _('nav_dashboard') }}</a>
     </div>
 </nav>
 

@@ -8,50 +8,7 @@ Divaman, Ratriman, Varna, Gana, Yoni, Nadi, Jata Danda, and more.
 
 import swisseph as swe
 from datetime import datetime, timedelta
-
-# ─── Assamese Names ─────────────────────────────────────────────
-TITHI_NAMES = [
-    "প্ৰতিপদ", "দ্বিতীয়া", "তৃতীয়া", "চতুৰ্থী", "পঞ্চমী", "ষষ্ঠী", "সপ্তমী",
-    "অষ্টমী", "নৱমী", "দশমী", "একাদশী", "দ্বাদশী", "ত্ৰয়োদশী", "চতুৰ্দশী",
-    "পূৰ্ণিমা", "প্ৰতিপদ", "দ্বিতীয়া", "তৃতীয়া", "চতুৰ্থী", "পঞ্চমী", "ষষ্ঠী",
-    "সপ্তমী", "অষ্টমী", "নৱমী", "দশমী", "একাদশী", "দ্বাদশী", "ত্ৰয়োদশী", "চতুৰ্দশী", "অমাৱস্যা"
-]
-
-NAKSHATRA_NAMES = [
-    "অশ্বিনী", "ভৰণী", "কৃত্তিকা", "ৰোহিণী", "মৃগশিৰা", "আৰ্দ্ৰা", "পুনৰ্বসু",
-    "পুষ্যা", "অশ্লেষা", "মঘা", "পূৰ্বফাল্গুনী", "উত্তৰফাল্গুনী", "হস্তা",
-    "চিত্ৰা", "স্বাতী", "বিশাখা", "অনুৰাধা", "জ্যেষ্ঠা", "মূল", "পূৰ্বাষাঢ়া",
-    "উত্তৰাষাঢ়া", "শ্ৰৱণা", "ধনিষ্ঠা", "শতভিষা", "পূৰ্বভাদ্ৰপদ", "উত্তৰভাদ্ৰপদ", "ৰেৱতী"
-]
-
-YOGA_NAMES = [
-    "বিষ্কুম্ভ", "প্ৰীতি", "আয়ুষ্মান", "সৌভাগ্য", "শোভন", "অতিগণ্ড", "সুকৰ্মা",
-    "ধৃতি", "শূল", "গণ্ড", "বৃদ্ধি", "ধ্ৰুৱ", "ব্যাঘাত", "হৰ্ষণ", "বজ্ৰ",
-    "সিদ্ধি", "ব্যতিপাত", "বৰীয়ান", "পৰিঘ", "শিৱ", "সিদ্ধ", "সাধ্য", "শুভ",
-    "শুক্ল", "ব্ৰহ্ম", "ইন্দ্ৰ", "বৈধৃতি"
-]
-
-KARANA_NAMES = [
-    "বৱ", "বালৱ", "কৌলৱ", "তৈতিল", "গৰ", "বণিজ", "বিষ্টি",
-    "শকুনি", "চতুষ্পদ", "নাগ", "কিংস্তুঘ্ন"
-]
-
-VAAR_NAMES = ["সোমবাৰ", "মঙ্গলবাৰ", "বুধবাৰ", "বৃহস্পতিবাৰ", "শুক্ৰবাৰ", "শনিবাৰ", "ৰবিবাৰ"]
-
-RITU_NAMES = ["বসন্ত", "গ্ৰীষ্ম", "বৰ্ষা", "শৰৎ", "হেমন্ত", "শিশিৰ"]
-
-MASA_NAMES = [
-    "ব'হাগ", "জেঠ", "আহাৰ", "শাওণ", "ভাদ", "আহিন",
-    "কাতি", "আঘোণ", "পুহ", "মাঘ", "ফাগুন", "চ'ত"
-]
-
-PAKSHA_NAMES = ["শুক্ল পক্ষ", "কৃষ্ণ পক্ষ"]
-
-# ─── Rashi Lords (ৰাশিৰ অধিপতি) ─────────────────────────────────
-RASHI_LORDS = [
-    "মংগল", "শুক্ৰ", "বুধ", "চন্দ্ৰ", "ৰবি", "বুধ",
-    "শুক্ৰ", "মংগল", "বৃহস্পতি", "শনি", "শনি", "বৃহস্পতি"
-]
+from prediction_i18n import get_panchanga_names_i18n
 
 # ─── Nakshatra Attributes ───────────────────────────────────────
 # Varna (বৰ্ণ): 0=ব্ৰাহ্মণ, 1=ক্ষত্ৰিয়, 2=বৈশ্য, 3=শূদ্ৰ
@@ -59,14 +16,12 @@ NAKSHATRA_VARNA = [
     1, 2, 0, 3, 0, 2, 1, 0, 3, 1, 0, 0, 2,
     0, 2, 1, 0, 1, 1, 2, 0, 0, 2, 3, 1, 0, 0
 ]
-VARNA_NAMES = ["ব্ৰাহ্মণ", "ক্ষত্ৰিয়", "বৈশ্য", "শূদ্ৰ"]
 
 # Gana (গণ): 0=দেৱ, 1=মানুষ্য, 2=ৰাক্ষস
 NAKSHATRA_GANA = [
     0, 1, 2, 1, 0, 1, 0, 0, 2, 2, 1, 1, 0,
     2, 0, 2, 0, 2, 2, 1, 1, 0, 2, 2, 1, 1, 0
 ]
-GANA_NAMES = ["দেৱ", "মানুষ্য", "ৰাক্ষস"]
 
 # Yoni (যোনি) - Animal symbols
 NAKSHATRA_YONI = [
@@ -83,7 +38,6 @@ NAKSHATRA_NADI = [
     0, 1, 2, 1, 2, 0, 0, 1, 2, 0, 1, 2, 1,
     2, 0, 0, 1, 2, 0, 1, 2, 1, 2, 0, 0, 1, 2
 ]
-NADI_NAMES = ["আদি", "মধ্য", "অন্ত্য"]
 
 # ─── Rahu Kaal part index (0-indexed) by weekday ────────────────
 # Sunday=6, Monday=0, Tuesday=1, Wednesday=2, Thursday=3, Friday=4, Saturday=5
@@ -127,8 +81,11 @@ def calculate_sun_moon(jd: float):
     return sun_pos[0], moon_pos[0]
 
 
-def calculate_tithi(sun_lon: float, moon_lon: float) -> dict:
+def calculate_tithi(sun_lon: float, moon_lon: float, lang: str = 'as') -> dict:
     """Calculate Tithi from Sun-Moon angular difference"""
+    names = get_panchanga_names_i18n(lang)
+    TITHI_NAMES = names['TITHI_NAMES']
+    PAKSHA_NAMES = names['PAKSHA_NAMES']
     diff = (moon_lon - sun_lon) % 360
     tithi_idx = int(diff / 12.0)
     tithi_name = TITHI_NAMES[tithi_idx]
@@ -144,8 +101,10 @@ def calculate_tithi(sun_lon: float, moon_lon: float) -> dict:
     }
 
 
-def calculate_nakshatra(moon_lon: float) -> dict:
+def calculate_nakshatra(moon_lon: float, lang: str = 'as') -> dict:
     """Calculate Nakshatra from Moon longitude"""
+    names = get_panchanga_names_i18n(lang)
+    NAKSHATRA_NAMES = names['NAKSHATRA_NAMES']
     nak_idx = int(moon_lon / 13.333333) % 27
     pada = int((moon_lon % 13.333333) / 3.333333) + 1
     remaining = (13.333333 - (moon_lon % 13.333333)) / 13.333333 * 100
@@ -157,8 +116,10 @@ def calculate_nakshatra(moon_lon: float) -> dict:
     }
 
 
-def calculate_yoga(sun_lon: float, moon_lon: float) -> dict:
+def calculate_yoga(sun_lon: float, moon_lon: float, lang: str = 'as') -> dict:
     """Calculate Yoga from Sun + Moon longitude"""
+    names = get_panchanga_names_i18n(lang)
+    YOGA_NAMES = names['YOGA_NAMES']
     total = (sun_lon + moon_lon) % 360
     yoga_idx = int(total / 13.333333) % 27
     remaining = (13.333333 - (total % 13.333333)) / 13.333333 * 100
@@ -169,7 +130,7 @@ def calculate_yoga(sun_lon: float, moon_lon: float) -> dict:
     }
 
 
-def calculate_karana(tithi_idx: int, remaining_pct: float = 50.0) -> dict:
+def calculate_karana(tithi_idx: int, remaining_pct: float = 50.0, lang: str = 'as') -> dict:
     """
     Calculate Karana from Tithi index and remaining percentage.
     Each tithi has 2 halves with different karanas.
@@ -183,6 +144,8 @@ def calculate_karana(tithi_idx: int, remaining_pct: float = 50.0) -> dict:
     
     Movable Karanas (7): Bava(0), Balava(1), Kaulava(2), Taitila(3), Gara(4), Vanija(5), Vishti(6)
     """
+    names = get_panchanga_names_i18n(lang)
+    KARANA_NAMES = names['KARANA_NAMES']
     half = 0 if remaining_pct > 50 else 1  # 0=first half, 1=second half
     
     # Fixed karanas
@@ -196,8 +159,6 @@ def calculate_karana(tithi_idx: int, remaining_pct: float = 50.0) -> dict:
         karana_idx = 9   # Naga
     else:
         # Movable karanas: count how many movable halves before this one
-        # Before tithi 14: movable_count = tithi_idx * 2 + half
-        # After tithi 14: subtract 1 for the fixed Kimstughna at tithi 14 half 0
         if tithi_idx < 14:
             movable_count = tithi_idx * 2 + half
         else:
@@ -207,20 +168,26 @@ def calculate_karana(tithi_idx: int, remaining_pct: float = 50.0) -> dict:
     return {"name": KARANA_NAMES[karana_idx], "index": karana_idx, "half": half}
 
 
-def calculate_vaar(jd: float) -> dict:
+def calculate_vaar(jd: float, lang: str = 'as') -> dict:
     """Calculate day of week (Vaar)"""
+    names = get_panchanga_names_i18n(lang)
+    VAAR_NAMES = names['VAAR_NAMES']
     weekday = int(jd + 0.5) % 7
     return {"name": VAAR_NAMES[weekday], "index": weekday}
 
 
-def calculate_ritu(sun_lon: float) -> dict:
+def calculate_ritu(sun_lon: float, lang: str = 'as') -> dict:
     """Calculate Ritu (season) from Sun longitude"""
+    names = get_panchanga_names_i18n(lang)
+    RITU_NAMES = names['RITU_NAMES']
     ritu_idx = int(sun_lon / 60) % 6
     return {"name": RITU_NAMES[ritu_idx], "index": ritu_idx}
 
 
-def calculate_masa(sun_lon: float) -> dict:
-    """Calculate Assamese solar month from Sun longitude"""
+def calculate_masa(sun_lon: float, lang: str = 'as') -> dict:
+    """Calculate solar month from Sun longitude"""
+    names = get_panchanga_names_i18n(lang)
+    MASA_NAMES = names['MASA_NAMES']
     masa_idx = int(sun_lon / 30) % 12
     return {"name": MASA_NAMES[masa_idx], "index": masa_idx}
 
@@ -328,15 +295,16 @@ def get_yama_kaal(sunrise_str: str, sunset_str: str, weekday: int) -> str:
     return _get_kala_from_part(sunrise_str, sunset_str, part_idx)
 
 
-def get_kaal_bela(sunrise_str: str, sunset_str: str, weekday: int) -> str:
+def get_kaal_bela(sunrise_str: str, sunset_str: str, weekday: int, lang: str = 'as') -> str:
     """Calculate Kaal Bela (কালবেলা) based on actual sunrise/sunset.
-    শনিবাৰে দুটা ভাগ: ০ আৰু ৭"""
+    Saturday uses dual parts (0 and 7)"""
+    names = get_panchanga_names_i18n(lang)
     part_idx = KAAL_BELA_PART[weekday]
     if part_idx == -1:
         # Saturday: two parts - 0 and 7
         part1 = _get_kala_from_part(sunrise_str, sunset_str, 0)
         part2 = _get_kala_from_part(sunrise_str, sunset_str, 7)
-        return f"{part1} আৰু {part2}"
+        return names['kaal_bela_dual'].format(p1=part1, p2=part2)
     return _get_kala_from_part(sunrise_str, sunset_str, part_idx)
 
 
@@ -346,15 +314,16 @@ def get_rar_bela(sunrise_str: str, sunset_str: str, weekday: int) -> str:
     return _get_kala_from_part(sunrise_str, sunset_str, part_idx)
 
 
-def get_bara_bela(sunrise_str: str, sunset_str: str, weekday: int) -> str:
+def get_bara_bela(sunrise_str: str, sunset_str: str, weekday: int, lang: str = 'as') -> str:
     """Calculate Bara Bela (বাৰবেলা) based on actual sunrise/sunset.
-    দিনমানক ৮ ভাগ কৰিলে বাৰবেলা: সোম=১, মঙ্গল=২, বুধ=৩, বৃহস্পতি=৪, শুক্ৰ=৫, শনি=০+৭, ৰবি=০"""
+    Saturday uses dual parts (0 and 7)"""
+    names = get_panchanga_names_i18n(lang)
     part_idx = BARA_BELA_PART[weekday]
     if part_idx == -1:
         # Saturday: two parts - 0 and 7
         part1 = _get_kala_from_part(sunrise_str, sunset_str, 0)
         part2 = _get_kala_from_part(sunrise_str, sunset_str, 7)
-        return f"{part1} আৰু {part2}"
+        return names['bara_bela_dual'].format(p1=part1, p2=part2)
     return _get_kala_from_part(sunrise_str, sunset_str, part_idx)
 
 
@@ -371,8 +340,9 @@ def get_abhijit_muhurta(sunrise_str: str, sunset_str: str) -> str:
         return "11:36 - 12:24"
 
 
-def get_divaman(sunrise_str: str, sunset_str: str) -> str:
+def get_divaman(sunrise_str: str, sunset_str: str, lang: str = 'as') -> str:
     """Calculate day duration (দিবামান)"""
+    names = get_panchanga_names_i18n(lang)
     sr_min = _time_to_minutes(sunrise_str)
     ss_min = _time_to_minutes(sunset_str)
     duration = ss_min - sr_min
@@ -380,11 +350,12 @@ def get_divaman(sunrise_str: str, sunset_str: str) -> str:
         duration = 720
     h = duration // 60
     m = duration % 60
-    return f"{h} ঘণ্টা {m} মিনিট"
+    return names['divaman_unit'].format(h=h, m=m)
 
 
-def get_ratriman(sunrise_str: str, sunset_str: str) -> str:
+def get_ratriman(sunrise_str: str, sunset_str: str, lang: str = 'as') -> str:
     """Calculate night duration (ৰাত্ৰিমান)"""
+    names = get_panchanga_names_i18n(lang)
     sr_min = _time_to_minutes(sunrise_str)
     ss_min = _time_to_minutes(sunset_str)
     day_dur = ss_min - sr_min
@@ -393,14 +364,15 @@ def get_ratriman(sunrise_str: str, sunset_str: str) -> str:
     night_dur = 1440 - day_dur
     h = night_dur // 60
     m = night_dur % 60
-    return f"{h} ঘণ্টা {m} মিনিট"
+    return names['ratriman_unit'].format(h=h, m=m)
 
 
-def get_jata_danda(birth_time_str: str, sunrise_str: str) -> str:
+def get_jata_danda(birth_time_str: str, sunrise_str: str, lang: str = 'as') -> str:
     """
     Calculate Jata Danda (জাতদণ্ড) - time elapsed since sunrise in danda/pala.
     1 danda = 24 minutes, 1 pala = 24 seconds
     """
+    names = get_panchanga_names_i18n(lang)
     try:
         bt_h, bt_m = map(int, birth_time_str.split(":"))
         sr_h, sr_m = map(int, sunrise_str.split(":"))
@@ -412,13 +384,17 @@ def get_jata_danda(birth_time_str: str, sunrise_str: str) -> str:
         danda = elapsed // 24
         remaining_min = elapsed % 24
         pala = remaining_min * 60 // 24
-        return f"{danda} দণ্ড {pala} পল"
+        return names['jata_danda_unit'].format(d=danda, p=pala)
     except:
-        return "0 দণ্ড 0 পল"
+        return names['jata_danda_unit'].format(d=0, p=0)
 
 
-def get_nakshatra_attributes(nak_idx: int) -> dict:
+def get_nakshatra_attributes(nak_idx: int, lang: str = 'as') -> dict:
     """Get Varna, Gana, Yoni, Nadi for a given nakshatra index (0-26)"""
+    names = get_panchanga_names_i18n(lang)
+    VARNA_NAMES = names['VARNA_NAMES']
+    GANA_NAMES = names['GANA_NAMES']
+    NADI_NAMES = names['NADI_NAMES']
     if nak_idx < 0 or nak_idx > 26:
         nak_idx = 0
     return {
@@ -429,43 +405,46 @@ def get_nakshatra_attributes(nak_idx: int) -> dict:
     }
 
 
-def get_rashi_lord(rashi_index: int) -> str:
+def get_rashi_lord(rashi_index: int, lang: str = 'as') -> str:
     """Get the lord of a rashi (0-11)"""
+    names = get_panchanga_names_i18n(lang)
+    RASHI_LORDS = names['RASHI_LORDS']
     if rashi_index < 0 or rashi_index > 11:
         return ""
     return RASHI_LORDS[rashi_index]
 
 
-def get_full_panchanga(dt: datetime, lat: float, lon: float, tz_offset: float = 5.5) -> dict:
+def get_full_panchanga(dt: datetime, lat: float, lon: float, tz_offset: float = 5.5, lang: str = 'as') -> dict:
     """
     Calculate complete Panchanga for a given datetime and location.
     Returns all five limbs + additional Muhurta info + nakshatra attributes.
     tz_offset: timezone offset from UTC in hours (e.g., 5.5 for IST)
+    lang: language code ('as', 'bn', 'hi', 'en')
     """
     jd = get_julian_day(dt)
     sun_lon, moon_lon = calculate_sun_moon(jd)
 
-    tithi = calculate_tithi(sun_lon, moon_lon)
-    nakshatra = calculate_nakshatra(moon_lon)
-    yoga = calculate_yoga(sun_lon, moon_lon)
-    karana = calculate_karana(tithi["index"], tithi["remaining_pct"])
-    vaar = calculate_vaar(jd)
-    ritu = calculate_ritu(sun_lon)
-    masa = calculate_masa(sun_lon)
+    tithi = calculate_tithi(sun_lon, moon_lon, lang)
+    nakshatra = calculate_nakshatra(moon_lon, lang)
+    yoga = calculate_yoga(sun_lon, moon_lon, lang)
+    karana = calculate_karana(tithi["index"], tithi["remaining_pct"], lang)
+    vaar = calculate_vaar(jd, lang)
+    ritu = calculate_ritu(sun_lon, lang)
+    masa = calculate_masa(sun_lon, lang)
     ayanamsa = calculate_ayanamsa(jd)
 
     sunrise = calculate_sunrise(jd, lat, lon, tz_offset)
     sunset = calculate_sunset(jd, lat, lon, tz_offset)
 
     # Nakshatra attributes
-    nak_attrs = get_nakshatra_attributes(nakshatra["index"])
+    nak_attrs = get_nakshatra_attributes(nakshatra["index"], lang)
 
     # Day/Night duration
-    divaman = get_divaman(sunrise, sunset)
-    ratriman = get_ratriman(sunrise, sunset)
+    divaman = get_divaman(sunrise, sunset, lang)
+    ratriman = get_ratriman(sunrise, sunset, lang)
 
     # Jata Danda
-    jata_danda = get_jata_danda(dt.strftime("%H:%M"), sunrise)
+    jata_danda = get_jata_danda(dt.strftime("%H:%M"), sunrise, lang)
 
     return {
         "tithi": tithi,
@@ -484,9 +463,9 @@ def get_full_panchanga(dt: datetime, lat: float, lon: float, tz_offset: float = 
         "gulika_kalam": get_gulika_kalam(sunrise, sunset, vaar["index"]),
         "abhijit_muhurta": get_abhijit_muhurta(sunrise, sunset),
         "yama_kaal": get_yama_kaal(sunrise, sunset, vaar["index"]),
-        "kaal_bela": get_kaal_bela(sunrise, sunset, vaar["index"]),
+        "kaal_bela": get_kaal_bela(sunrise, sunset, vaar["index"], lang),
         "rar_bela": get_rar_bela(sunrise, sunset, vaar["index"]),
-        "bara_bela": get_bara_bela(sunrise, sunset, vaar["index"]),
+        "bara_bela": get_bara_bela(sunrise, sunset, vaar["index"], lang),
         "divaman": divaman,
         "ratriman": ratriman,
         "jata_danda": jata_danda,
