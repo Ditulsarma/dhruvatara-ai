@@ -214,11 +214,34 @@ def _build_jotok_html(result: dict, boy: dict, girl: dict,
             </div>"""
 
     # ─── Nadi/Bhakoot warnings ───
+    # NOTE: Default values that contain HTML/backslashes must be pulled out
+    # to plain variables — pre-3.12 Python forbids backslashes inside
+    # f-string expression parts, so the default literal `'...<br>\n...'`
+    # would raise `SyntaxError: f-string expression part cannot include
+    # a backslash` on the deployed server. Define the strings here, then
+    # reference them by name in the f-string below.
+    nadi_warning_text = L.get(
+        "pdf_nadi_warning",
+        "⚠️ <b>নাড়ী দোষ</b> উপস্থিত — নাড়ী দোষ নিবাৰণ নকৰাকৈ বিবাহ পৰামৰ্শিত নহয়।",
+    )
+    bhakoot_warning_text = L.get(
+        "pdf_bhakoot_warning",
+        "⚠️ <b>ভকূট দোষ</b> উপস্থিত — পাৰিবাৰিক কল্যাণৰ বাবে প্ৰতিকাৰ কৰক।",
+    )
     warnings_html = ""
     if result.get('has_nadi_dosha'):
-        warnings_html += f'<div class="warning-box">{L.get("pdf_nadi_warning", "⚠️ <b>নাড়ী দোষ</b> উপস্থিত — নাড়ী দোষ নিবাৰণ নকৰাকৈ বিবাহ পৰামৰ্শিত নহয়।")}</div>'
+        warnings_html += f'<div class="warning-box">{nadi_warning_text}</div>'
     if result.get('has_bhakoot_dosha'):
-        warnings_html += f'<div class="warning-box">{L.get("pdf_bhakoot_warning", "⚠️ <b>ভকূট দোষ</b> উপস্থিত — পাৰিবাৰিক কল্যাণৰ বাবে প্ৰতিকাৰ কৰক।")}</div>'
+        warnings_html += f'<div class="warning-box">{bhakoot_warning_text}</div>'
+
+    # ─── Conclusion blessing ───
+    # Defined outside the f-string so the embedded \n / <br> in the default
+    # value don't violate the pre-3.12 "no backslash in f-string expression"
+    # rule. See the warnings block above for the same reasoning.
+    pdf_blessing_text = L.get(
+        'pdf_blessing',
+        "✨ ঈশ্বৰে আপোনালোকৰ দাম্পত্য জীৱন সুখময়, সমৃদ্ধিশালী আৰু দীৰ্ঘস্থায়ী কৰি তোলক।<br>\n        শুভম ভৱতু। 🙏",
+    )
 
     # ═══════════════════════════════════════════════════════════════
     # FULL HTML
@@ -466,7 +489,7 @@ def _build_jotok_html(result: dict, boy: dict, girl: dict,
         <p>{verdict_desc}</p>
     </div>
     <div class="blessing">
-        {L.get('pdf_blessing', '✨ ঈশ্বৰে আপোনালোকৰ দাম্পত্য জীৱন সুখময়, সমৃদ্ধিশালী আৰু দীৰ্ঘস্থায়ী কৰি তোলক।<br>\n        শুভম ভৱতু। 🙏')}
+        {pdf_blessing_text}
     </div>
 </div>
 
