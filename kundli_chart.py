@@ -50,48 +50,122 @@ ASC_HIGHLIGHT = "#FF6600"
 # FONT LOADING
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def _find_font_path() -> str:
-    """Find best Assamese/Bengali font. kalpurush first."""
-    candidates = [
-        os.path.join(_FONTS_DIR, "kalpurush.ttf"),
-        os.path.join(_FONTS_DIR, "NotoSansBengali-Regular.ttf"),
-        os.path.join(_FONTS_DIR, "NotoSansBengali-Bold.ttf"),
-        "C:/Windows/Fonts/kalpurush.ttf",
-        "C:/Windows/Fonts/Nirmala.ttf",
-        "C:/Windows/Fonts/Siyamrupali.ttf",
-        "/usr/share/fonts/truetype/noto/NotoSansBengali-Regular.ttf",
-        "/usr/share/fonts/noto/NotoSansBengali-Regular.ttf",
+def _find_font_path(lang: str = "as") -> str:
+    """Find the best font for the given language.
+
+    Each language has its own primary font family because Bengali and
+    Devanagari scripts use different code-point ranges — a single font
+    that ships one script cannot render the other.
+
+    For 'hi' (Hindi / Devanagari) we look for Nirmala, Mangal, Lohit,
+    NotoSansDevanagari, etc., in that order.
+    For 'bn' and 'as' (Bengali / Assamese) we look for kalpurush and
+    NotoSansBengali first.
+    For 'en' (Latin) we prefer NotoSans, Arial, DejaVuSans.
+    A Unicode-capable font is always appended as a last-resort fallback
+    so unknown scripts at least don't show as boxes.
+    """
+    # Per-language primary font filenames (regular weight).
+    # The first one that exists wins.
+    if lang == "hi":
+        primary = [
+            os.path.join(_FONTS_DIR, "Nirmala.ttf"),
+            os.path.join(_FONTS_DIR, "NotoSansDevanagari-Regular.ttf"),
+            os.path.join(_FONTS_DIR, "Mangal.ttf"),
+            os.path.join(_FONTS_DIR, "Lohit-Devanagari.ttf"),
+            "C:/Windows/Fonts/Nirmala.ttf",
+            "C:/Windows/Fonts/Mangal.ttf",
+            "C:/Windows/Fonts/MangalB.ttf",
+            "C:/Windows/Fonts/NirmalaB.ttf",
+            "C:/Windows/Fonts/Aparajita.ttf",
+            "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf",
+            "/usr/share/fonts/noto/NotoSansDevanagari-Regular.ttf",
+            "/usr/share/fonts/truetype/lohit-devanagari/Lohit-Devanagari.ttf",
+        ]
+    elif lang == "en":
+        primary = [
+            os.path.join(_FONTS_DIR, "NotoSans-Regular.ttf"),
+            os.path.join(_FONTS_DIR, "DejaVuSans.ttf"),
+            "C:/Windows/Fonts/arial.ttf",
+            "C:/Windows/Fonts/segoeui.ttf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        ]
+    else:  # 'as', 'bn', and any other Bengali/Assamese variant
+        primary = [
+            os.path.join(_FONTS_DIR, "kalpurush.ttf"),
+            os.path.join(_FONTS_DIR, "NotoSansBengali-Regular.ttf"),
+            os.path.join(_FONTS_DIR, "NotoSansBengali-Bold.ttf"),
+            "C:/Windows/Fonts/kalpurush.ttf",
+            "C:/Windows/Fonts/Nirmala.ttf",  # Nirmala also has Bengali glyphs
+            "C:/Windows/Fonts/Siyamrupali.ttf",
+            "C:/Windows/Fonts/SiyamRupali.ttf",
+            "/usr/share/fonts/truetype/noto/NotoSansBengali-Regular.ttf",
+            "/usr/share/fonts/noto/NotoSansBengali-Regular.ttf",
+            "/usr/share/fonts/truetype/lohit-bengali/Lohit-Bengali.ttf",
+        ]
+    for path in primary:
+        if os.path.exists(path):
+            return path
+    # Final fallback — Unicode-capable system font.
+    final_fallback = [
+        "C:/Windows/Fonts/arial.ttf",
         "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "arial.ttf" if os.name == "nt" else "DejaVuSans.ttf",
     ]
-    for path in candidates:
+    for path in final_fallback:
         if os.path.exists(path):
             return path
     return None
 
-def _find_bold_font_path() -> str:
-    """Find best bold Assamese/Bengali font for planet text."""
-    candidates = [
-        os.path.join(_FONTS_DIR, "NotoSansBengali-Bold.ttf"),
-        os.path.join(_FONTS_DIR, "NirmalaB.ttf"),
-        os.path.join(_FONTS_DIR, "kalpurush.ttf"),  # fallback
-        "C:/Windows/Fonts/NirmalaB.ttf",
-        "C:/Windows/Fonts/NotoSansBengali-Bold.ttf",
-        "C:/Windows/Fonts/kalpurush.ttf",
-        "/usr/share/fonts/truetype/noto/NotoSansBengali-Bold.ttf",
-        "/usr/share/fonts/noto/NotoSansBengali-Bold.ttf",
-    ]
-    for path in candidates:
+
+def _find_bold_font_path(lang: str = "as") -> str:
+    """Find the best bold font for the given language."""
+    if lang == "hi":
+        primary = [
+            os.path.join(_FONTS_DIR, "NirmalaB.ttf"),
+            os.path.join(_FONTS_DIR, "NotoSansDevanagari-Bold.ttf"),
+            os.path.join(_FONTS_DIR, "MangalB.ttf"),
+            "C:/Windows/Fonts/NirmalaB.ttf",
+            "C:/Windows/Fonts/MangalB.ttf",
+            "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Bold.ttf",
+        ]
+    elif lang == "en":
+        primary = [
+            os.path.join(_FONTS_DIR, "NotoSans-Bold.ttf"),
+            os.path.join(_FONTS_DIR, "DejaVuSans-Bold.ttf"),
+            "C:/Windows/Fonts/arialbd.ttf",
+            "C:/Windows/Fonts/segoeuib.ttf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        ]
+    else:
+        primary = [
+            os.path.join(_FONTS_DIR, "NotoSansBengali-Bold.ttf"),
+            os.path.join(_FONTS_DIR, "NirmalaB.ttf"),
+            os.path.join(_FONTS_DIR, "kalpurush.ttf"),  # fallback
+            "C:/Windows/Fonts/NirmalaB.ttf",
+            "C:/Windows/Fonts/NotoSansBengali-Bold.ttf",
+            "C:/Windows/Fonts/kalpurush.ttf",
+            "/usr/share/fonts/truetype/noto/NotoSansBengali-Bold.ttf",
+            "/usr/share/fonts/noto/NotoSansBengali-Bold.ttf",
+        ]
+    for path in primary:
         if os.path.exists(path):
             return path
-    return _find_font_path()  # ultimate fallback
+    return _find_font_path(lang)
 
-def _load_fonts(scale=1.0):
+
+def _load_fonts(scale=1.0, lang: str = "as"):
     """Load all needed font sizes, scaled by chart size factor.
-    Planet fonts use bold variant for better readability in small charts."""
-    font_path = _find_font_path()
+
+    `lang` controls which font family is selected so that the chart
+    renders the target script (Assamese/Bengali vs Devanagari vs Latin)
+    without showing boxes for unsupported glyphs.
+    """
+    font_path = _find_font_path(lang)
     if font_path is None:
         font_path = "arial.ttf" if os.name == "nt" else "DejaVuSans.ttf"
-    bold_path = _find_bold_font_path()
+    bold_path = _find_bold_font_path(lang)
 
     def _fs(base):
         return max(8, int(base * scale))
@@ -299,15 +373,15 @@ def _draw_south_indian_chart(draw, W, H, ascendant_index, planet_data, fonts, sc
         (X0 + 1.5 * cell, Y0 + 0.5 * cell),  # 0: Aries
         (X0 + 2.5 * cell, Y0 + 0.5 * cell),  # 1: Taurus
         (X0 + 3.5 * cell, Y0 + 0.5 * cell),  # 2: Gemini
-        (X0 + 3.5 * cell, Y0 + 1.5 * cell),  # 3: Cancer 
-        (X0 + 3.5 * cell, Y0 + 2.5 * cell),  # 4: Leo 
-        (X0 + 3.5 * cell, Y0 + 3.5 * cell),  # 5: Virgo 
-        (X0 + 2.5 * cell, Y0 + 3.5 * cell),  # 6: Libra 
-        (X0 + 1.5 * cell, Y0 + 3.5 * cell),  # 7: Scorpio 
-        (X0 + 0.5 * cell, Y0 + 3.5 * cell),  # 8: Sagittarius 
-        (X0 + 0.5 * cell, Y0 + 2.5 * cell),  # 9: Capricorn 
-        (X0 + 0.5 * cell, Y0 + 1.5 * cell),  # 10: Aquarius 
-        (X0 + 0.5 * cell, Y0 + 0.5 * cell),  # 11: Pisces 
+        (X0 + 3.5 * cell, Y0 + 1.5 * cell),  # 3: Cancer
+        (X0 + 3.5 * cell, Y0 + 2.5 * cell),  # 4: Leo
+        (X0 + 3.5 * cell, Y0 + 3.5 * cell),  # 5: Virgo
+        (X0 + 2.5 * cell, Y0 + 3.5 * cell),  # 6: Libra
+        (X0 + 1.5 * cell, Y0 + 3.5 * cell),  # 7: Scorpio
+        (X0 + 0.5 * cell, Y0 + 3.5 * cell),  # 8: Sagittarius
+        (X0 + 0.5 * cell, Y0 + 2.5 * cell),  # 9: Capricorn
+        (X0 + 0.5 * cell, Y0 + 1.5 * cell),  # 10: Aquarius
+        (X0 + 0.5 * cell, Y0 + 0.5 * cell),  # 11: Pisces
     ]
 
     for rasi_idx, (cx, cy) in enumerate(houses):
@@ -320,12 +394,13 @@ def _draw_south_indian_chart(draw, W, H, ascendant_index, planet_data, fonts, sc
             )
             _draw_text_centered(draw, (cx, cy - 22), "", fonts["planet_sm"], ASC_HIGHLIGHT)
 
-        # Print Text Name of Rasi (মেষ, বৃষ, etc)
-        _draw_text_centered(draw, (cx, cy - 8), RASI_NAMES[rasi_idx], fonts["rasi_sm"], RASI_COLOR)
-        
+        # Print Text Name of Rasi — use the translated rasi_names passed in
+        # so Hindi / Bengali / English labels are honored.
+        _draw_text_centered(draw, (cx, cy - 8), rasi_names[rasi_idx], fonts["rasi_sm"], RASI_COLOR)
+
         # Planets
         if rasi_idx in planet_data and planet_data[rasi_idx]:
-            planet_names = [PLANET_SHORT_DISPLAY.get(p, p) for p in planet_data[rasi_idx]]
+            planet_names = [planet_short.get(p, p) for p in planet_data[rasi_idx]]
             _draw_text_centered_multi(draw, cx, cy + 16, planet_names, fonts["planet_sm"], PLANET_COLOR, line_spacing=2)
 
 
@@ -363,7 +438,7 @@ def draw_kundli_chart(
     # Scale fonts and geometry proportionally to chart size (reference: 700px)
     ref = 700.0
     scale = min(width, height) / ref
-    fonts = _load_fonts(scale)
+    fonts = _load_fonts(scale, lang)
     title_h = int(50 * scale) if title else 0
     img = Image.new("RGB", (width, height + title_h), BG_COLOR)
     draw = ImageDraw.Draw(img)
@@ -417,7 +492,7 @@ def draw_all_styles(
 
     ref = 700.0
     scale = min(chart_w, chart_h) / ref
-    fonts = _load_fonts(scale)
+    fonts = _load_fonts(scale, lang)
 
     # Create the main wide canvas
     img = Image.new("RGB", (width, height), BG_COLOR)

@@ -60,6 +60,19 @@ def _svg_chart(chart_data: dict, size: int = 400, title: str = "", show_rasi_nam
     pnames = get_panchanga_names_i18n(lang)
     rasi_names = pnames['RASHI_NAMES']
 
+    # Pick a font-family list appropriate to the language so that the
+    # browser / PDF rasterizer uses a font that has the required glyphs.
+    # Devanagari (Hindi) and Bengali live in different Unicode blocks, so
+    # the same primary font cannot render both.
+    if lang == 'hi':
+        font_family = "Nirmala UI, Mangal, Noto Sans Devanagari, Lohit Devanagari, sans-serif"
+    elif lang == 'bn':
+        font_family = "Noto Sans Bengali, SiyamRupali, Kalpurush, sans-serif"
+    elif lang == 'en':
+        font_family = "Noto Sans, Arial, Helvetica, sans-serif"
+    else:  # 'as' and any other default
+        font_family = "Noto Sans Bengali, Kalpurush, Nirmala UI, sans-serif"
+
     S = size
     # Use a 4x4 grid. Each cell is S/4 x S/4.
     # Grid positions (row, col) for each rasi:
@@ -107,7 +120,7 @@ def _svg_chart(chart_data: dict, size: int = 400, title: str = "", show_rasi_nam
         rasi_fs = S * 0.028
         rasi_y = cy + rasi_fs + 2
         if show_rasi_names:
-            svg += f'<text x="{cx + C/2}" y="{rasi_y}" text-anchor="middle" font-size="{rasi_fs}" fill="#7f8c8d" font-family="Noto Sans Bengali, Nirmala UI, sans-serif">{rasi_names[ri]}</text>'
+            svg += f'<text x="{cx + C/2}" y="{rasi_y}" text-anchor="middle" font-size="{rasi_fs}" fill="#7f8c8d" font-family="{font_family}">{rasi_names[ri]}</text>'
 
         # Planets - use foreignObject for proper multi-line centering
         if planets:
@@ -127,10 +140,10 @@ def _svg_chart(chart_data: dict, size: int = 400, title: str = "", show_rasi_nam
             
             for pi, p in enumerate(planets):
                 py = block_start_y + pi * p_line_h + p_fs * 0.75
-                svg += f'<text x="{cx + C/2}" y="{py}" text-anchor="middle" font-size="{p_fs}" fill="#1a237e" font-weight="800" font-family="Noto Sans Bengali, Nirmala UI, sans-serif">{p}</text>'
+                svg += f'<text x="{cx + C/2}" y="{py}" text-anchor="middle" font-size="{p_fs}" fill="#1a237e" font-weight="800" font-family="{font_family}">{p}</text>'
 
     if title:
-        svg += f'<text x="{S/2}" y="{S - 4}" text-anchor="middle" font-size="{S*0.03}" fill="#FF6600" font-weight="bold" font-family="Noto Sans Bengali, Nirmala UI, sans-serif">{title}</text>'
+        svg += f'<text x="{S/2}" y="{S - 4}" text-anchor="middle" font-size="{S*0.03}" fill="#FF6600" font-weight="bold" font-family="{font_family}">{title}</text>'
     svg += '</svg>'
     return svg
 
