@@ -271,7 +271,7 @@
     </div>
 
     <script>
-        // ─── Inactivity Auto-Logout (Free users: 1 minute) ────────
+        // ─── Inactivity Auto-Logout (Free users: 3 minutes) ────────
         const isFreeUser = {{ 'true' if subscription.id == 1 else 'false' }};
         let lastActivityTime = Date.now();
         let inactivityCheckInterval = null;

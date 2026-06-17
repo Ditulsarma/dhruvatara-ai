@@ -2719,7 +2719,10 @@ def logout():
 
 @app.route("/api/heartbeat", methods=["POST"])
 def api_heartbeat():
-    """Heartbeat endpoint to track user activity. Returns auto-logout signal if inactive > 1 min."""
+    """Heartbeat endpoint to track user activity. Returns auto-logout signal if inactive > 3 min (free users only)."""
+    # Free-user inactivity timeout (in seconds). Pro users have no inactivity limit.
+    FREE_USER_INACTIVITY_LIMIT_SECONDS = 180  # 3 minutes
+
     if 'user_id' not in session:
         return jsonify({"logged_in": False, "auto_logout": True}), 401
 
@@ -2727,15 +2730,16 @@ def api_heartbeat():
     data = request.get_json(silent=True) or {}
     last_activity = data.get('last_activity', 0)  # seconds since last activity
 
-    # If inactive for more than 60 seconds, signal auto-logout for free users
+    # If inactive for more than the free-user limit, signal auto-logout for free users only.
+    # Pro users (subscription_id > 1) are never auto-logged out for inactivity.
     sub_id = session.get('subscription_id', 1)
-    if sub_id == 1 and last_activity > 60:
+    if sub_id == 1 and last_activity > FREE_USER_INACTIVITY_LIMIT_SECONDS:
         end_all_user_sessions(user_id)
         session.clear()
         return jsonify({
             "logged_in": False,
             "auto_logout": True,
-            "message": "আপুনি ১ মিনিটতকৈ বেছি সময় নিষ্ক্ৰিয় আছিল। বিনামূলীয়া ব্যৱহাৰকাৰীৰ বাবে চেচন স্বয়ংক্ৰিয়ভাৱে বন্ধ কৰা হ'ল।"
+            "message": "আপুনি ৩ মিনিটতকৈ বেছি সময় নিষ্ক্ৰিয় আছিল। বিনামূলীয়া ব্যৱহাৰকাৰীৰ বাবে চেচন স্বয়ংক্ৰিয়ভাৱে বন্ধ কৰা হ'ল।"
         })
 
     return jsonify({"logged_in": True, "auto_logout": False})
