@@ -66,6 +66,7 @@ from graha_bichar import get_all_graha_bichar, get_graha_bichar_html
 from kundli_chart import draw_kundli_chart, draw_all_styles
 from patrika import generate_patrika_text
 from kartari_dosha import generate_kartari_report
+from graha_maitri import get_all_maitri_data
 from jotok_milan_engine import get_complete_jotok_milan, get_koota_name_asm, get_koota_icon
 from jotok_milan_pdf import generate_jotok_milan_pdf
 from small_antardasaphal import get_antardasha_phala, get_all_antardasha_phala_for_pdf
@@ -1589,6 +1590,44 @@ def api_kartari_report():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
+
+# ═══════════════════════════════════════════
+#  GRAHA MAITRI (Planetary Friendship)
+# ═══════════════════════════════════════════
+
+@app.route("/graha-maitri")
+@login_required
+def graha_maitri_page():
+    """Graha Maitri page - shows planetary friendship charts."""
+    lang = get_current_language()
+    user_features = get_user_features(session['user_id'])
+    feature_defs = get_all_feature_definitions()
+    
+    return render_template("graha_maitri.html",
+                           lang=lang,
+                           user_features=user_features,
+                           feature_defs=feature_defs,
+                           user_sub_info=get_user_sub_info(session['user_id']))
+
+
+@app.route("/api/graha-maitri", methods=["POST"])
+@login_required
+def api_graha_maitri():
+    """API endpoint to calculate Graha Maitri from planet house positions."""
+    try:
+        data = request.get_json(silent=True) or {}
+        planet_houses = data.get('planet_houses', {})
+        lang = data.get('lang', get_current_language())
+        
+        if not planet_houses:
+            return jsonify({'success': False, 'message': 'Planet house data missing.'}), 400
+        
+        maitri_data = get_all_maitri_data(planet_houses, lang)
+        return jsonify({'success': True, 'data': maitri_data})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
 @app.route("/generate-patrika", methods=["POST"])
 def generate_patrika():
     """Generate patrika text from form data."""
@@ -2832,7 +2871,7 @@ def user_dashboard():
         "lagna_phala": "🌅", "rashi_phala": "♈", "sannari_chakra": "🔄",
         "navatara_chakra": "🌐", "tripap_rista": "⚡", "custom_pdf": "📑",
         "numerology": "🔢", "numerology_chat": "💬", "numerology_pdf": "📋",
-        "numerology_varsha": "📅"
+        "numerology_varsha": "📅", "graha_maitri": "🤝"
     }
 
     return render_template("user_dashboard.html",

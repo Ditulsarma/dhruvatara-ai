@@ -1462,6 +1462,86 @@ TRANSLATIONS = {
         "en": "You were inactive for more than 3 minutes. Session automatically closed for free users."
     },
 
+    # ─── Graha Maitri (Planetary Friendship) ───
+    "graha_maitri_title": {
+        "as": "গ্ৰহ মৈত্ৰী",
+        "bn": "গ্রহ মৈত্রী",
+        "hi": "ग्रह मैत्री",
+        "en": "Graha Maitri"
+    },
+    "graha_maitri_subtitle": {
+        "as": "গ্ৰহৰ নৈসৰ্গিক, তাৎকালীন আৰু পঞ্চধা মৈত্ৰী",
+        "bn": "গ্রহের নৈসর্গিক, তাৎকালীন ও পঞ্চধা মৈত্রী",
+        "hi": "ग्रहों की नैसर्गिक, तात्कालिक और पंचधा मैत्री",
+        "en": "Natural, Temporary & Five-fold Planetary Friendship"
+    },
+    "maitri_naisargik": {
+        "as": "নৈসৰ্গিক মৈত্ৰী চক্ৰ",
+        "bn": "নৈসর্গিক মৈত্রী চক্র",
+        "hi": "नैसर्गिक मैत्री चक्र",
+        "en": "Natural Friendship Chart"
+    },
+    "maitri_tatkalin": {
+        "as": "তাৎকালীন মৈত্ৰী চক্ৰ",
+        "bn": "তাৎকালীন মৈত্রী চক্র",
+        "hi": "तात्कालिक मैत्री चक्र",
+        "en": "Temporary Friendship Chart"
+    },
+    "maitri_panchadha": {
+        "as": "পঞ্চধা মৈত্ৰী চক্ৰ",
+        "bn": "পঞ্চধা মৈত্রী চক্র",
+        "hi": "पंचधा मैत्री चक्र",
+        "en": "Five-fold Friendship Chart"
+    },
+    "maitri_mitra": {
+        "as": "মিত্ৰ",
+        "bn": "মিত্র",
+        "hi": "मित्र",
+        "en": "Friend"
+    },
+    "maitri_shatru": {
+        "as": "শত্ৰু",
+        "bn": "শত্রু",
+        "hi": "शत्रु",
+        "en": "Enemy"
+    },
+    "maitri_sam": {
+        "as": "সম",
+        "bn": "সম",
+        "hi": "सम",
+        "en": "Neutral"
+    },
+    "maitri_adhimitra": {
+        "as": "অতিমিত্ৰ",
+        "bn": "অতিমিত্র",
+        "hi": "अतिमित्र",
+        "en": "Very Good Friend"
+    },
+    "maitri_adhishatru": {
+        "as": "অতিশত্ৰু",
+        "bn": "অতিশত্রু",
+        "hi": "अतिशत्रु",
+        "en": "Bitter Enemy"
+    },
+    "maitri_house_position": {
+        "as": "গৃহ স্থান",
+        "bn": "গৃহ স্থান",
+        "hi": "गृह स्थान",
+        "en": "House Position"
+    },
+    "maitri_legend": {
+        "as": "ৰং নিৰ্দেশিকা",
+        "bn": "রং নির্দেশিকা",
+        "hi": "रंग निर्देशिका",
+        "en": "Color Legend"
+    },
+    "maitri_no_data": {
+        "as": "গ্ৰহ মৈত্ৰী গণনা কৰিবলৈ কুণ্ডলীৰ প্ৰয়োজন। অনুগ্ৰহ কৰি প্ৰথমে কুণ্ডলী প্ৰস্তুত কৰক।",
+        "bn": "গ্রহ মৈত্রী গণনা করতে কুণ্ডলীর প্রয়োজন। অনুগ্রহ করে প্রথমে কুণ্ডলী প্রস্তুত করুন।",
+        "hi": "ग्रह मैत्री की गणना के लिए कुंडली आवश्यक है। कृपया पहले कुंडली तैयार करें।",
+        "en": "A Kundli is required to calculate Graha Maitri. Please generate a Kundli first."
+    },
+
     # ─── Language Names ───
     "lang_as": {
         "as": "অসমীয়া",

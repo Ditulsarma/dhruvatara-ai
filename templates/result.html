@@ -951,6 +951,7 @@
         <button class="btn-sm btn-fill" onclick="toggleBirthDetails()" id="btnBirthDetails" style="background:var(--deep-blue);">{{ _('btn_birth_details') }}</button>
         <button class="btn-sm btn-fill" onclick="togglePatrika()" id="btnPatrika" style="background:var(--green);">{{ _('btn_patrika') }}</button>
         <button class="btn-sm btn-fill" onclick="openKartariModal()" style="background:#5B3E96;">{{ _('btn_kartari') }}</button>
+        <button class="btn-sm btn-fill" onclick="openGrahaMaitri()" style="background:#00897B;">🤝 {{ _('graha_maitri_title') }}</button>
         <button class="btn-sm btn-fill" onclick="openChatFromResult()" style="background:var(--purple);">{{ _('btn_ai_chat') }}</button>
     </div>
 </nav>
@@ -2748,6 +2749,13 @@
     function closeKartariModal() {
         document.getElementById('kartariModal').classList.remove('show');
         document.body.style.overflow = '';
+    }
+
+    // ─── Graha Maitri ───
+    function openGrahaMaitri() {
+        // Store planet houses in sessionStorage for the graha-maitri page
+        sessionStorage.setItem('graha_maitri_planet_houses', JSON.stringify(planetHouses));
+        window.location.href = '/graha-maitri';
     }
 
     // ─── Upgrade Plans Modal ───

@@ -228,6 +228,14 @@
                             <div class="f-desc">{{ f.description }}</div>
                         </div>
                     </a>
+                    {% elif f.feature_key == 'graha_maitri' %}
+                    <a href="/graha-maitri" class="feature-card">
+                        <div class="f-icon">{{ feature_icons.get(f.feature_key, '✨') }}</div>
+                        <div class="f-info">
+                            <div class="f-name">{{ f.feature_name_asm }}</div>
+                            <div class="f-desc">{{ f.description }}</div>
+                        </div>
+                    </a>
                     {% elif f.feature_key in ['numerology_chat', 'numerology_pdf', 'numerology_varsha'] %}
                     <!-- Skip sub-features, they're accessed from within numerology page -->
                     {% else %}
