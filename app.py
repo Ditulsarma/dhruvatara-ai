@@ -67,6 +67,7 @@ from kundli_chart import draw_kundli_chart, draw_all_styles
 from patrika import generate_patrika_text
 from kartari_dosha import generate_kartari_report
 from graha_maitri import get_all_maitri_data, build_graha_maitri_pdf_html
+from ratna_engine import get_ratna_data, build_ratna_html
 from jotok_milan_engine import get_complete_jotok_milan, get_koota_name_asm, get_koota_icon
 from jotok_milan_pdf import generate_jotok_milan_pdf
 from small_antardasaphal import get_antardasha_phala, get_all_antardasha_phala_for_pdf
@@ -1517,6 +1518,11 @@ def download_pdf():
             dasa_hierarchy, gender=gender, lang=lang
         )
 
+        # Build pratyantar dasha phala HTML (today onward, current antardasha only)
+        pratyantar_dasha_html = build_pratyantar_dasha_html(
+            dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx, gender=gender, lang=lang
+        )
+
         # Apply gender to AI interpretation
         ai_interpretation = apply_gender(ai_interpretation, gender)
 
@@ -1552,6 +1558,12 @@ def download_pdf():
         # Graha Maitri for PDF
         graha_maitri_html = build_graha_maitri_pdf_html(planet_houses, lang)
 
+        # Kartari Yoga for PDF (Subh Kartari / Paap Kartari)
+        kartari_html = generate_kartari_report(planet_houses, lang)
+
+        # Ratna (Gemstones) for PDF
+        ratna_html = build_ratna_html(asc_rasi_idx, lang)
+
         pdf_bytes = generate_pdf_report(
             name, dob, tob, place, planets_data, panchanga,
             dosha_results, yoga_results, dasa_hierarchy, ai_interpretation,
@@ -1566,7 +1578,10 @@ def download_pdf():
             moon_rasi=moon_rasi, gender=gender,
             astrologer_profile=astrologer_profile,
             patrika_text=patrika_text,
+            pratyantar_dasha_html=pratyantar_dasha_html,
             graha_maitri_html=graha_maitri_html,
+            kartari_html=kartari_html,
+            ratna_html=ratna_html,
             lang=lang
         )
 
@@ -1589,7 +1604,8 @@ def api_kartari_report():
             planet_houses = json.loads(planet_houses)
         if not planet_houses:
             return jsonify({'success': False, 'message': 'Planet house data missing.'}), 400
-        report = generate_kartari_report(planet_houses)
+        lang = data.get('lang', get_current_language())
+        report = generate_kartari_report(planet_houses, lang)
         return jsonify({'success': True, 'report': report})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
@@ -1606,12 +1622,18 @@ def graha_maitri_page():
     lang = get_current_language()
     user_features = get_user_features(session['user_id'])
     feature_defs = get_all_feature_definitions()
+    sidebar_images = get_images_by_placement('sidebar')
+    footer_images = get_images_by_placement('footer')
+    plans_images = get_images_by_placement('plans')
+    general_images = get_images_by_placement('general')
+    all_footer_images = sidebar_images + footer_images + plans_images + general_images
     
     return render_template("graha_maitri.html",
                            lang=lang,
                            user_features=user_features,
                            feature_defs=feature_defs,
-                           user_sub_info=get_user_sub_info(session['user_id']))
+                           user_sub_info=get_user_sub_info(session['user_id']),
+                           all_footer_images=all_footer_images)
 
 
 @app.route("/api/graha-maitri", methods=["POST"])
@@ -1628,6 +1650,64 @@ def api_graha_maitri():
         
         maitri_data = get_all_maitri_data(planet_houses, lang)
         return jsonify({'success': True, 'data': maitri_data})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+# ═══════════════════════════════════════════
+#  RATNA (Gemstones)
+# ═══════════════════════════════════════════
+
+@app.route("/ratna")
+@login_required
+def ratna_page():
+    """Ratna page - shows gemstone recommendations based on Lagna."""
+    lang = get_current_language()
+    user_features = get_user_features(session['user_id'])
+    feature_defs = get_all_feature_definitions()
+    sidebar_images = get_images_by_placement('sidebar')
+    footer_images = get_images_by_placement('footer')
+    plans_images = get_images_by_placement('plans')
+    general_images = get_images_by_placement('general')
+    all_footer_images = sidebar_images + footer_images + plans_images + general_images
+    
+    # Try to get ascendant rashi from sessionStorage (passed via query param or session)
+    asc_rasi_idx = request.args.get('asc', None)
+    ratna_data = None
+    if asc_rasi_idx is not None:
+        try:
+            asc_rasi_idx = int(asc_rasi_idx)
+            ratna_data = get_ratna_data(asc_rasi_idx, lang)
+        except (ValueError, TypeError):
+            pass
+    
+    return render_template("ratna.html",
+                           lang=lang,
+                           user_features=user_features,
+                           feature_defs=feature_defs,
+                           user_sub_info=get_user_sub_info(session['user_id']),
+                           all_footer_images=all_footer_images,
+                           ratna_data=ratna_data)
+
+
+@app.route("/api/ratna", methods=["POST"])
+@login_required
+def api_ratna():
+    """API endpoint to get Ratna (gemstone) data from ascendant rashi index."""
+    try:
+        data = request.get_json(silent=True) or {}
+        asc_rasi_idx = data.get('asc_rasi_idx', None)
+        lang = data.get('lang', get_current_language())
+        
+        if asc_rasi_idx is None:
+            return jsonify({'success': False, 'message': 'Ascendant rashi index missing.'}), 400
+        
+        asc_rasi_idx = int(asc_rasi_idx)
+        if asc_rasi_idx < 0 or asc_rasi_idx > 11:
+            return jsonify({'success': False, 'message': 'Invalid ascendant rashi index.'}), 400
+        
+        ratna_data = get_ratna_data(asc_rasi_idx, lang)
+        return jsonify({'success': True, 'data': ratna_data})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
@@ -1745,6 +1825,9 @@ def download_patrika_pdf():
         p_sidereal_longitudes = {}
         planet_signs = {}
         planet_houses = {}
+        # [i18n fix] Get planet name map for PDF
+        _pdf_lang = get_current_language()
+        pnames = get_planet_names_i18n(_pdf_lang)
         
         for p_name, p_id in planets_dict.items():
             pos, _ = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
@@ -1858,10 +1941,7 @@ def download_patrika_pdf():
             dasa_hierarchy, gender=gender, lang=lang
         )
 
-        # Build pratyantar dasha phala HTML (today onward, current antardasha only)
-        pratyantar_dasha_html = build_pratyantar_dasha_html(
-            dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx, gender=gender, lang=lang
-        )
+        # NOTE: Pratyantar Dasha Phal NOT included in Patrika PDF
 
         # Dwadash Bhab Phala for PDF (only actual placements) (i18n)
         dwadash_html = get_dwadash_html_i18n(planet_houses=planet_houses, asc_rasi_idx=asc_rasi_idx, lang=lang)
@@ -1871,6 +1951,22 @@ def download_patrika_pdf():
         
         # Graha Maitri for PDF
         graha_maitri_html = build_graha_maitri_pdf_html(planet_houses, lang)
+
+        # Kartari Yoga for PDF (Subh Kartari / Paap Kartari)
+        kartari_html = generate_kartari_report(planet_houses, lang)
+
+        # Ratna (Gemstones) for PDF
+        ratna_html = build_ratna_html(asc_rasi_idx, lang)
+
+        # Patrika PDF excludes pratyantar dasha section
+        patrika_selected_sections = [
+            'planets_table', 'kundli_chart', 'varga_charts', 'panchanga',
+            'shani_sare_sati', 'dosha', 'yoga', 'sannari', 'navatara', 'tripap',
+            'graha_maitri', 'kartari', 'nakshatra_phala', 'lagna_phala',
+            'rashi_phala', 'graha_bichar', 'dwadash_bhab_phala',
+            'dasha_summary', 'dasha_full', 'dasha_predictions', 'antardasha_phala',
+            'ratna', 'ai'
+        ]
         
         pdf_bytes = generate_pdf_report(
             name, dob, tob, place, planets_data, panchanga,
@@ -1882,12 +1978,14 @@ def download_patrika_pdf():
             antardasha_phala_html=antardasha_phala_html,
             dwadash_html=dwadash_html,
             vimsottari_summary=vimsottari_summary,
+            selected_sections=patrika_selected_sections,
             lagna_lord=lagna_lord, moon_rashi_lord=moon_rashi_lord,
             moon_rasi=moon_rasi, gender=gender,
             astrologer_profile=astrologer_profile,
             patrika_text=patrika_text,
-            pratyantar_dasha_html=pratyantar_dasha_html,
             graha_maitri_html=graha_maitri_html,
+            kartari_html=kartari_html,
+            ratna_html=ratna_html,
             lang=lang
         )
         
@@ -2096,6 +2194,12 @@ def download_pratyantar_pdf():
         # Graha Maitri for PDF
         graha_maitri_html = build_graha_maitri_pdf_html(planet_houses, lang)
 
+        # Kartari Yoga for PDF (Subh Kartari / Paap Kartari)
+        kartari_html = generate_kartari_report(planet_houses, lang)
+
+        # Ratna (Gemstones) for PDF
+        ratna_html = build_ratna_html(asc_rasi_idx, lang)
+
         pdf_bytes = generate_pdf_report(
             name, dob, tob, place, planets_data, panchanga,
             dosha_results, yoga_results, dasa_hierarchy, ai_interpretation,
@@ -2112,6 +2216,8 @@ def download_pratyantar_pdf():
             patrika_text=patrika_text,
             pratyantar_dasha_html=pratyantar_dasha_html,
             graha_maitri_html=graha_maitri_html,
+            kartari_html=kartari_html,
+            ratna_html=ratna_html,
             lang=lang
         )
 
@@ -2386,6 +2492,16 @@ def custom_pdf():
         if 'graha_maitri' in selected_sections:
             graha_maitri_html = build_graha_maitri_pdf_html(planet_houses, lang)
 
+        # Kartari Yoga for PDF (only if selected)
+        kartari_html = ""
+        if 'kartari' in selected_sections:
+            kartari_html = generate_kartari_report(planet_houses, lang)
+
+        # Ratna (Gemstones) for PDF (only if selected)
+        ratna_html = ""
+        if 'ratna' in selected_sections:
+            ratna_html = build_ratna_html(asc_rasi_idx, lang)
+
         pdf_bytes = generate_pdf_report(
             name, dob, tob, place, planets_data, panchanga,
             dosha_results, yoga_results, dasa_hierarchy, ai_interpretation,
@@ -2403,6 +2519,8 @@ def custom_pdf():
             patrika_text=patrika_text,
             pratyantar_dasha_html=pratyantar_dasha_html,
             graha_maitri_html=graha_maitri_html,
+            kartari_html=kartari_html,
+            ratna_html=ratna_html,
             lang=lang
         )
 

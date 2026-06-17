@@ -386,6 +386,8 @@ def _build_html(
     patrika_text: str = "",
     pratyantar_dasha_html: str = "",
     graha_maitri_html: str = "",
+    kartari_html: str = "",
+    ratna_html: str = "",
     lang: str = "as"
 ) -> str:
     """Build complete HTML for the PDF report.
@@ -1671,6 +1673,10 @@ def _build_html(
         html += '<div style="page-break-before: always;"></div>'
         html += '<h2 class="section-heading">🤝 ' + t('pdf_graha_maitri_section') + '</h2>' + graha_maitri_html
 
+    if _include('kartari'):
+        html += '<div style="page-break-before: always;"></div>'
+        html += '<h2 class="section-heading">🔮 ' + t('pdf_kartari_section') + '</h2>' + kartari_html
+
     if _include('nakshatra_phala'):
         html += '<h2 class="section-heading">🌟 ' + t('pdf_nakshatra_phala_section') + '</h2>' + nakshatra_phala_html
 
@@ -1715,6 +1721,10 @@ def _build_html(
         html += '<div style="page-break-before: always;"></div>'
         html += '<h2 class="section-heading">🔮 ' + t('pdf_pratyantar_section') + '</h2>'
         html += f'<div style="font-family:{content_font};font-size:8.5pt;line-height:1.6;">' + pratyantar_dasha_html + '</div>'
+
+    if _include('ratna'):
+        html += '<div style="page-break-before: always;"></div>'
+        html += '<h2 class="section-heading">💎 ' + t('pdf_ratna_section') + '</h2>' + ratna_html
 
     if _include('ai'):
         html += ai_html
@@ -1767,6 +1777,8 @@ def generate_pdf_report(
     patrika_text: str = "",
     pratyantar_dasha_html: str = "",
     graha_maitri_html: str = "",
+    kartari_html: str = "",
+    ratna_html: str = "",
     lang: str = "as"
 ) -> bytes:
     """
@@ -1795,6 +1807,8 @@ def generate_pdf_report(
         patrika_text=patrika_text,
         pratyantar_dasha_html=pratyantar_dasha_html,
         graha_maitri_html=graha_maitri_html,
+        kartari_html=kartari_html,
+        ratna_html=ratna_html,
         lang=lang
     )
 

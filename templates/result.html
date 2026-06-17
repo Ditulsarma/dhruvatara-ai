@@ -952,6 +952,7 @@
         <button class="btn-sm btn-fill" onclick="togglePatrika()" id="btnPatrika" style="background:var(--green);">{{ _('btn_patrika') }}</button>
         <button class="btn-sm btn-fill" onclick="openKartariModal()" style="background:#5B3E96;">{{ _('btn_kartari') }}</button>
         <button class="btn-sm btn-fill" onclick="openGrahaMaitri()" style="background:#00897B;">🤝 {{ _('graha_maitri_title') }}</button>
+        <button class="btn-sm btn-fill" onclick="openRatna()" style="background:#E91E63;">{{ _('btn_ratna') }}</button>
         <button class="btn-sm btn-fill" onclick="openChatFromResult()" style="background:var(--purple);">{{ _('btn_ai_chat') }}</button>
     </div>
 </nav>
@@ -1821,6 +1822,9 @@
                 <h4>🤝 গ্ৰহ মৈত্ৰী</h4>
                 <div class="cb-row"><input type="checkbox" name="sections" value="graha_maitri" id="sec_graha_maitri" checked><label for="sec_graha_maitri">গ্ৰহ মৈত্ৰী (নৈসৰ্গিক, তাৎকালীন, পঞ্চধা)</label></div>
 
+                <h4>🔮 কৰ্তৰী যোগ</h4>
+                <div class="cb-row"><input type="checkbox" name="sections" value="kartari" id="sec_kartari" checked><label for="sec_kartari">কৰ্তৰী যোগ (শুভ কৰ্তৰী / পাপ কৰ্তৰী)</label></div>
+
                 <h4>{{ _('cp_group_nakshatra') }}</h4>
                 <div class="cb-row"><input type="checkbox" name="sections" value="nakshatra_phala" id="sec_nakshatra_phala" checked><label for="sec_nakshatra_phala">{{ _('cp_nakshatra') }}</label></div>
 
@@ -1882,6 +1886,9 @@
                         </optgroup>
                     </select>
                 </div>
+
+                <h4>💎 ৰত্ন</h4>
+                <div class="cb-row"><input type="checkbox" name="sections" value="ratna" id="sec_ratna" checked><label for="sec_ratna">ৰত্ন (জীৱন ৰত্ন / পুণ্য ৰত্ন / ভাগ্য ৰত্ন + গ্ৰহৰ অশুভ ফল)</label></div>
 
                 <h4>🤖 AI বিশ্লেষণ</h4>
                 <div class="cb-row"><input type="checkbox" name="sections" value="ai" id="sec_ai" checked><label for="sec_ai">AI বিশ্লেষণ আৰু পৰামৰ্শ</label></div>
@@ -2759,6 +2766,13 @@
         // Store planet houses in sessionStorage for the graha-maitri page
         sessionStorage.setItem('graha_maitri_planet_houses', JSON.stringify(planetHouses));
         window.location.href = '/graha-maitri';
+    }
+
+    // ─── Ratna (Gemstones) ───
+    function openRatna() {
+        // Store ascendant rashi index in sessionStorage for the ratna page
+        sessionStorage.setItem('ratna_asc_rasi_idx', {{ asc_rasi_index }});
+        window.location.href = '/ratna';
     }
 
     // ─── Upgrade Plans Modal ───

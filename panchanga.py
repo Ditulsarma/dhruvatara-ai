@@ -395,12 +395,13 @@ def get_nakshatra_attributes(nak_idx: int, lang: str = 'as') -> dict:
     VARNA_NAMES = names['VARNA_NAMES']
     GANA_NAMES = names['GANA_NAMES']
     NADI_NAMES = names['NADI_NAMES']
+    YONI_NAMES = names.get('YONI_NAMES', NAKSHATRA_YONI)
     if nak_idx < 0 or nak_idx > 26:
         nak_idx = 0
     return {
         "varna": VARNA_NAMES[NAKSHATRA_VARNA[nak_idx]],
         "gana": GANA_NAMES[NAKSHATRA_GANA[nak_idx]],
-        "yoni": NAKSHATRA_YONI[nak_idx],
+        "yoni": YONI_NAMES[nak_idx],
         "nadi": NADI_NAMES[NAKSHATRA_NADI[nak_idx]],
     }
 

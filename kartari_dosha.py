@@ -282,11 +282,20 @@ def get_complete_kartari_analysis(planet_house_map: dict) -> dict:
     }
 
 
-def generate_kartari_report(planet_house_map: dict) -> str:
+def generate_kartari_report(planet_house_map: dict, lang: str = 'as') -> str:
     """
     জন্মকুণ্ডলীৰ বাবে কৰ্তৰী যোগ ৰিপোৰ্ট প্ৰস্তুত কৰক।
     HTML ফৰ্মেটত প্ৰতিটো ঘৰৰ স্থিতি ৰঙীন কাৰ্ড হিচাপে প্ৰদৰ্শন কৰে।
+    
+    Args:
+        planet_house_map: dict mapping Assamese planet names to house numbers (0-11)
+        lang: language code ('as', 'bn', 'hi', 'en')
     """
+    from translations import get_text
+    from prediction_i18n import get_planet_name_i18n
+    
+    t = lambda k: get_text(k, lang)
+    
     all_analysis = get_complete_kartari_analysis(planet_house_map)
     pap_kartari = all_analysis["house_kartari"]["pap_kartari"]
     shubh_kartari = all_analysis["house_kartari"]["shubh_kartari"]
@@ -296,10 +305,32 @@ def generate_kartari_report(planet_house_map: dict) -> str:
     shubh_houses_set = set(h["house"] for h in shubh_kartari["affected_houses"])
     mixed_houses_set = set(h["house"] for h in mixed_kartari["affected_houses"])
 
-    # CSS styles
+    # ── i18n house names ──
+    HOUSE_KEYS = ['house_1', 'house_2', 'house_3', 'house_4', 'house_5', 'house_6',
+                  'house_7', 'house_8', 'house_9', 'house_10', 'house_11', 'house_12']
+    
+    def _get_house_name(house_num):
+        """Get i18n house name for house number (0-11)."""
+        key = HOUSE_KEYS[house_num]
+        return t(key)
+    
+    # ── i18n planet name lookup ──
+    # planet_house_map keys are Assamese names; convert to target language
+    def _get_planet_name(asm_name):
+        """Convert Assamese planet name to target language."""
+        # Map Assamese names to English keys
+        asm_to_en = {
+            "ৰবি": "Sun", "চন্দ্ৰ": "Moon", "মংগল": "Mars", "বুধ": "Mercury",
+            "বৃহস্পতি": "Jupiter", "শুক্ৰ": "Venus", "শনি": "Saturn",
+            "ৰাহু": "Rahu", "কেতু": "Ketu", "লগ্ন": "Lagna"
+        }
+        en_key = asm_to_en.get(asm_name, asm_name)
+        return get_planet_name_i18n(en_key, lang)
+
+    # CSS styles (language-independent)
     css = """
     <style>
-        .kartari-container { font-family: 'Noto Sans Bengali', 'Arial', sans-serif; }
+        .kartari-container { font-family: 'Noto Sans Bengali', 'Noto Sans Devanagari', 'Arial', sans-serif; }
         .kartari-title { text-align:center; font-size:1.2rem; font-weight:800; color:#5B3E96; margin-bottom:6px; }
         .kartari-subtitle { text-align:center; font-size:0.8rem; color:#888; margin-bottom:16px; }
         .kartari-summary { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-bottom:18px; }
@@ -330,26 +361,25 @@ def generate_kartari_report(planet_house_map: dict) -> str:
     # Build HTML
     html = [css]
     html.append('<div class="kartari-container">')
-    html.append('<div class="kartari-title">🔮 কৰ্তৰী যোগ বিশ্লেষণ</div>')
-    html.append('<div class="kartari-subtitle">প্ৰতিটো ঘৰৰ কৰ্তৰী স্থিতি</div>')
+    html.append(f'<div class="kartari-title">{t("kartari_title")}</div>')
+    html.append(f'<div class="kartari-subtitle">{t("kartari_subtitle")}</div>')
 
     # Summary badges
     pap_count = len(pap_houses_set)
     shubh_count = len(shubh_houses_set)
     mixed_count = len(mixed_houses_set)
-    normal_count = 12 - pap_count - shubh_count + mixed_count  # mixed counted in both
 
     html.append('<div class="kartari-summary">')
     if pap_count > 0:
-        html.append(f'<div class="kartari-summary-item red">🔴 পাপ কৰ্তৰী: {pap_count} ঘৰ</div>')
+        html.append(f'<div class="kartari-summary-item red">{t("kartari_summary_pap").replace("{n}", str(pap_count))}</div>')
     else:
-        html.append('<div class="kartari-summary-item gray">🔴 পাপ কৰ্তৰী: 0</div>')
+        html.append(f'<div class="kartari-summary-item gray">{t("kartari_summary_pap_zero")}</div>')
     if shubh_count > 0:
-        html.append(f'<div class="kartari-summary-item green">🟢 শুভ কৰ্তৰী: {shubh_count} ঘৰ</div>')
+        html.append(f'<div class="kartari-summary-item green">{t("kartari_summary_shubh").replace("{n}", str(shubh_count))}</div>')
     else:
-        html.append('<div class="kartari-summary-item gray">🟢 শুভ কৰ্তৰী: 0</div>')
+        html.append(f'<div class="kartari-summary-item gray">{t("kartari_summary_shubh_zero")}</div>')
     if mixed_count > 0:
-        html.append(f'<div class="kartari-summary-item yellow">🟡 মিশ্ৰিত: {mixed_count} ঘৰ</div>')
+        html.append(f'<div class="kartari-summary-item yellow">{t("kartari_summary_mixed").replace("{n}", str(mixed_count))}</div>')
     html.append('</div>')
 
     # House cards grid
@@ -367,31 +397,28 @@ def generate_kartari_report(planet_house_map: dict) -> str:
         prev_benefic = [p for p in prev_planets if p in BENEFIC_PLANETS]
         next_benefic = [p for p in next_planets if p in BENEFIC_PLANETS]
 
-        # Determine card color class
+        # Determine card color class and status text
         if prev_malefic and next_malefic and prev_benefic and next_benefic:
             color_class = "yellow"
-            status_text = "🟡 মিশ্ৰিত"
+            status_text = t("kartari_mixed_label")
         elif prev_malefic and next_malefic:
             color_class = "red"
-            status_text = "🔴 পাপ কৰ্তৰী"
+            status_text = t("kartari_pap_label")
         elif prev_benefic and next_benefic:
             color_class = "green"
-            status_text = "🟢 শুভ কৰ্তৰী"
+            status_text = t("kartari_shubh_label")
         else:
             color_class = "gray"
-            status_text = "⚪ সাধাৰণ"
+            status_text = t("kartari_normal_label")
 
-        house_name = HOUSE_CHARACTERISTICS.get(house_num, f"ঘৰ {house_num + 1}")
-        # Extract short name after the dash
-        if "—" in house_name:
-            house_name = house_name.split("—")[0].strip()
-        elif " - " in house_name:
-            house_name = house_name.split(" - ")[0].strip()
-
-        planets_str = ", ".join(planets_in_house) if planets_in_house else "খালী"
+        house_name = _get_house_name(house_num)
+        # Convert planet names to target language
+        planets_i18n = [_get_planet_name(p) for p in planets_in_house]
+        planets_str = ", ".join(planets_i18n) if planets_i18n else t("kartari_empty_house")
+        house_num_label = t("kartari_house_num")
 
         html.append(f'''<div class="kartari-house-card {color_class}">
-            <div class="kartari-house-num">ঘৰ #{house_num + 1}</div>
+            <div class="kartari-house-num">{house_num_label}{house_num + 1}</div>
             <div class="kartari-house-name">{house_name}</div>
             <div class="kartari-house-planets">{planets_str}</div>
             <div class="kartari-house-status {color_class}">{status_text}</div>

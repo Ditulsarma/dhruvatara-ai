@@ -691,6 +691,12 @@ TRANSLATIONS = {
         "hi": "ग्रह मैत्री",
         "en": "Graha Maitri (Planetary Friendship)"
     },
+    "pdf_kartari_section": {
+        "as": "কৰ্তৰী যোগ (শুভ কৰ্তৰী / পাপ কৰ্তৰী)",
+        "bn": "কর্তরী যোগ (শুভ কর্তরী / পাপ কর্তরী)",
+        "hi": "कर्तरी योग (शुभ कर्तरी / पाप कर्तरी)",
+        "en": "Kartari Yoga (Subh Kartari / Paap Kartari)"
+    },
     "pdf_nakshatra_phala_section": {
         "as": "নক্ষত্ৰ ফলাফল",
         "bn": "নক্ষত্র ফলাফল",
@@ -1547,6 +1553,122 @@ TRANSLATIONS = {
         "hi": "ग्रह मैत्री की गणना के लिए कुंडली आवश्यक है। कृपया पहले कुंडली तैयार करें।",
         "en": "A Kundli is required to calculate Graha Maitri. Please generate a Kundli first."
     },
+    "maitri_info_banner": {
+        "as": "✨ <strong>গ্ৰহ মৈত্ৰী</strong> — বৈদিক জ্যোতিষত গ্ৰহসমূহৰ পাৰস্পৰিক বন্ধুত্ব-শত্ৰুতা সম্পৰ্ক। <strong>নৈসৰ্গিক</strong> (স্বাভাৱিক), <strong>তৎকালীন</strong> (অস্থায়ী), আৰু <strong>পঞ্চধা</strong> (পাঁচ-স্তৰীয়) — এই তিনিও ধৰণৰ মৈত্ৰীৰ জ্ঞান ৰাশিফল বিশ্লেষণত অতি গুৰুত্বপূৰ্ণ।",
+        "bn": "✨ <strong>গ্রহ মৈত্রী</strong> — বৈদিক জ্যোতিষে গ্রহসমূহের পারস্পরিক বন্ধুত্ব-শত্রুতা সম্পর্ক। <strong>নৈসর্গিক</strong> (স্বাভাবিক), <strong>তৎকালীন</strong> (অস্থায়ী), এবং <strong>পঞ্চধা</strong> (পাঁচ-স্তরীয়) — এই তিন ধরনের মৈত্রীর জ্ঞান রাশিফল বিশ্লেষণে অতি গুরুত্বপূর্ণ।",
+        "hi": "✨ <strong>ग्रह मैत्री</strong> — वैदिक ज्योतिष में ग्रहों का पारस्परिक मित्रता-शत्रुता संबंध। <strong>नैसर्गिक</strong> (स्वाभाविक), <strong>तात्कालिक</strong> (अस्थायी), और <strong>पंचधा</strong> (पाँच-स्तरीय) — इन तीन प्रकार की मैत्री का ज्ञान कुंडली विश्लेषण में अति महत्वपूर्ण है।",
+        "en": "✨ <strong>Graha Maitri</strong> — Planetary friendship-enmity relationships in Vedic astrology. <strong>Naisargik</strong> (Natural), <strong>Tatkalin</strong> (Temporary), and <strong>Panchadha</strong> (Five-fold) — knowledge of these three types of Maitri is extremely important in horoscope analysis."
+    },
+    "maitri_manual_title": {
+        "as": "🪐 গ্ৰহৰ গৃহ স্থান নিৰ্বাচন কৰক",
+        "bn": "🪐 গ্রহের গৃহ স্থান নির্বাচন করুন",
+        "hi": "🪐 ग्रहों का गृह स्थान चुनें",
+        "en": "🪐 Select Planet House Positions"
+    },
+    "maitri_manual_hint": {
+        "as": "প্ৰতিটো গ্ৰহ কোন ঘৰত (১-১২) অৱস্থিত সেয়া বাছনি কৰক। কুণ্ডলীৰ পৰা স্বয়ংক্ৰিয়ভাৱে ডাটা আহিলে এই ফৰ্ম নেদেখাব।",
+        "bn": "প্রতিটি গ্রহ কোন ঘরে (১-১২) অবস্থিত তা নির্বাচন করুন। কুণ্ডলী থেকে স্বয়ংক্রিয়ভাবে ডাটা এলে এই ফর্ম দেখাবে না।",
+        "hi": "प्रत्येक ग्रह किस भाव (१-१२) में स्थित है, चुनें। कुंडली से स्वतः डाटा आने पर यह फॉर्म नहीं दिखेगा।",
+        "en": "Select which house (1-12) each planet is in. This form will be hidden if data comes automatically from a Kundli."
+    },
+    "maitri_btn_calculate": {
+        "as": "🔮 গ্ৰহ মৈত্ৰী গণনা কৰক",
+        "bn": "🔮 গ্রহ মৈত্রী গণনা করুন",
+        "hi": "🔮 ग्रह मैत्री की गणना करें",
+        "en": "🔮 Calculate Graha Maitri"
+    },
+    "maitri_btn_kundli": {
+        "as": "✨ কুণ্ডলী প্ৰস্তুত কৰক",
+        "bn": "✨ কুণ্ডলী প্রস্তুত করুন",
+        "hi": "✨ कुंडली तैयार करें",
+        "en": "✨ Generate Kundli"
+    },
+    "maitri_loading": {
+        "as": "গণনা চলি আছে...",
+        "bn": "গণনা চলছে...",
+        "hi": "गणना जारी है...",
+        "en": "Calculating..."
+    },
+    "maitri_naisargik_desc": {
+        "as": "নৈসৰ্গিক মৈত্ৰী হৈছে গ্ৰহসমূহৰ স্থায়ী, স্বাভাৱিক বন্ধুত্ব-শত্ৰুতা সম্পৰ্ক। এই সম্পৰ্ক চিৰন্তন আৰু গ্ৰহৰ অৱস্থানৰ ওপৰত নিৰ্ভৰ নকৰে।",
+        "bn": "নৈসর্গিক মৈত্রী হল গ্রহসমূহের স্থায়ী, স্বাভাবিক বন্ধুত্ব-শত্রুতা সম্পর্ক। এই সম্পর্ক চিরন্তন এবং গ্রহের অবস্থানের উপর নির্ভর করে না।",
+        "hi": "नैसर्गिक मैत्री ग्रहों का स्थायी, स्वाभाविक मित्रता-शत्रुता संबंध है। यह संबंध शाश्वत है और ग्रहों की स्थिति पर निर्भर नहीं करता।",
+        "en": "Naisargik Maitri is the permanent, natural friendship-enmity relationship between planets. This relationship is eternal and does not depend on planetary positions."
+    },
+    "maitri_tatkalin_desc": {
+        "as": "তৎকালীন মৈত্ৰী গ্ৰহসমূহৰ বৰ্তমান গৃহ অৱস্থানৰ ওপৰত ভিত্তি কৰি গণনা কৰা হয়। যি গ্ৰহ ২য়, ৩য়, ৪ৰ্থ, ১০ম, ১১শ, বা ১২শ ঘৰত থাকে, সি বন্ধু; অন্যথা শত্ৰু।",
+        "bn": "তৎকালীন মৈত্রী গ্রহসমূহের বর্তমান গৃহ অবস্থানের উপর ভিত্তি করে গণনা করা হয়। যে গ্রহ ২য়, ৩য়, ৪র্থ, ১০ম, ১১শ, বা ১২শ ঘরে থাকে, সে বন্ধু; অন্যথা শত্রু।",
+        "hi": "तात्कालिक मैत्री ग्रहों की वर्तमान भाव स्थिति के आधार पर गणना की जाती है। जो ग्रह २, ३, ४, १०, ११, या १२वें भाव में हो, वह मित्र; अन्यथा शत्रु।",
+        "en": "Tatkalin Maitri is calculated based on the current house positions of planets. A planet in the 2nd, 3rd, 4th, 10th, 11th, or 12th house from another is a friend; otherwise an enemy."
+    },
+    "maitri_panchadha_desc": {
+        "as": "পঞ্চধা মৈত্ৰী নৈসৰ্গিক + তৎকালীন মৈত্ৰীৰ সংযুক্ত ৰূপ। ইয়াত পাঁচ ধৰণৰ সম্পৰ্ক পোৱা যায় — মিত্ৰ, শত্ৰু, সম, অতি মিত্ৰ, আৰু অতি শত্ৰু।",
+        "bn": "পঞ্চধা মৈত্রী নৈসর্গিক + তৎকালীন মৈত্রীর সংযুক্ত রূপ। এতে পাঁচ ধরনের সম্পর্ক পাওয়া যায় — মিত্র, শত্রু, সম, অতি মিত্র, এবং অতি শত্রু।",
+        "hi": "पंचधा मैत्री नैसर्गिक + तात्कालिक मैत्री का संयुक्त रूप है। इसमें पाँच प्रकार के संबंध मिलते हैं — मित्र, शत्रु, सम, अति मित्र, और अति शत्रु।",
+        "en": "Panchadha Maitri is the combined form of Naisargik + Tatkalin Maitri. Five types of relationships are found — Mitra (Friend), Shatru (Enemy), Sam (Neutral), Adhimitra (Very Good Friend), and Adhishatru (Bitter Enemy)."
+    },
+    "maitri_select_placeholder": {
+        "as": "— বাছনি —",
+        "bn": "— নির্বাচন —",
+        "hi": "— चुनें —",
+        "en": "— Select —"
+    },
+    "maitri_house_option": {
+        "as": "🏠 ঘৰ {h}",
+        "bn": "🏠 ঘর {h}",
+        "hi": "🏠 भाव {h}",
+        "en": "🏠 House {h}"
+    },
+    "maitri_validation_error": {
+        "as": "অনুগ্ৰহ কৰি সকলো গ্ৰহৰ গৃহ স্থান বাছনি কৰক।",
+        "bn": "অনুগ্রহ করে সকল গ্রহের গৃহ স্থান নির্বাচন করুন।",
+        "hi": "कृपया सभी ग्रहों का गृह स्थान चुनें।",
+        "en": "Please select house positions for all planets."
+    },
+    "maitri_footer": {
+        "as": "© 2026 ধ্ৰুৱতৰা AI · দিতুল শৰ্মা",
+        "bn": "© 2026 ধ্রুবতারা AI · দিতুল শর্মা",
+        "hi": "© 2026 ध्रुवतारा AI · दितुल शर्मा",
+        "en": "© 2026 Dhruvatara AI · Ditul Sarma"
+    },
+    "maitri_calc_error": {
+        "as": "গণনা ত্ৰুটি",
+        "bn": "গণনা ত্রুটি",
+        "hi": "गणना त्रुटि",
+        "en": "Calculation error"
+    },
+    "maitri_network_error": {
+        "as": "নেটৱৰ্ক ত্ৰুটি। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।",
+        "bn": "নেটওয়ার্ক ত্রুটি। অনুগ্রহ করে পুনরায় চেষ্টা করুন।",
+        "hi": "नेटवर्क त्रुटि। कृपया पुनः प्रयास करें।",
+        "en": "Network error. Please try again."
+    },
+
+    # ─── Ratna (Gemstone) Page ───
+    "ratna_title": {
+        "as": "ৰত্ন (Gemstones)",
+        "bn": "রত্ন (Gemstones)",
+        "hi": "रत्न (Gemstones)",
+        "en": "Gemstones (Ratna)"
+    },
+    "ratna_subtitle": {
+        "as": "লগ্ন অনুসৰি জীৱন ৰত্ন, পুণ্য ৰত্ন, আৰু ভাগ্য ৰত্নৰ বিৱৰণ। গ্ৰহৰ অশুভ ফল আৰু প্ৰতিকাৰ।",
+        "bn": "লগ্ন অনুসারে জীবন রত্ন, পুণ্য রত্ন, এবং ভাগ্য রত্নের বিবরণ। গ্রহের অশুভ ফল এবং প্রতিকার।",
+        "hi": "लग्न के अनुसार जीवन रत्न, पुण्य रत्न, और भाग्य रत्न का विवरण। ग्रहों के अशुभ फल और उपाय।",
+        "en": "Life Gem, Punya Gem, and Destiny Gem based on your Ascendant. Malefic planetary effects and remedies."
+    },
+    "ratna_no_data": {
+        "as": "ৰত্নৰ তথ্য চাবলৈ কুণ্ডলীৰ প্ৰয়োজন। অনুগ্ৰহ কৰি প্ৰথমে কুণ্ডলী প্ৰস্তুত কৰক।",
+        "bn": "রত্নের তথ্য দেখতে কুণ্ডলীর প্রয়োজন। অনুগ্রহ করে প্রথমে কুণ্ডলী প্রস্তুত করুন।",
+        "hi": "रत्न की जानकारी देखने के लिए कुंडली आवश्यक है। कृपया पहले कुंडली तैयार करें।",
+        "en": "A Kundli is required to view gemstone details. Please generate a Kundli first."
+    },
+    "pdf_ratna_section": {
+        "as": "ৰত্ন (জীৱন ৰত্ন / পুণ্য ৰত্ন / ভাগ্য ৰত্ন)",
+        "bn": "রত্ন (জীবন রত্ন / পুণ্য রত্ন / ভাগ্য রত্ন)",
+        "hi": "रत्न (जीवन रत्न / पुण्य रत्न / भाग्य रत्न)",
+        "en": "Gemstones (Life Gem / Punya Gem / Destiny Gem)"
+    },
 
     # ─── Language Names ───
     "lang_as": {
@@ -2092,6 +2214,7 @@ TRANSLATIONS = {
     "btn_birth_details": {"as": "📋 জন্মৰ সবিশেষ", "bn": "📋 জন্মের বিবরণ", "hi": "📋 जन्म विवरण", "en": "📋 Birth Details"},
     "btn_patrika": {"as": "📜 জন্মপত্ৰিকা বনাওক", "bn": "📜 জন্মপত্রিকা বানান", "hi": "📜 जन्मपत्रिका बनाएं", "en": "📜 Create Patrika"},
     "btn_kartari": {"as": "🔮 কৰ্তৰী যোগ", "bn": "🔮 কর্তরী যোগ", "hi": "🔮 कर्तरी योग", "en": "🔮 Kartari Yoga"},
+    "btn_ratna": {"as": "💎 ৰত্ন", "bn": "💎 রত্ন", "hi": "💎 रत्न", "en": "💎 Gemstones"},
     "btn_ai_chat": {"as": "💬 AI চেট", "bn": "💬 AI চ্যাট", "hi": "💬 AI चैट", "en": "💬 AI Chat"},
 
     # ─── Result Page: Birth Details ───
@@ -2270,6 +2393,21 @@ TRANSLATIONS = {
     # ─── Result Page: Kartari Modal ───
     "kartari_modal_title": {"as": "🔮 কৰ্তৰী যোগ বিশ্লেষণ", "bn": "🔮 কর্তরী যোগ বিশ্লেষণ", "hi": "🔮 कर्तरी योग विश्लेषण", "en": "🔮 Kartari Yoga Analysis"},
     "kartari_close": {"as": "বন্ধ কৰক", "bn": "বন্ধ করুন", "hi": "बंद करें", "en": "Close"},
+
+    # ─── Kartari PDF Labels (i18n) ───
+    "kartari_title": {"as": "🔮 কৰ্তৰী যোগ বিশ্লেষণ", "bn": "🔮 কর্তরী যোগ বিশ্লেষণ", "hi": "🔮 कर्तरी योग विश्लेषण", "en": "🔮 Kartari Yoga Analysis"},
+    "kartari_subtitle": {"as": "প্ৰতিটো ঘৰৰ কৰ্তৰী স্থিতি", "bn": "প্রতিটি ঘরের কর্তরী স্থিতি", "hi": "प्रत्येक भाव की कर्तरी स्थिति", "en": "Kartari Status of Each House"},
+    "kartari_pap_label": {"as": "🔴 পাপ কৰ্তৰী", "bn": "🔴 পাপ কর্তরী", "hi": "🔴 पाप कर्तरी", "en": "🔴 Paap Kartari"},
+    "kartari_shubh_label": {"as": "🟢 শুভ কৰ্তৰী", "bn": "🟢 শুভ কর্তরী", "hi": "🟢 शुभ कर्तरी", "en": "🟢 Subh Kartari"},
+    "kartari_mixed_label": {"as": "🟡 মিশ্ৰিত", "bn": "🟡 মিশ্রিত", "hi": "🟡 मिश्रित", "en": "🟡 Mixed"},
+    "kartari_normal_label": {"as": "⚪ সাধাৰণ", "bn": "⚪ সাধারণ", "hi": "⚪ सामान्य", "en": "⚪ Normal"},
+    "kartari_empty_house": {"as": "খালী", "bn": "খালি", "hi": "खाली", "en": "Empty"},
+    "kartari_house_num": {"as": "ঘৰ #", "bn": "ঘর #", "hi": "भाव #", "en": "House #"},
+    "kartari_summary_pap": {"as": "পাপ কৰ্তৰী: {n} ঘৰ", "bn": "পাপ কর্তরী: {n} ঘর", "hi": "पाप कर्तरी: {n} भाव", "en": "Paap Kartari: {n} houses"},
+    "kartari_summary_shubh": {"as": "শুভ কৰ্তৰী: {n} ঘৰ", "bn": "শুভ কর্তরী: {n} ঘর", "hi": "शुभ कर्तरी: {n} भाव", "en": "Subh Kartari: {n} houses"},
+    "kartari_summary_mixed": {"as": "মিশ্ৰিত: {n} ঘৰ", "bn": "মিশ্রিত: {n} ঘর", "hi": "मिश्रित: {n} भाव", "en": "Mixed: {n} houses"},
+    "kartari_summary_pap_zero": {"as": "🔴 পাপ কৰ্তৰী: 0", "bn": "🔴 পাপ কর্তরী: 0", "hi": "🔴 पाप कर्तरी: 0", "en": "🔴 Paap Kartari: 0"},
+    "kartari_summary_shubh_zero": {"as": "🟢 শুভ কৰ্তৰী: 0", "bn": "🟢 শুভ কর্তরী: 0", "hi": "🟢 शुभ कर्तरी: 0", "en": "🟢 Subh Kartari: 0"},
 
     # ─── Result Page: Custom PDF Modal ───
     "custom_pdf_modal_title": {"as": "⚙️ নিজৰ মতে PDF সৃষ্টি কৰক", "bn": "⚙️ নিজের মতো PDF তৈরি করুন", "hi": "⚙️ अपनी पसंद का PDF बनाएं", "en": "⚙️ Create Custom PDF"},

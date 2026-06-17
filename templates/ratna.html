@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ _('ratna_title') }} - {{ _('app_name') }}</title>
+    <meta name="description" content="ৰত্ন (Gemstones) — লগ্ন অনুসৰি জীৱন ৰত্ন, পুণ্য ৰত্ন, আৰু ভাগ্য ৰত্ন। গ্ৰহৰ অশুভ ফল আৰু প্ৰতিকাৰ। ধ্ৰুৱতৰা AI। dhrubataraai.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --orange: #FF6600; --orange-dark: #E55D00; --deep-blue: #1a237e;
+            --gold: #D4A017; --bg: #FFF8F0; --card-bg: #FFFFFF;
+            --text: #2c3e50; --text-light: #5a6c7d; --border: #e8e0d5;
+            --shadow: 0 4px 20px rgba(0,0,0,0.06); --shadow-lg: 0 8px 32px rgba(0,0,0,0.10);
+            --radius: 14px; --radius-sm: 8px;
+            --green: #2E7D32; --red: #C62828; --purple: #6A1B9A;
+            --transition: 0.25s ease;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans Bengali', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #FFF8F0 0%, #FFF3E0 30%, #FFECB3 60%, #FFF8F0 100%);
+            background-attachment: fixed;
+            min-height: 100vh; color: var(--text); line-height: 1.6;
+        }
+        .bg-pattern {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 0; opacity: 0.03;
+            background-image:
+                radial-gradient(circle at 20% 50%, var(--orange) 1px, transparent 1px),
+                radial-gradient(circle at 80% 20%, var(--deep-blue) 1px, transparent 1px),
+                radial-gradient(circle at 50% 80%, var(--gold) 1px, transparent 1px);
+            background-size: 60px 60px, 80px 80px, 70px 70px;
+        }
+
+        .top-nav {
+            background: white; border-bottom: 1px solid var(--border);
+            padding: 12px 24px; display: flex; align-items: center;
+            justify-content: space-between; position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .top-nav .brand { font-weight: 800; font-size: 1.2rem; color: var(--orange); text-decoration: none; }
+        .top-nav .brand span { color: var(--deep-blue); }
+        .nav-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .btn {
+            padding: 8px 18px; border-radius: 20px; font-size: 0.82rem;
+            font-weight: 600; font-family: inherit; cursor: pointer;
+            border: none; transition: var(--transition); text-decoration: none;
+            display: inline-flex; align-items: center; gap: 5px;
+        }
+        .btn-outline { background: white; color: var(--orange); border: 2px solid var(--orange); }
+        .btn-outline:hover { background: var(--orange); color: white; }
+        .btn-fill { background: var(--orange); color: white; }
+        .btn-fill:hover { background: var(--orange-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255,102,0,0.3); }
+
+        .user-plan-badge {
+            display: inline-block; padding: 4px 12px; border-radius: 14px;
+            font-size: 0.72rem; font-weight: 700; letter-spacing: 0.5px;
+        }
+        .user-plan-badge.pro {
+            background: linear-gradient(135deg, var(--orange), var(--gold));
+            color: white; box-shadow: 0 2px 8px rgba(255,102,0,0.3);
+        }
+        .user-plan-badge.free { background: #E0E0E0; color: #666; border: 1px solid #ccc; }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; position: relative; z-index: 1; }
+
+        .page-header {
+            background: linear-gradient(135deg, var(--deep-blue), #283593);
+            color: white; border-radius: var(--radius); padding: 28px 32px;
+            margin-bottom: 24px; box-shadow: 0 8px 32px rgba(26,35,126,0.2);
+            text-align: center; position: relative; overflow: hidden;
+        }
+        .page-header h1 { font-size: 1.6rem; margin-bottom: 6px; position: relative; z-index: 1; }
+        .page-header .sub { opacity: 0.85; font-size: 0.9rem; position: relative; z-index: 1; }
+
+        /* ─── Gem Cards ─── */
+        .gem-cards {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+            margin-bottom: 24px;
+        }
+        .gem-card {
+            border-radius: var(--radius); padding: 24px 18px; text-align: center;
+            box-shadow: var(--shadow); transition: var(--transition);
+        }
+        .gem-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+        .gem-card.life { background: linear-gradient(135deg, #FFF3E0, #FFE0B2); border: 2px solid #FF9800; }
+        .gem-card.punya { background: linear-gradient(135deg, #E8F5E9, #C8E6C9); border: 2px solid #4CAF50; }
+        .gem-card.destiny { background: linear-gradient(135deg, #E3F2FD, #BBDEFB); border: 2px solid #2196F3; }
+        .gem-icon { font-size: 2.5rem; margin-bottom: 8px; }
+        .gem-label { font-size: 0.9rem; font-weight: 700; color: #333; margin-bottom: 4px; }
+        .gem-name { font-size: 1.1rem; font-weight: 800; color: var(--deep-blue); margin-bottom: 10px; }
+        .gem-desc { font-size: 0.82rem; color: #555; line-height: 1.7; text-align: justify; }
+
+        /* ─── Remedies Section ─── */
+        .remedies-section {
+            background: var(--card-bg); border-radius: var(--radius);
+            box-shadow: var(--shadow); padding: 24px; margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+        .remedies-title {
+            text-align: center; font-size: 1.15rem; font-weight: 800;
+            color: var(--red); margin-bottom: 18px;
+        }
+        .remedy-card {
+            background: #FAFAFA; border-radius: var(--radius-sm);
+            padding: 16px 18px; margin-bottom: 12px;
+            border: 1px solid #e8e0d5; box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        }
+        .remedy-planet { font-size: 0.92rem; font-weight: 700; color: var(--deep-blue); margin-bottom: 6px; }
+        .remedy-effects { font-size: 0.82rem; color: #555; line-height: 1.7; margin-bottom: 8px; }
+        .remedy-solution { font-size: 0.82rem; color: var(--green); font-weight: 600; margin-bottom: 4px; }
+        .remedy-mantra { font-size: 0.8rem; color: var(--purple); font-weight: 600; font-style: italic; }
+        .closing-blessing {
+            text-align: center; font-size: 0.95rem; font-weight: 700;
+            color: var(--purple); margin-top: 20px; padding: 14px;
+            background: linear-gradient(135deg, #F3E5F5, #E1BEE7);
+            border-radius: var(--radius-sm);
+        }
+
+        .no-data-msg {
+            text-align: center; padding: 48px 20px; color: var(--text-light);
+        }
+        .no-data-msg .empty-icon { font-size: 3rem; margin-bottom: 12px; opacity: 0.6; }
+        .no-data-msg a { color: var(--orange); font-weight: 700; text-decoration: none; }
+
+        .page-footer {
+            text-align: center; padding: 16px; background: white;
+            border-top: 1px solid var(--border); margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            .top-nav { padding: 8px 12px; flex-wrap: wrap; gap: 6px; }
+            .top-nav .brand { font-size: 1rem; }
+            .btn { padding: 6px 12px; font-size: 0.72rem; }
+            .page-header { padding: 18px 16px; }
+            .page-header h1 { font-size: 1.2rem; }
+            .gem-cards { grid-template-columns: 1fr; gap: 12px; }
+            .gem-card { padding: 18px 14px; }
+            .remedies-section { padding: 16px; }
+        }
+        @media (max-width: 480px) {
+            .container { padding: 6px; }
+            .page-header { padding: 14px 12px; }
+            .page-header h1 { font-size: 1.05rem; }
+            .gem-icon { font-size: 2rem; }
+            .gem-name { font-size: 0.95rem; }
+            .gem-desc { font-size: 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="bg-pattern"></div>
+
+<nav class="top-nav">
+    <a href="/" class="brand">💎 {{ _('app_name') }}</a>
+    <div class="nav-actions">
+        {% include 'lang_selector.html' %}
+        {% if user_sub_info %}
+        <span class="user-plan-badge {% if user_sub_info.is_pro %}pro{% else %}free{% endif %}">
+            {{ _('pro_badge') if user_sub_info.is_pro else _('free_badge') }}
+        </span>
+        {% endif %}
+        <a href="/dashboard" class="btn btn-outline">📋 {{ _('nav_dashboard') }}</a>
+        <a href="/logout" class="btn btn-outline">🚪 {{ _('nav_logout') }}</a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="page-header">
+        <h1>💎 {{ _('ratna_title') }}</h1>
+        <div class="sub">{{ _('ratna_subtitle') }}</div>
+    </div>
+
+    <!-- No Data Message -->
+    <div id="noDataMsg" class="no-data-msg">
+        <div class="empty-icon">💎</div>
+        <p>{{ _('ratna_no_data') }}</p>
+        <p style="margin-top:12px;">
+            <a href="/kundli" class="btn btn-fill">✨ {{ _('maitri_btn_kundli') }}</a>
+        </p>
+    </div>
+
+    <!-- Loading -->
+    <div id="loadingSpinner" class="loading-spinner" style="display:none;text-align:center;padding:48px 20px;color:var(--text-light);">
+        <div class="spinner-icon" style="display:inline-block;font-size:2rem;animation:spin 1s linear infinite;">⏳</div>
+        <p>{{ _('maitri_loading') }}</p>
+    </div>
+
+    <!-- Ratna Content (filled by JS) -->
+    <div id="ratnaContent" style="display:none;"></div>
+</div>
+
+<div class="page-footer">
+    {% if all_footer_images %}
+    {% for img in all_footer_images %}
+    <img src="/api/images/{{ img.id }}" alt="{{ img.alt_text }}" style="width:{{ img.width }}px;height:{{ img.height }}px;">
+    {% endfor %}
+    {% endif %}
+    <p style="font-size:0.72rem;color:var(--text-light);margin-top:8px;">{{ _('maitri_footer') }}</p>
+</div>
+
+<script>
+    const currentLang = '{{ lang }}';
+
+    // ─── INIT: Check sessionStorage for auto-loaded data ───
+    (function() {
+        const stored = sessionStorage.getItem('ratna_asc_rasi_idx');
+        if (stored) {
+            try {
+                const ascIdx = parseInt(stored);
+                if (!isNaN(ascIdx) && ascIdx >= 0 && ascIdx <= 11) {
+                    loadRatnaData(ascIdx, currentLang);
+                    return;
+                }
+            } catch(e) {
+                console.error('Failed to parse stored asc rasi idx:', e);
+            }
+        }
+        // No data - show the no-data message
+        document.getElementById('noDataMsg').style.display = 'block';
+    })();
+
+    async function loadRatnaData(ascRasiIdx, lang) {
+        document.getElementById('noDataMsg').style.display = 'none';
+        document.getElementById('loadingSpinner').style.display = 'block';
+
+        try {
+            const response = await fetch('/api/ratna', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ asc_rasi_idx: ascRasiIdx, lang: lang })
+            });
+            const result = await response.json();
+            if (result.success) {
+                renderRatnaContent(result.data);
+            } else {
+                document.getElementById('loadingSpinner').style.display = 'none';
+                document.getElementById('noDataMsg').style.display = 'block';
+                document.getElementById('noDataMsg').innerHTML =
+                    '<p style="color:#C62828;">⚠️ ' + (result.message || 'ত্ৰুটি') + '</p>';
+            }
+        } catch (err) {
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('noDataMsg').style.display = 'block';
+            document.getElementById('noDataMsg').innerHTML =
+                '<p style="color:#C62828;">⚠️ নেটৱৰ্ক ত্ৰুটি</p>';
+            console.error(err);
+        }
+    }
+
+    function renderRatnaContent(data) {
+        document.getElementById('loadingSpinner').style.display = 'none';
+        const container = document.getElementById('ratnaContent');
+        container.style.display = 'block';
+
+        let html = '';
+
+        // Gemstone Cards
+        html += '<div class="gem-cards">';
+        html += '<div class="gem-card life"><div class="gem-icon">❤️</div><div class="gem-label">' + data.life_gem_label + '</div><div class="gem-name">' + data.life_gem + '</div><div class="gem-desc">' + data.life_gem_desc + '</div></div>';
+        html += '<div class="gem-card punya"><div class="gem-icon">🌟</div><div class="gem-label">' + data.punya_gem_label + '</div><div class="gem-name">' + data.punya_gem + '</div><div class="gem-desc">' + data.punya_gem_desc + '</div></div>';
+        html += '<div class="gem-card destiny"><div class="gem-icon">🔮</div><div class="gem-label">' + data.destiny_gem_label + '</div><div class="gem-name">' + data.destiny_gem + '</div><div class="gem-desc">' + data.destiny_gem_desc + '</div></div>';
+        html += '</div>';
+
+        // Malefic Remedies
+        html += '<div class="remedies-section">';
+        html += '<div class="remedies-title">⚠️ ' + data.remedies_title + '</div>';
+        const maleficOrder = ['Sun', 'Mars', 'Saturn', 'Rahu', 'Ketu'];
+        for (const pk of maleficOrder) {
+            const pd = data.remedies_planets[pk];
+            if (!pd) continue;
+            html += '<div class="remedy-card"><div class="remedy-planet">🪐 ' + pd.name + '</div><div class="remedy-effects">' + pd.effects + '</div><div class="remedy-solution">' + pd.remedy + '</div><div class="remedy-mantra">' + pd.mantra + '</div></div>';
+        }
+        html += '<div class="closing-blessing">' + data.remedies_closing + '</div>';
+        html += '</div>';
+
+        container.innerHTML = html;
+    }
+</script>
+</body>
+</html>
