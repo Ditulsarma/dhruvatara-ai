@@ -685,6 +685,12 @@ TRANSLATIONS = {
         "hi": "त्रिपाप रिष्ट विश्लेषण",
         "en": "Tripap Rista Analysis"
     },
+    "pdf_graha_maitri_section": {
+        "as": "গ্ৰহ মৈত্ৰী",
+        "bn": "গ্রহ মৈত্রী",
+        "hi": "ग्रह मैत्री",
+        "en": "Graha Maitri (Planetary Friendship)"
+    },
     "pdf_nakshatra_phala_section": {
         "as": "নক্ষত্ৰ ফলাফল",
         "bn": "নক্ষত্র ফলাফল",

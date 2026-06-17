@@ -66,7 +66,7 @@ from graha_bichar import get_all_graha_bichar, get_graha_bichar_html
 from kundli_chart import draw_kundli_chart, draw_all_styles
 from patrika import generate_patrika_text
 from kartari_dosha import generate_kartari_report
-from graha_maitri import get_all_maitri_data
+from graha_maitri import get_all_maitri_data, build_graha_maitri_pdf_html
 from jotok_milan_engine import get_complete_jotok_milan, get_koota_name_asm, get_koota_icon
 from jotok_milan_pdf import generate_jotok_milan_pdf
 from small_antardasaphal import get_antardasha_phala, get_all_antardasha_phala_for_pdf
@@ -1549,6 +1549,9 @@ def download_pdf():
         # Vimsottari Dasha Summary for PDF
         vimsottari_summary = build_vimsottari_summary(dasa_hierarchy, lang=lang)
 
+        # Graha Maitri for PDF
+        graha_maitri_html = build_graha_maitri_pdf_html(planet_houses, lang)
+
         pdf_bytes = generate_pdf_report(
             name, dob, tob, place, planets_data, panchanga,
             dosha_results, yoga_results, dasa_hierarchy, ai_interpretation,
@@ -1563,6 +1566,7 @@ def download_pdf():
             moon_rasi=moon_rasi, gender=gender,
             astrologer_profile=astrologer_profile,
             patrika_text=patrika_text,
+            graha_maitri_html=graha_maitri_html,
             lang=lang
         )
 
@@ -1865,6 +1869,9 @@ def download_patrika_pdf():
         # Vimsottari Dasha Summary for PDF
         vimsottari_summary = build_vimsottari_summary(dasa_hierarchy, lang=lang)
         
+        # Graha Maitri for PDF
+        graha_maitri_html = build_graha_maitri_pdf_html(planet_houses, lang)
+        
         pdf_bytes = generate_pdf_report(
             name, dob, tob, place, planets_data, panchanga,
             dosha_results, yoga_results, dasa_hierarchy, ai_interpretation,
@@ -1880,6 +1887,7 @@ def download_patrika_pdf():
             astrologer_profile=astrologer_profile,
             patrika_text=patrika_text,
             pratyantar_dasha_html=pratyantar_dasha_html,
+            graha_maitri_html=graha_maitri_html,
             lang=lang
         )
         
@@ -2085,6 +2093,9 @@ def download_pratyantar_pdf():
         # Vimsottari Dasha Summary
         vimsottari_summary = build_vimsottari_summary(dasa_hierarchy, lang=lang)
 
+        # Graha Maitri for PDF
+        graha_maitri_html = build_graha_maitri_pdf_html(planet_houses, lang)
+
         pdf_bytes = generate_pdf_report(
             name, dob, tob, place, planets_data, panchanga,
             dosha_results, yoga_results, dasa_hierarchy, ai_interpretation,
@@ -2100,6 +2111,7 @@ def download_pratyantar_pdf():
             astrologer_profile=astrologer_profile,
             patrika_text=patrika_text,
             pratyantar_dasha_html=pratyantar_dasha_html,
+            graha_maitri_html=graha_maitri_html,
             lang=lang
         )
 
@@ -2369,6 +2381,11 @@ def custom_pdf():
         if 'dasha_summary' in selected_sections:
             vimsottari_summary = build_vimsottari_summary(dasa_hierarchy, lang=lang)
 
+        # Graha Maitri for PDF (only if selected)
+        graha_maitri_html = ""
+        if 'graha_maitri' in selected_sections:
+            graha_maitri_html = build_graha_maitri_pdf_html(planet_houses, lang)
+
         pdf_bytes = generate_pdf_report(
             name, dob, tob, place, planets_data, panchanga,
             dosha_results, yoga_results, dasa_hierarchy, ai_interpretation,
@@ -2385,6 +2402,7 @@ def custom_pdf():
             astrologer_profile=astrologer_profile,
             patrika_text=patrika_text,
             pratyantar_dasha_html=pratyantar_dasha_html,
+            graha_maitri_html=graha_maitri_html,
             lang=lang
         )
 

@@ -385,6 +385,7 @@ def _build_html(
     astrologer_profile: dict = None,
     patrika_text: str = "",
     pratyantar_dasha_html: str = "",
+    graha_maitri_html: str = "",
     lang: str = "as"
 ) -> str:
     """Build complete HTML for the PDF report.
@@ -723,6 +724,11 @@ def _build_html(
                 {ages_str}
                 <br><span class="small-note">{t('pdf_tripap_total_ages').format(n=len(tripap_ages))}</span>
             </div>"""
+
+    # ── Graha Maitri (Planetary Friendship) ──
+    if graha_maitri_html:
+        # graha_maitri_html is already pre-built HTML from graha_maitri module
+        pass  # Will be inserted in body assembly below
 
     # ââ AI Section ââ
     ai_html = ""
@@ -1106,6 +1112,53 @@ def _build_html(
         font-size: 8pt; line-height: 1.6;
     }}
     .small-note {{ font-size: 6pt; color: #888; }}
+
+    /* Graha Maitri (Planetary Friendship) */
+    .maitri-pdf-section {{
+        margin-bottom: 10px; page-break-inside: avoid;
+    }}
+    .maitri-pdf-table {{
+        width: 100%; border-collapse: collapse; font-size: 6.5pt;
+        margin-bottom: 8px;
+    }}
+    .maitri-pdf-table th {{
+        background: {DEEP_BLUE}; color: white; padding: 3px 4px;
+        font-size: 6.5pt; font-weight: 700; text-align: center;
+        border: 1px solid #ccc;
+    }}
+    .maitri-pdf-table td {{
+        padding: 2px 4px; text-align: center; border: 1px solid #ccc;
+        font-size: 6.5pt; font-weight: 500;
+    }}
+    .maitri-pdf-table .row-header {{
+        background: #E8EAF6; font-weight: 700; color: {DEEP_BLUE};
+        text-align: left; padding-left: 6px;
+    }}
+    .maitri-pdf-table .cell-self {{ background: #E0E0E0; color: #999; }}
+    .maitri-pdf-table .cell-mitra {{ background: #C8E6C9; color: #1B5E20; font-weight: 600; }}
+    .maitri-pdf-table .cell-shatru {{ background: #FFCDD2; color: #B71C1C; font-weight: 600; }}
+    .maitri-pdf-table .cell-sam {{ background: #FFF9C4; color: #F57F17; font-weight: 600; }}
+    .maitri-pdf-table .cell-adhimitra {{ background: #A5D6A7; color: #1B5E20; font-weight: 700; }}
+    .maitri-pdf-table .cell-adhishatru {{ background: #EF9A9A; color: #B71C1C; font-weight: 700; }}
+    .maitri-pdf-legend {{
+        display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+        margin-top: 6px; padding: 6px 10px; background: #fafafa;
+        border-radius: 4px; font-size: 6.5pt;
+    }}
+    .maitri-pdf-legend-item {{
+        display: flex; align-items: center; gap: 4px;
+    }}
+    .maitri-pdf-swatch {{
+        width: 12px; height: 12px; border-radius: 2px; border: 1px solid #ccc;
+    }}
+    .maitri-pdf-house-row {{
+        display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+        margin-bottom: 10px; font-size: 7pt;
+    }}
+    .maitri-pdf-house-badge {{
+        background: #E8EAF6; padding: 3px 10px; border-radius: 12px;
+        font-weight: 600; color: {DEEP_BLUE};
+    }}
 
     /* Sannari Chakra */
     .sannari-section {{
@@ -1614,6 +1667,10 @@ def _build_html(
         html += '<div style="page-break-before: always;"></div>'
         html += '<h2 class="section-heading">☠️ ' + t('pdf_tripap_section') + '</h2>' + tripap_html
 
+    if _include('graha_maitri'):
+        html += '<div style="page-break-before: always;"></div>'
+        html += '<h2 class="section-heading">🤝 ' + t('pdf_graha_maitri_section') + '</h2>' + graha_maitri_html
+
     if _include('nakshatra_phala'):
         html += '<h2 class="section-heading">🌟 ' + t('pdf_nakshatra_phala_section') + '</h2>' + nakshatra_phala_html
 
@@ -1709,6 +1766,7 @@ def generate_pdf_report(
     astrologer_profile: dict = None,
     patrika_text: str = "",
     pratyantar_dasha_html: str = "",
+    graha_maitri_html: str = "",
     lang: str = "as"
 ) -> bytes:
     """
@@ -1736,6 +1794,7 @@ def generate_pdf_report(
         astrologer_profile=astrologer_profile,
         patrika_text=patrika_text,
         pratyantar_dasha_html=pratyantar_dasha_html,
+        graha_maitri_html=graha_maitri_html,
         lang=lang
     )
 

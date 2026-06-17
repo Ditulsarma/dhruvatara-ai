@@ -257,3 +257,92 @@ def get_all_maitri_data(planet_houses: dict, lang: str = 'as') -> dict:
         'panchadha': panchadha,
         'planet_houses': houses,
     }
+
+
+def build_graha_maitri_pdf_html(planet_houses: dict, lang: str = 'as') -> str:
+    """
+    Build PDF-ready HTML for all three Graha Maitri charts.
+    
+    Args:
+        planet_houses: dict mapping Assamese planet names to house numbers (1-12)
+        lang: language code ('as', 'bn', 'hi', 'en')
+    
+    Returns:
+        HTML string with all three charts styled for PDF rendering.
+    """
+    from translations import get_text
+    
+    data = get_all_maitri_data(planet_houses, lang)
+    planet_names = data['planet_names']
+    friendship_types = data['friendship_types']
+    houses = data['planet_houses']
+    
+    t = lambda k: get_text(k, lang)
+    
+    # ── Helper: cell CSS class ──
+    def _cell_class(val):
+        if val == -1: return 'cell-self'
+        if val == 0: return 'cell-mitra'
+        if val == 1: return 'cell-shatru'
+        if val == 2: return 'cell-sam'
+        if val == 3: return 'cell-adhimitra'
+        if val == 4: return 'cell-adhishatru'
+        return ''
+    
+    def _swatch_color(val):
+        if val == 0: return '#C8E6C9'
+        if val == 1: return '#FFCDD2'
+        if val == 2: return '#FFF9C4'
+        if val == 3: return '#A5D6A7'
+        if val == 4: return '#EF9A9A'
+        return '#E0E0E0'
+    
+    # ── House position badges ──
+    house_html = '<div class="maitri-pdf-house-row">'
+    for i in range(9):
+        house_html += f'<span class="maitri-pdf-house-badge">{planet_names[i]}: 🏠 {houses[i]}</span>'
+    house_html += '</div>'
+    
+    # ── Build a single matrix table ──
+    def _build_matrix(matrix, relevant_types):
+        html = '<table class="maitri-pdf-table">'
+        html += '<thead><tr><th></th>'
+        for j in range(9):
+            html += f'<th>{planet_names[j]}</th>'
+        html += '</tr></thead><tbody>'
+        
+        for i in range(9):
+            html += '<tr>'
+            html += f'<td class="row-header">{planet_names[i]}</td>'
+            for j in range(9):
+                val = matrix[i][j]
+                if val == -1:
+                    html += '<td class="cell-self">—</td>'
+                else:
+                    cls = _cell_class(val)
+                    label = friendship_types[val] if val < len(friendship_types) else '—'
+                    html += f'<td class="{cls}">{label}</td>'
+            html += '</tr>'
+        html += '</tbody></table>'
+        
+        # Legend
+        html += '<div class="maitri-pdf-legend">'
+        for rt in relevant_types:
+            if rt < len(friendship_types):
+                html += f'<div class="maitri-pdf-legend-item"><span class="maitri-pdf-swatch" style="background:{_swatch_color(rt)};"></span> {friendship_types[rt]}</div>'
+        html += '</div>'
+        return html
+    
+    # ── Assemble all three sections ──
+    result = house_html
+    
+    result += f'<h3 style="color:#1a237e;font-size:10pt;margin:12px 0 6px;">🌿 {t("maitri_naisargik")}</h3>'
+    result += _build_matrix(data['naisargik'], [0, 1, 2])
+    
+    result += f'<h3 style="color:#1a237e;font-size:10pt;margin:16px 0 6px;">⏱️ {t("maitri_tatkalin")}</h3>'
+    result += _build_matrix(data['tatkalin'], [0, 1])
+    
+    result += f'<h3 style="color:#1a237e;font-size:10pt;margin:16px 0 6px;">🌟 {t("maitri_panchadha")}</h3>'
+    result += _build_matrix(data['panchadha'], [0, 1, 2, 3, 4])
+    
+    return result
