@@ -206,6 +206,87 @@ def convert_planet_degrees_to_en(planet_degrees: dict) -> dict:
         result[en_key] = v
     return result
 
+
+# ═══════════════════════════════════════════════════════════════
+# গ্ৰহৰ অৱস্থা (Planet State: বক্ৰি/মাৰ্গী/অস্ত/উচ্চ/নীচ)
+# ═══════════════════════════════════════════════════════════════
+
+# Exaltation signs (0-indexed)
+_EXALTATION_SIGNS = {
+    "ৰবি": 0, "চন্দ্ৰ": 1, "মংগল": 9, "বুধ": 5,
+    "বৃহস্পতি": 3, "শুক্ৰ": 11, "শনি": 6
+}
+# Debilitation = exaltation + 7 signs
+_DEBILITATION_SIGNS = {k: (v + 7) % 12 for k, v in _EXALTATION_SIGNS.items()}
+
+# Combust degrees (angular distance from Sun)
+_COMBUST_DEGREES = {
+    "চন্দ্ৰ": 12, "মংগল": 17, "বুধ": 14, "বুধ_বক্ৰি": 13,
+    "বৃহস্পতি": 11, "শুক্ৰ": 10, "শুক্ৰ_বক্ৰি": 8, "শনি": 15
+}
+
+_STATE_LABELS = {
+    "margi": {"as": "মাৰ্গী", "bn": "মার্গী", "hi": "मार्गी", "en": "Direct"},
+    "vakri": {"as": "বক্ৰী", "bn": "বক্রী", "hi": "वक्री", "en": "Retrograde"},
+    "asta": {"as": "অস্ত", "bn": "অস্ত", "hi": "अस्त", "en": "Combust"},
+    "uchch": {"as": "উচ্চ", "bn": "উচ্চ", "hi": "उच्च", "en": "Exalted"},
+    "nich": {"as": "নীচ", "bn": "নীচ", "hi": "नीच", "en": "Debilitated"},
+}
+
+
+def get_planet_state(planet_asm: str, sign_idx: int, speed: float,
+                     sun_longitude: float, planet_longitude: float,
+                     lang: str = 'as') -> str:
+    """
+    Calculate planet state: Retrograde (বক্ৰী), Direct (মাৰ্গী), Combust (অস্ত),
+    Exalted (উচ্চ), Debilitated (নীচ).
+    Returns a localized string with all applicable states.
+    """
+    def _(key): return _STATE_LABELS.get(key, {}).get(lang, key)
+
+    states = []
+
+    # Rahu & Ketu are always retrograde (chaya graha)
+    if planet_asm in ("ৰাহু", "কেতু"):
+        return _("vakri")
+
+    # Lagna has no state
+    if planet_asm == "লগ্ন":
+        return "—"
+
+    # Check exalted / debilitated
+    if planet_asm in _EXALTATION_SIGNS:
+        if sign_idx == _EXALTATION_SIGNS[planet_asm]:
+            states.append(_("uchch"))
+        elif sign_idx == _DEBILITATION_SIGNS[planet_asm]:
+            states.append(_("nich"))
+
+    # Check retrograde / direct
+    is_retro = speed < 0
+    if is_retro:
+        states.append(_("vakri"))
+    else:
+        states.append(_("margi"))
+
+    # Check combust (only for planets other than Sun, Rahu, Ketu)
+    if planet_asm not in ("ৰবি", "সূৰ্য", "ৰাহু", "কেতু"):
+        angular_distance = abs(planet_longitude - sun_longitude)
+        if angular_distance > 180:
+            angular_distance = 360 - angular_distance
+
+        combust_limit = None
+        if planet_asm == "বুধ" and is_retro:
+            combust_limit = _COMBUST_DEGREES.get("বুধ_বক্ৰি")
+        elif planet_asm == "শুক্ৰ" and is_retro:
+            combust_limit = _COMBUST_DEGREES.get("শুক্ৰ_বক্ৰি")
+        else:
+            combust_limit = _COMBUST_DEGREES.get(planet_asm)
+
+        if combust_limit and angular_distance < combust_limit:
+            states.append(_("asta"))
+
+    return " · ".join(states) if states else _("margi")
+
 # ═══════════════════════════════════════════════════════════════
 # গ্ৰহৰ সম্পূৰ্ণ তথ্য (Planet Details)
 # ═══════════════════════════════════════════════════════════════

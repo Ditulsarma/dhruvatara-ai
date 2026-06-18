@@ -2286,6 +2286,7 @@ TRANSLATIONS = {
     "th_degree": {"as": "ডিগ্ৰী", "bn": "ডিগ্রী", "hi": "डिग्री", "en": "Degree"},
     "th_nakshatra": {"as": "নক্ষত্ৰ", "bn": "নক্ষত্র", "hi": "नक्षत्र", "en": "Nakshatra"},
     "th_nak_lord": {"as": "নক্ষত্ৰ পতি", "bn": "নক্ষত্র পতি", "hi": "नक्षत्र पति", "en": "Nakshatra Lord"},
+    "th_state": {"as": "অৱস্থা", "bn": "অবস্থা", "hi": "अवस्था", "en": "State"},
 
     # ─── Result Page: Panchanga Labels ───
     "panch_tithi": {"as": "তিথি", "bn": "তিথি", "hi": "तिथि", "en": "Tithi"},

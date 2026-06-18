@@ -347,6 +347,9 @@
         #tab-planets tr.planet-ketu td:first-child,
         #tab-planets tr.planet-lagna td:first-child { font-size: 1.05rem; }
 
+        /* গ্ৰহ অৱস্থা cell - বিশেষ styling */
+        #tab-planets td.state-cell { font-size: 0.85rem; font-style: italic; letter-spacing: 0.3px; }
+
         .chart-controls {
             display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;
         }
@@ -1204,10 +1207,10 @@
     <div id="tab-planets" class="tab-content active">
         <div class="section"><div class="section-body">
             <table>
-                <thead><tr><th>{{ _('th_planet') }}</th><th>{{ _('th_rashi') }}</th><th>{{ _('th_degree') }}</th><th>{{ _('th_nakshatra') }}</th><th>{{ _('th_nak_lord') }}</th></tr></thead>
+                <thead><tr><th>{{ _('th_planet') }}</th><th>{{ _('th_rashi') }}</th><th>{{ _('th_degree') }}</th><th>{{ _('th_nakshatra') }}</th><th>{{ _('th_nak_lord') }}</th><th>{{ _('th_state') }}</th></tr></thead>
                 <tbody>
                     {% for p in planets %}
-                    <tr class="planet-{{ p.name_en | lower }}"><td><b>{{ p.name }}</b></td><td>{{ p.rasi }}</td><td>{{ p.degree }}°</td><td>{{ p.nakshatra }}</td><td>{{ p.lord }}</td></tr>
+                    <tr class="planet-{{ p.name_en | lower }}"><td><b>{{ p.name }}</b></td><td>{{ p.rasi }}</td><td>{{ p.degree }}°</td><td>{{ p.nakshatra }}</td><td>{{ p.lord }}</td><td class="state-cell">{{ p.state }}</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
