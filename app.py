@@ -1872,15 +1872,7 @@ def download_patrika_pdf():
         navatara_data = get_navatara_data(moon_nak_idx)
         sannari_data = get_sannari_data(moon_nak_idx)
         
-        ai_interpretation = (generate_ai_interpretation_i18n if lang != 'as' else generate_ai_interpretation)(
-            name, planets_data, asc_rasi, dosha_results, yoga_results, dasa_hierarchy,
-            asc_rasi_idx=asc_rasi_idx, planet_signs=planet_signs,
-            moon_nak_name=get_nakshatra_name_i18n(moon_nak_idx - 1, lang),
-            moon_rasi=get_rashi_name_i18n(moon_rasi_idx, lang),
-            tripap_ages=TRIPAP_AGES.get(moon_nak_idx, []),
-            navatara_data=navatara_data, sannari_data=sannari_data,
-            lang=lang
-        )
+        ai_interpretation = ""  # AI বিশ্লেষণ পত্ৰিকা PDF-ত দিয়া নহয়
         
         vargas = {"D1": 1, "D2": 2, "D3": 3, "D4": 4, "D7": 7, "D9": 9,
                   "D10": 10, "D12": 12, "D16": 16, "D20": 20, "D24": 24,
@@ -1912,7 +1904,6 @@ def download_patrika_pdf():
         for dp in all_dasha_predictions:
             dp["prediction"] = apply_gender(dp["prediction"], gender)
         all_dasha_predictions = filter_future_dasha_predictions(all_dasha_predictions)
-        ai_interpretation = apply_gender(ai_interpretation, gender)
         
         # Generate patrika text
         patrika_text = generate_patrika_text(
@@ -1965,7 +1956,7 @@ def download_patrika_pdf():
             'graha_maitri', 'kartari', 'nakshatra_phala', 'lagna_phala',
             'rashi_phala', 'graha_bichar', 'dwadash_bhab_phala',
             'dasha_summary', 'dasha_full', 'dasha_predictions', 'antardasha_phala',
-            'ratna', 'ai'
+            'ratna'
         ]
         
         pdf_bytes = generate_pdf_report(
@@ -2111,15 +2102,7 @@ def download_pratyantar_pdf():
         navatara_data = get_navatara_data(moon_nak_idx)
         sannari_data = get_sannari_data(moon_nak_idx)
 
-        ai_interpretation = (generate_ai_interpretation_i18n if lang != 'as' else generate_ai_interpretation)(
-            name, planets_data, asc_rasi, dosha_results, yoga_results, dasa_hierarchy,
-            asc_rasi_idx=asc_rasi_idx, planet_signs=planet_signs,
-            moon_nak_name=get_nakshatra_name_i18n(moon_nak_idx - 1, lang),
-            moon_rasi=get_rashi_name_i18n(moon_rasi_idx, lang),
-            tripap_ages=TRIPAP_AGES.get(moon_nak_idx, []),
-            navatara_data=navatara_data, sannari_data=sannari_data,
-            lang=lang
-        )
+        ai_interpretation = ""  # AI বিশ্লেষণ প্ৰত্যান্তৰ দশাফল PDF-ত দিয়া নহয়
 
         vargas = {"D1": 1, "D2": 2, "D3": 3, "D4": 4, "D7": 7, "D9": 9,
                   "D10": 10, "D12": 12, "D16": 16, "D20": 20, "D24": 24,
@@ -2151,7 +2134,6 @@ def download_pratyantar_pdf():
         for dp in all_dasha_predictions:
             dp["prediction"] = apply_gender(dp["prediction"], gender)
         all_dasha_predictions = filter_future_dasha_predictions(all_dasha_predictions)
-        ai_interpretation = apply_gender(ai_interpretation, gender)
 
         # Build antardasha phala HTML
         antardasha_phala_html = build_important_antardasha_html(

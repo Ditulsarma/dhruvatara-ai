@@ -319,6 +319,34 @@
         tr:nth-child(even) { background: #fefcf9; }
         tr:hover { background: #fff8f0; }
 
+        /* গ্ৰহ অৱস্থান টেবুল - ডাঙৰ ফন্ট */
+        #tab-planets table { font-size: 1rem; }
+        #tab-planets th { font-size: 0.9rem; }
+        #tab-planets td { font-size: 0.95rem; font-weight: 700; }
+        #tab-planets td b { font-size: 1rem; }
+
+        /* গ্ৰহ অৱস্থান - ৰঙীন প্লেনেট ৰো */
+        #tab-planets tr.planet-sun td { background: #FFF3E0; color: #E65100; }
+        #tab-planets tr.planet-moon td { background: #ECEFF1; color: #37474F; }
+        #tab-planets tr.planet-mars td { background: #FFEBEE; color: #C62828; }
+        #tab-planets tr.planet-mercury td { background: #E8F5E9; color: #1B5E20; }
+        #tab-planets tr.planet-jupiter td { background: #FFF8E1; color: #F57F17; }
+        #tab-planets tr.planet-venus td { background: #FCE4EC; color: #AD1457; }
+        #tab-planets tr.planet-saturn td { background: #ECEFF1; color: #263238; }
+        #tab-planets tr.planet-rahu td { background: #EDE7F6; color: #4527A0; }
+        #tab-planets tr.planet-ketu td { background: #EFEBE9; color: #4E342E; }
+        #tab-planets tr.planet-lagna td { background: #E3F2FD; color: #0D47A1; }
+        #tab-planets tr.planet-sun td:first-child,
+        #tab-planets tr.planet-moon td:first-child,
+        #tab-planets tr.planet-mars td:first-child,
+        #tab-planets tr.planet-mercury td:first-child,
+        #tab-planets tr.planet-jupiter td:first-child,
+        #tab-planets tr.planet-venus td:first-child,
+        #tab-planets tr.planet-saturn td:first-child,
+        #tab-planets tr.planet-rahu td:first-child,
+        #tab-planets tr.planet-ketu td:first-child,
+        #tab-planets tr.planet-lagna td:first-child { font-size: 1.05rem; }
+
         .chart-controls {
             display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;
         }
@@ -602,6 +630,22 @@
             table { font-size: 0.7rem; }
             th, td { padding: 6px 8px; font-size: 0.68rem; }
 
+            /* গ্ৰহ অৱস্থান টেবুল - ডাঙৰ ফন্ট (টেবলেট) */
+            #tab-planets table { font-size: 0.85rem; }
+            #tab-planets th { font-size: 0.78rem; }
+            #tab-planets td { font-size: 0.82rem; font-weight: 700; }
+            #tab-planets td b { font-size: 0.85rem; }
+            #tab-planets tr.planet-sun td:first-child,
+            #tab-planets tr.planet-moon td:first-child,
+            #tab-planets tr.planet-mars td:first-child,
+            #tab-planets tr.planet-mercury td:first-child,
+            #tab-planets tr.planet-jupiter td:first-child,
+            #tab-planets tr.planet-venus td:first-child,
+            #tab-planets tr.planet-saturn td:first-child,
+            #tab-planets tr.planet-rahu td:first-child,
+            #tab-planets tr.planet-ketu td:first-child,
+            #tab-planets tr.planet-lagna td:first-child { font-size: 0.9rem; }
+
             /* Dasha tree - stack vertically */
             #tab-dasha .section-body > div { grid-template-columns: 1fr !important; gap: 10px; }
             .dasha-tree { max-height: 350px; }
@@ -692,6 +736,22 @@
             .section-body { padding: 8px 6px; }
             table { font-size: 0.62rem; }
             th, td { padding: 4px 5px; font-size: 0.6rem; }
+
+            /* গ্ৰহ অৱস্থান টেবুল - ডাঙৰ ফন্ট (মোবাইল) */
+            #tab-planets table { font-size: 0.75rem; }
+            #tab-planets th { font-size: 0.7rem; }
+            #tab-planets td { font-size: 0.72rem; font-weight: 700; }
+            #tab-planets td b { font-size: 0.75rem; }
+            #tab-planets tr.planet-sun td:first-child,
+            #tab-planets tr.planet-moon td:first-child,
+            #tab-planets tr.planet-mars td:first-child,
+            #tab-planets tr.planet-mercury td:first-child,
+            #tab-planets tr.planet-jupiter td:first-child,
+            #tab-planets tr.planet-venus td:first-child,
+            #tab-planets tr.planet-saturn td:first-child,
+            #tab-planets tr.planet-rahu td:first-child,
+            #tab-planets tr.planet-ketu td:first-child,
+            #tab-planets tr.planet-lagna td:first-child { font-size: 0.8rem; }
             .dasha-tree { max-height: 280px; }
             .md-header .md-info strong { font-size: 0.72rem; }
             .ad-header .ad-info strong { font-size: 0.65rem; }
@@ -1147,7 +1207,7 @@
                 <thead><tr><th>{{ _('th_planet') }}</th><th>{{ _('th_rashi') }}</th><th>{{ _('th_degree') }}</th><th>{{ _('th_nakshatra') }}</th><th>{{ _('th_nak_lord') }}</th></tr></thead>
                 <tbody>
                     {% for p in planets %}
-                    <tr><td><b>{{ p.name }}</b></td><td>{{ p.rasi }}</td><td>{{ p.degree }}°</td><td>{{ p.nakshatra }}</td><td>{{ p.lord }}</td></tr>
+                    <tr class="planet-{{ p.name_en | lower }}"><td><b>{{ p.name }}</b></td><td>{{ p.rasi }}</td><td>{{ p.degree }}°</td><td>{{ p.nakshatra }}</td><td>{{ p.lord }}</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
