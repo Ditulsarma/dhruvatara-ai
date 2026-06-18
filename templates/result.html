@@ -1140,13 +1140,16 @@
             <button class="btn-sm btn-outline" onclick="downloadPatrikaPDF()">{{ _('btn_patrika_pdf') }}</button>
             {% if user_features and user_features.get('pratyantar_dasha_pdf', False) %}
             <button class="btn-sm btn-fill" onclick="downloadPratyantarPDF()" style="background:#6A1B9A;">{{ _('btn_pratyantar_pdf') }}</button>
+            <button class="btn-sm btn-fill" onclick="openPratyantarEditor()" style="background:#6A1B9A;">✏️ {{ _('pratyantar_editor_title') }}</button>
             {% else %}
             <button class="btn-sm btn-fill" disabled style="background:#6A1B9A;opacity:0.5;cursor:not-allowed;" title="{{ _('txt_upgrade_to_pro') }}">{{ _('btn_pratyantar_pdf') }}</button>
+            <button class="btn-sm btn-fill" onclick="openPratyantarEditor()" style="background:#6A1B9A;opacity:0.5;" title="{{ _('txt_upgrade_to_pro') }}">✏️ {{ _('pratyantar_editor_title') }}</button>
             {% endif %}
             {% else %}
             <button class="btn-sm btn-fill" disabled style="background:var(--deep-blue);opacity:0.5;cursor:not-allowed;" title="{{ _('txt_upgrade_to_pro') }}">{{ _('btn_generate_patrika') }}</button>
             <button class="btn-sm btn-outline" disabled style="opacity:0.5;cursor:not-allowed;" title="{{ _('txt_upgrade_to_pro') }}">{{ _('btn_patrika_pdf') }}</button>
             <button class="btn-sm btn-fill" disabled style="background:#6A1B9A;opacity:0.5;cursor:not-allowed;" title="{{ _('txt_upgrade_to_pro') }}">{{ _('btn_pratyantar_pdf') }}</button>
+            <button class="btn-sm btn-fill" onclick="openPratyantarEditor()" style="background:#6A1B9A;opacity:0.5;" title="{{ _('txt_upgrade_to_pro') }}">✏️ {{ _('pratyantar_editor_title') }}</button>
             <button class="btn-upgrade" onclick="openUpgradePlansModal()" style="padding:8px 18px;font-size:0.78rem;">{{ _('btn_upgrade_pro') }}</button>
             {% endif %}
         </div>
@@ -2997,9 +3000,44 @@
             timezone: '{{ timezone }}'
         };
 
+        // Include edited phala from localStorage if available
+        try {
+            const stored = localStorage.getItem('pratyantar_edited_phala');
+            if (stored) {
+                data.edited_phala = stored;
+            }
+        } catch(e) {}
+
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = '/download-pratyantar-pdf';
+        for (const [key, value] of Object.entries(data)) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value;
+            form.appendChild(input);
+        }
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+    }
+
+    function openPratyantarEditor() {
+        // POST kundli data to editor page so user doesn't need to re-enter
+        const data = {
+            name: '{{ user_name }}',
+            dob: '{{ user_dob }}',
+            tob: '{{ user_tob }}',
+            place: '{{ user_place }}',
+            gender: '{{ gender }}',
+            lat: '{{ lat }}',
+            lon: '{{ lon }}',
+            timezone: '{{ timezone }}'
+        };
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/pratyantar-editor';
         for (const [key, value] of Object.entries(data)) {
             const input = document.createElement('input');
             input.type = 'hidden';

@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ _('pratyantar_editor_title') }} | {{ _('app_name') }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --orange: #FF6600; --orange-dark: #E55D00; --deep-blue: #1a237e;
+            --gold: #D4A017; --bg: #FFF8F0; --card-bg: #FFFFFF;
+            --text: #2c3e50; --text-light: #5a6c7d; --border: #e8e0d5;
+            --shadow: 0 4px 20px rgba(0,0,0,0.06); --radius: 14px; --radius-sm: 8px;
+            --green: #2E7D32; --red: #C62828; --purple: #6A1B9A;
+            --transition: 0.25s ease;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans Bengali', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #FFF8F0 0%, #FFF3E0 30%, #FFECB3 60%, #FFF8F0 100%);
+            background-attachment: fixed; min-height: 100vh; color: var(--text);
+        }
+
+        /* ─── Top Nav ─── */
+        .top-nav {
+            background: white; border-bottom: 1px solid var(--border);
+            padding: 12px 24px; display: flex; align-items: center;
+            justify-content: space-between; position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .top-nav .brand { font-weight: 800; font-size: 1.2rem; color: var(--orange); }
+        .top-nav .brand span { color: var(--deep-blue); }
+        .nav-actions { display: flex; gap: 10px; align-items: center; }
+        .btn-sm {
+            padding: 8px 16px; border-radius: 20px; font-size: 0.82rem;
+            font-weight: 600; font-family: inherit; cursor: pointer; border: none;
+            transition: var(--transition); text-decoration: none; display: inline-block;
+        }
+        .btn-sm-primary { background: var(--orange); color: white; }
+        .btn-sm-primary:hover { background: var(--orange-dark); }
+        .btn-sm-outline { background: white; color: var(--orange); border: 1.5px solid var(--orange); }
+        .btn-sm-outline:hover { background: var(--orange); color: white; }
+        .badge-pro {
+            background: linear-gradient(135deg, #D4A017, #FFD700);
+            color: #1a237e; padding: 4px 12px; border-radius: 12px;
+            font-size: 0.75rem; font-weight: 700;
+        }
+        .badge-free {
+            background: #e0e0e0; color: #666; padding: 4px 12px;
+            border-radius: 12px; font-size: 0.75rem; font-weight: 600;
+        }
+
+        /* ─── Page Layout ─── */
+        .page-wrapper { max-width: 1100px; margin: 0 auto; padding: 20px; }
+        .page-header {
+            text-align: center; margin-bottom: 24px;
+        }
+        .page-header h1 { font-size: 1.6rem; color: var(--deep-blue); margin-bottom: 4px; }
+        .page-header p { color: var(--text-light); font-size: 0.9rem; }
+
+        /* ─── Form Card ─── */
+        .card {
+            background: var(--card-bg); border-radius: var(--radius);
+            box-shadow: var(--shadow); padding: 24px; margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+        .card-title {
+            font-size: 1.1rem; font-weight: 700; color: var(--deep-blue);
+            margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--orange);
+        }
+        .form-row {
+            display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px;
+        }
+        .form-group { flex: 1; min-width: 180px; }
+        .form-group label {
+            display: block; font-size: 0.82rem; font-weight: 600;
+            color: var(--text-light); margin-bottom: 4px;
+        }
+        .form-group input, .form-group select {
+            width: 100%; padding: 10px 12px; border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm); font-size: 0.9rem; font-family: inherit;
+            background: #fafafa; transition: var(--transition);
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px rgba(255,102,0,0.1);
+        }
+        .btn-load {
+            display: block; width: 100%; max-width: 300px; margin: 16px auto 0;
+            padding: 12px 24px; background: linear-gradient(135deg, var(--deep-blue), #283593);
+            color: white; border: none; border-radius: 25px; font-size: 1rem;
+            font-weight: 700; font-family: inherit; cursor: pointer; transition: var(--transition);
+        }
+        .btn-load:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(26,35,126,0.3); }
+        .btn-load:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        /* ─── Free User Warning ─── */
+        .free-warning {
+            background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+            border: 2px solid var(--orange); border-radius: var(--radius);
+            padding: 20px; text-align: center; margin-bottom: 20px;
+        }
+        .free-warning .warn-icon { font-size: 2rem; display: block; margin-bottom: 8px; }
+        .free-warning p { color: #E65100; font-size: 0.9rem; line-height: 1.6; margin-bottom: 12px; }
+        .btn-upgrade {
+            display: inline-block; padding: 12px 28px;
+            background: linear-gradient(135deg, #D4A017, #FFD700);
+            color: #1a237e; border: none; border-radius: 25px;
+            font-size: 0.95rem; font-weight: 700; font-family: inherit;
+            cursor: pointer; text-decoration: none; transition: var(--transition);
+            box-shadow: 0 4px 16px rgba(212,160,23,0.3);
+        }
+        .btn-upgrade:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(212,160,23,0.4); }
+
+        /* ─── Editor Section ─── */
+        .editor-section { display: none; }
+        .editor-section.active { display: block; }
+
+        .antardasha-block {
+            margin-bottom: 20px;
+        }
+        .ad-header {
+            background: linear-gradient(135deg, #1a237e, #283593);
+            color: white; padding: 12px 16px; border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+            font-weight: 700; font-size: 0.95rem;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 8px;
+        }
+        .ad-header .ad-dates { font-size: 0.8rem; opacity: 0.85; font-weight: 400; }
+
+        .pratyantar-item {
+            background: #faf5ff; border-left: 3px solid var(--purple);
+            padding: 12px 16px; margin-bottom: 1px;
+            transition: var(--transition);
+        }
+        .pratyantar-item:last-child { border-radius: 0 0 var(--radius-sm) var(--radius-sm); }
+        .pratyantar-item:hover { background: #f3e5f5; }
+
+        .pd-title-row {
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 8px; margin-bottom: 6px;
+        }
+        .pd-title {
+            font-weight: 700; color: var(--purple); font-size: 0.9rem;
+        }
+        .pd-dates {
+            font-size: 0.78rem; color: #888;
+        }
+        .pd-info {
+            font-size: 0.75rem; color: #999; margin-bottom: 6px;
+        }
+
+        .phala-display {
+            color: #333; font-size: 0.85rem; line-height: 1.7;
+            padding: 8px 10px; background: white; border-radius: 4px;
+            border: 1px solid #e8e0d5; white-space: pre-line;
+        }
+        .phala-textarea {
+            width: 100%; min-height: 60px; padding: 8px 10px;
+            border: 1.5px solid var(--purple); border-radius: 4px;
+            font-size: 0.85rem; font-family: inherit; line-height: 1.7;
+            resize: vertical; background: white; color: #333;
+            transition: var(--transition);
+        }
+        .phala-textarea:focus {
+            outline: none; border-color: var(--orange);
+            box-shadow: 0 0 0 3px rgba(255,102,0,0.1);
+        }
+        .phala-textarea:disabled {
+            background: #f5f5f5; border-color: #ddd; color: #666; cursor: not-allowed;
+        }
+
+        .pd-actions {
+            display: flex; gap: 6px; margin-top: 6px;
+        }
+        .btn-xs {
+            padding: 4px 10px; border-radius: 12px; font-size: 0.72rem;
+            font-weight: 600; font-family: inherit; cursor: pointer; border: none;
+            transition: var(--transition);
+        }
+        .btn-xs-edit { background: #e8e0f0; color: var(--purple); }
+        .btn-xs-edit:hover { background: var(--purple); color: white; }
+        .btn-xs-save { background: var(--green); color: white; }
+        .btn-xs-save:hover { background: #1B5E20; }
+        .btn-xs-cancel { background: #eee; color: #666; }
+        .btn-xs-cancel:hover { background: #ddd; }
+        .btn-xs-reset { background: #fff3e0; color: var(--orange); }
+        .btn-xs-reset:hover { background: var(--orange); color: white; }
+
+        /* ─── Global Actions Bar ─── */
+        .global-actions {
+            display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+            margin-top: 24px; padding: 16px;
+            background: white; border-radius: var(--radius);
+            box-shadow: var(--shadow); position: sticky; bottom: 16px;
+            border: 1px solid var(--border);
+        }
+        .btn-action {
+            padding: 12px 24px; border-radius: 25px; font-size: 0.9rem;
+            font-weight: 700; font-family: inherit; cursor: pointer; border: none;
+            transition: var(--transition); display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-print {
+            background: linear-gradient(135deg, var(--green), #1B5E20);
+            color: white; box-shadow: 0 4px 16px rgba(46,125,50,0.3);
+        }
+        .btn-print:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(46,125,50,0.4); }
+        .btn-print:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-reset-all {
+            background: white; color: var(--orange); border: 2px solid var(--orange);
+        }
+        .btn-reset-all:hover { background: var(--orange); color: white; }
+
+        /* ─── Loading & Messages ─── */
+        .loading-spinner {
+            display: none; text-align: center; padding: 40px;
+        }
+        .loading-spinner.active { display: block; }
+        .spinner {
+            width: 40px; height: 40px; border: 4px solid #e0e0e0;
+            border-top: 4px solid var(--orange); border-radius: 50%;
+            animation: spin 0.8s linear infinite; margin: 0 auto 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .toast {
+            position: fixed; top: 20px; right: 20px; z-index: 999;
+            padding: 12px 20px; border-radius: 8px; font-size: 0.85rem;
+            font-weight: 600; box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            display: none; max-width: 400px;
+        }
+        .toast.success { background: #E8F5E9; color: #2E7D32; border: 1px solid #A5D6A7; }
+        .toast.error { background: #FFEBEE; color: #C62828; border: 1px solid #EF9A9A; }
+        .toast.show { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .no-data-msg {
+            text-align: center; padding: 40px; color: #888; font-size: 0.9rem;
+        }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 768px) {
+            .page-wrapper { padding: 12px; }
+            .card { padding: 16px; }
+            .form-group { min-width: 140px; }
+            .btn-load { max-width: 100%; }
+            .global-actions { flex-direction: column; }
+            .btn-action { width: 100%; justify-content: center; }
+            .ad-header { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ─── Top Navigation ─── -->
+<nav class="top-nav">
+    <div class="brand">{{ _('app_name') }} <span>✦</span></div>
+    <div class="nav-actions">
+        {% if user_sub_info.is_pro %}
+        <span class="badge-pro">{{ user_sub_info.name_asm }}</span>
+        {% else %}
+        <span class="badge-free">{{ user_sub_info.name_asm }}</span>
+        {% endif %}
+        <a href="/dashboard" class="btn-sm btn-sm-outline">{{ _('nav_dashboard') }}</a>
+        <a href="/logout" class="btn-sm btn-sm-outline">{{ _('nav_logout') }}</a>
+    </div>
+</nav>
+
+<div class="page-wrapper">
+
+    <!-- ─── Page Header ─── -->
+    <div class="page-header">
+        <h1>{{ _('pratyantar_editor_title') }}</h1>
+        <p>{{ _('pratyantar_editor_subtitle') }}</p>
+    </div>
+
+    <!-- ─── Free User Warning ─── -->
+    {% if not user_sub_info.is_pro %}
+    <div class="free-warning" id="freeWarning">
+        <span class="warn-icon">⚠️</span>
+        <p>{{ _('pratyantar_free_warning') }}</p>
+        <a href="/subscription" class="btn-upgrade">{{ _('pratyantar_upgrade_btn') }}</a>
+    </div>
+    {% endif %}
+
+    <!-- ─── Kundli Input Form ─── -->
+    <div class="card" id="inputCard">
+        <div class="card-title">🔮 {{ _('kundli_title') }}</div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>{{ _('your_name') }}</label>
+                <input type="text" id="inpName" placeholder="{{ _('name_placeholder') }}" value="{{ kundli_data.name if kundli_data else '' }}">
+            </div>
+            <div class="form-group">
+                <label>{{ _('gender_label') }}</label>
+                <select id="inpGender">
+                    <option value="male" {% if kundli_data and kundli_data.gender == 'male' %}selected{% endif %}>{{ _('gender_male') }}</option>
+                    <option value="female" {% if kundli_data and kundli_data.gender == 'female' %}selected{% endif %}>{{ _('gender_female') }}</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>{{ _('dob_label') }}</label>
+                <input type="date" id="inpDob" value="{{ kundli_data.dob if kundli_data else '' }}">
+            </div>
+            <div class="form-group">
+                <label>{{ _('tob_label') }}</label>
+                <input type="time" id="inpTob" value="{{ kundli_data.tob if kundli_data else '' }}" step="1">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>{{ _('birth_place') }}</label>
+                <input type="text" id="inpPlace" placeholder="{{ _('place_placeholder') }}" value="{{ kundli_data.place if kundli_data else '' }}">
+            </div>
+            <div class="form-group" style="min-width:100px;">
+                <label>Latitude</label>
+                <input type="number" id="inpLat" placeholder="26.1445" step="any" value="{{ kundli_data.lat if kundli_data else '' }}">
+            </div>
+            <div class="form-group" style="min-width:100px;">
+                <label>Longitude</label>
+                <input type="number" id="inpLon" placeholder="91.7362" step="any" value="{{ kundli_data.lon if kundli_data else '' }}">
+            </div>
+            <div class="form-group" style="min-width:100px;">
+                <label>{{ _('timezone_label') }}</label>
+                <input type="number" id="inpTz" placeholder="5.5" step="0.5" value="{{ kundli_data.timezone if kundli_data else '5.5' }}">
+            </div>
+        </div>
+        <button class="btn-load" id="btnLoad" onclick="loadPratyantarData()">
+            🔮 {{ _('btn_generate_kundli') }}
+        </button>
+    </div>
+
+    <!-- ─── Loading Spinner ─── -->
+    <div class="loading-spinner" id="loadingSpinner">
+        <div class="spinner"></div>
+        <p style="color:#888;">{{ _('loading') | default('Loading...') }}</p>
+    </div>
+
+    <!-- ─── Editor Section ─── -->
+    <div class="editor-section" id="editorSection">
+        <div id="editorContent"></div>
+
+        <!-- Global Actions -->
+        <div class="global-actions" id="globalActions">
+            {% if user_sub_info.is_pro %}
+            <button class="btn-action btn-print" id="btnPrintAll" onclick="printPratyantarPDF()">
+                🖨️ {{ _('pratyantar_print') }}
+            </button>
+            {% endif %}
+            <button class="btn-action btn-reset-all" id="btnResetAll" onclick="resetAllPhala()"
+                    {% if not user_sub_info.is_pro %}disabled style="opacity:0.5;cursor:not-allowed;"{% endif %}>
+                🔄 {{ _('pratyantar_reset') }}
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<!-- ─── Toast ─── -->
+<div class="toast" id="toast"></div>
+
+<!-- ─── Hidden iframe for PDF download ─── -->
+<iframe id="pdfDownloadFrame" style="display:none;" name="pdfDownloadFrame"></iframe>
+
+<script>
+// ═══════════════════════════════════════════
+//  GLOBAL STATE
+// ═══════════════════════════════════════════
+let pratyantarData = null;       // Full data from API
+let editedPhalaMap = {};         // { "lord_en|start": "new text" }
+let kundliParams = {};           // Form params for re-printing
+let isPro = {{ 'true' if user_sub_info.is_pro else 'false' }};
+let currentLang = '{{ lang }}';
+const STORAGE_KEY = 'pratyantar_edited_phala';
+
+// ═══════════════════════════════════════════
+//  INIT: Auto-load if kundli data present
+// ═══════════════════════════════════════════
+(function init() {
+    // Load saved edits from localStorage
+    try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+            editedPhalaMap = JSON.parse(stored);
+        }
+    } catch(e) {}
+
+    // Auto-load if kundli data was passed from result page
+    {% if kundli_data %}
+    // Hide the input form since data is already provided
+    document.getElementById('inputCard').style.display = 'none';
+    // Auto-trigger load
+    setTimeout(() => loadPratyantarData(), 200);
+    {% endif %}
+})();
+
+// ═══════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════
+function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + type + ' show';
+    setTimeout(() => { t.className = 'toast'; }, 3000);
+}
+
+// ═══════════════════════════════════════════
+//  PERSIST EDITS TO localStorage
+// ═══════════════════════════════════════════
+function persistEdits() {
+    try {
+        if (Object.keys(editedPhalaMap).length > 0) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(editedPhalaMap));
+        } else {
+            localStorage.removeItem(STORAGE_KEY);
+        }
+    } catch(e) {}
+}
+
+// ═══════════════════════════════════════════
+//  LOAD PRATYANTAR DATA
+// ═══════════════════════════════════════════
+async function loadPratyantarData() {
+    const btn = document.getElementById('btnLoad');
+    const spinner = document.getElementById('loadingSpinner');
+    const editorSection = document.getElementById('editorSection');
+    const editorContent = document.getElementById('editorContent');
+
+    // Collect form data
+    const name = document.getElementById('inpName').value.trim();
+    const dob = document.getElementById('inpDob').value;
+    const tob = document.getElementById('inpTob').value;
+    const place = document.getElementById('inpPlace').value.trim();
+    const gender = document.getElementById('inpGender').value;
+    const lat = parseFloat(document.getElementById('inpLat').value) || 0;
+    const lon = parseFloat(document.getElementById('inpLon').value) || 0;
+    const tz = parseFloat(document.getElementById('inpTz').value) || 5.5;
+
+    if (!dob || !tob) {
+        showToast('{{ _("dob_label") }} আৰু {{ _("tob_label") }} প্ৰয়োজনীয়।', 'error');
+        return;
+    }
+
+    kundliParams = { name, dob, tob, place, gender, lat, lon, timezone: tz, lang: currentLang };
+
+    btn.disabled = true;
+    spinner.classList.add('active');
+    editorSection.classList.remove('active');
+    editorContent.innerHTML = '';
+
+    try {
+        const resp = await fetch('/api/pratyantar-editor-data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(kundliParams)
+        });
+        const result = await resp.json();
+
+        if (!result.success) {
+            showToast(result.error || 'Data load failed.', 'error');
+            return;
+        }
+
+        pratyantarData = result.data;
+
+        // Merge with saved edits from localStorage (don't reset!)
+        // editedPhalaMap already loaded from localStorage in init()
+
+        if (!pratyantarData || pratyantarData.length === 0) {
+            editorContent.innerHTML = '<div class="no-data-msg">{{ _("pratyantar_no_data") }}</div>';
+        } else {
+            renderEditor();
+        }
+
+        editorSection.classList.add('active');
+
+    } catch (e) {
+        showToast('Network error: ' + e.message, 'error');
+    } finally {
+        btn.disabled = false;
+        spinner.classList.remove('active');
+    }
+}
+
+// ═══════════════════════════════════════════
+//  RENDER EDITOR
+// ═══════════════════════════════════════════
+function renderEditor() {
+    const container = document.getElementById('editorContent');
+    let html = '';
+
+    for (const adBlock of pratyantarData) {
+        html += '<div class="antardasha-block">';
+        html += '<div class="ad-header">';
+        html += '<span>' + escapeHtml(adBlock.header) + '</span>';
+        html += '<span class="ad-dates">' + escapeHtml(adBlock.dates) + '</span>';
+        html += '</div>';
+
+        for (const pd of adBlock.pratyantar_list) {
+            const editKey = pd.lord_en + '|' + pd.start;
+            const currentPhala = editedPhalaMap[editKey] !== undefined ? editedPhalaMap[editKey] : pd.phala_text;
+            const isEdited = editedPhalaMap[editKey] !== undefined;
+            const itemId = 'pd-' + sanitizeId(editKey);
+
+            html += '<div class="pratyantar-item" id="' + itemId + '">';
+            html += '<div class="pd-title-row">';
+            html += '<span class="pd-title">└ ' + escapeHtml(pd.lord) + ' {{ _("pratyantar_dasha") | default("Pratyantar Dasha") }}</span>';
+            html += '<span class="pd-dates">' + escapeHtml(pd.start) + ' — ' + escapeHtml(pd.end) + '</span>';
+            html += '</div>';
+
+            // Planet info (read-only)
+            if (pd.graha_asm || pd.rasi || pd.house) {
+                html += '<div class="pd-info">';
+                if (pd.graha_asm) html += 'গ্রহ: ' + escapeHtml(pd.graha_asm) + ' | ';
+                if (pd.rasi) html += 'ৰাশি: ' + escapeHtml(pd.rasi) + ' | ';
+                if (pd.house) html += 'ঘৰ: ' + escapeHtml(pd.house);
+                html += '</div>';
+            }
+
+            // Phala text area
+            html += '<textarea class="phala-textarea" id="ta-' + sanitizeId(editKey) + '" ';
+            if (!isPro) html += 'disabled ';
+            html += 'oninput="onPhalaEdit(\'' + escapeJs(editKey) + '\', this.value)">';
+            html += escapeHtml(currentPhala);
+            html += '</textarea>';
+
+            // Action buttons (Pro only)
+            if (isPro) {
+                html += '<div class="pd-actions">';
+                html += '<button class="btn-xs btn-xs-reset" onclick="resetOnePhala(\'' + escapeJs(editKey) + '\', \'' + escapeJs(pd.phala_default) + '\')" title="Reset to default">🔄</button>';
+                html += '</div>';
+            }
+
+            html += '</div>';
+        }
+        html += '</div>';
+    }
+
+    container.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════
+//  EDIT HANDLERS
+// ═══════════════════════════════════════════
+function onPhalaEdit(editKey, newText) {
+    editedPhalaMap[editKey] = newText;
+    persistEdits();
+}
+
+function resetOnePhala(editKey, defaultText) {
+    editedPhalaMap[editKey] = defaultText;
+    const taId = 'ta-' + sanitizeId(editKey);
+    const ta = document.getElementById(taId);
+    if (ta) {
+        ta.value = defaultText;
+    }
+    persistEdits();
+    showToast('{{ _("pratyantar_reset") }}', 'success');
+}
+
+function resetAllPhala() {
+    if (!isPro) return;
+    if (!pratyantarData) return;
+    if (!confirm('সকলো ফল ডিফল্টলৈ ঘূৰাই নিব বিচাৰে নেকি?')) return;
+
+    editedPhalaMap = {};
+    for (const adBlock of pratyantarData) {
+        for (const pd of adBlock.pratyantar_list) {
+            const editKey = pd.lord_en + '|' + pd.start;
+            const taId = 'ta-' + sanitizeId(editKey);
+            const ta = document.getElementById(taId);
+            if (ta) {
+                ta.value = pd.phala_default || pd.phala_text || '';
+            }
+        }
+    }
+    localStorage.removeItem(STORAGE_KEY);
+    showToast('{{ _("pratyantar_reset") }}', 'success');
+}
+
+// ═══════════════════════════════════════════
+//  PRINT PDF
+// ═══════════════════════════════════════════
+async function printPratyantarPDF() {
+    if (!isPro) {
+        showToast('Pro version required.', 'error');
+        return;
+    }
+    if (!pratyantarData) {
+        showToast('No data to print.', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('btnPrintAll');
+    btn.disabled = true;
+    btn.textContent = '⏳ Generating PDF...';
+
+    try {
+        const resp = await fetch('/api/pratyantar-print', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                ...kundliParams,
+                edited_phala: editedPhalaMap
+            })
+        });
+        const result = await resp.json();
+
+        if (!result.success) {
+            showToast(result.error || 'Print failed.', 'error');
+            return;
+        }
+
+        // Download PDF from base64
+        const byteChars = atob(result.pdf_base64);
+        const byteNums = new Array(byteChars.length);
+        for (let i = 0; i < byteChars.length; i++) {
+            byteNums[i] = byteChars.charCodeAt(i);
+        }
+        const byteArr = new Uint8Array(byteNums);
+        const blob = new Blob([byteArr], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = result.filename || 'Pratyantar_Dasha.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showToast('✅ PDF downloaded!', 'success');
+
+    } catch (e) {
+        showToast('Print error: ' + e.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '🖨️ {{ _("pratyantar_print") }}';
+    }
+}
+
+// ═══════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════
+function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function escapeJs(str) {
+    if (!str) return '';
+    return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+}
+
+function sanitizeId(str) {
+    if (!str) return 'x';
+    return str.replace(/[^a-zA-Z0-9_-]/g, '_');
+}
+
+// ─── Language switcher (preserve page) ───
+function switchLang(langCode) {
+    window.location.href = '/set-language/' + langCode + '?next=/pratyantar-editor';
+}
+</script>
+
+<!-- ─── Footer Images ─── -->
+{% if all_footer_images %}
+<div style="text-align:center;padding:20px;">
+{% for img in all_footer_images %}
+    {% if img.filename %}
+    <img src="/api/images/{{ img.id }}" alt="{{ img.alt_text or '' }}"
+         style="max-width:{{ img.width or 200 }}px; height:auto; margin:4px; border-radius:8px;"
+         loading="lazy" />
+    {% endif %}
+{% endfor %}
+</div>
+{% endif %}
+
+</body>
+</html>

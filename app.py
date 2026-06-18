@@ -1540,9 +1540,24 @@ def download_pdf():
         )
 
         # Build pratyantar dasha phala HTML (today onward, current antardasha only)
-        pratyantar_dasha_html = build_pratyantar_dasha_html(
-            dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx, gender=gender, lang=lang
-        )
+        # Check for edited phala from localStorage (sent as JSON string)
+        edited_phala_map = {}
+        edited_phala_str = request.form.get('edited_phala', '')
+        if edited_phala_str:
+            try:
+                edited_phala_map = json.loads(edited_phala_str)
+            except Exception:
+                pass
+
+        if edited_phala_map:
+            pratyantar_dasha_html = build_pratyantar_dasha_html_editable(
+                dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx,
+                gender=gender, lang=lang, edited_phala_map=edited_phala_map
+            )
+        else:
+            pratyantar_dasha_html = build_pratyantar_dasha_html(
+                dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx, gender=gender, lang=lang
+            )
 
         # Apply gender to AI interpretation
         ai_interpretation = apply_gender(ai_interpretation, gender)
@@ -2182,9 +2197,24 @@ def download_pratyantar_pdf():
         )
 
         # Build pratyantar dasha phala HTML (today onward, current antardasha only)
-        pratyantar_dasha_html = build_pratyantar_dasha_html(
-            dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx, gender=gender, lang=lang
-        )
+        # Check for edited phala from localStorage (sent as JSON string)
+        edited_phala_map = {}
+        edited_phala_str = request.form.get('edited_phala', '')
+        if edited_phala_str:
+            try:
+                edited_phala_map = json.loads(edited_phala_str)
+            except Exception:
+                pass
+
+        if edited_phala_map:
+            pratyantar_dasha_html = build_pratyantar_dasha_html_editable(
+                dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx,
+                gender=gender, lang=lang, edited_phala_map=edited_phala_map
+            )
+        else:
+            pratyantar_dasha_html = build_pratyantar_dasha_html(
+                dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx, gender=gender, lang=lang
+            )
 
         # Generate patrika text
         patrika_text = generate_patrika_text(
@@ -2252,6 +2282,543 @@ def download_pratyantar_pdf():
         )
     except Exception as e:
         return f"<div style='padding:40px;font-family:Arial;text-align:center;'><h2 style='color:#c62828;'>প্ৰত্যন্তৰ দশা PDF নিৰ্মাণ ত্ৰুটি</h2><p>{str(e)}</p><a href='/'>আকৌ চেষ্টা কৰক</a></div>"
+
+# ═══════════════════════════════════════════
+#  PRATYANTAR DASHA EDITOR (Editable PDF)
+# ═══════════════════════════════════════════
+
+@app.route("/pratyantar-editor", methods=["GET", "POST"])
+@login_required
+def pratyantar_editor_page():
+    """Pratyantar Dasha Phala Editor page — Pro users can edit & print, Free users view only.
+    GET: renders the editor page. If kundli data is in session, passes it for auto-load.
+    POST: receives kundli data from result.html, stores in session, redirects to GET."""
+    lang = get_current_language()
+    user_id = session.get('user_id', 0)
+    user_sub_info = get_user_sub_info(user_id)
+    is_pro = user_sub_info.get('is_pro', False)
+
+    # Handle POST: store kundli data in session
+    if request.method == 'POST':
+        session['pratyantar_kundli'] = {
+            'name': request.form.get('name', ''),
+            'dob': request.form.get('dob', ''),
+            'tob': request.form.get('tob', ''),
+            'place': request.form.get('place', ''),
+            'gender': request.form.get('gender', 'male'),
+            'lat': request.form.get('lat', ''),
+            'lon': request.form.get('lon', ''),
+            'timezone': request.form.get('timezone', '5.5'),
+        }
+        return redirect(url_for('pratyantar_editor_page'))
+
+    # GET: retrieve stored kundli data (if any)
+    kundli_data = session.pop('pratyantar_kundli', None)
+
+    # Get sidebar/footer images
+    sidebar_images = get_images_by_placement('sidebar')
+    footer_images = get_images_by_placement('footer')
+    plans_images = get_images_by_placement('plans')
+    general_images = get_images_by_placement('general')
+    all_footer_images = sidebar_images + footer_images + plans_images + general_images
+
+    return render_template("pratyantar_editor.html",
+                           lang=lang,
+                           is_pro=is_pro,
+                           user_sub_info=user_sub_info,
+                           user_features=get_user_features(user_id),
+                           feature_defs=get_all_feature_definitions(),
+                           all_footer_images=all_footer_images,
+                           kundli_data=kundli_data)
+
+
+@app.route("/api/pratyantar-editor-data", methods=["POST"])
+@login_required
+def api_pratyantar_editor_data():
+    """API: Return pratyantar dasha phala data for the editor.
+    Accepts kundli form data, calculates everything, returns structured JSON
+    with planet names, dates, and phala text for each pratyantar period."""
+    try:
+        data = request.get_json(silent=True) or {}
+        # Support both JSON and form data
+        name = data.get("name", "")
+        dob = data.get("dob", "")
+        tob = data.get("tob", "")
+        place = data.get("place", "")
+        gender = data.get("gender", "male")
+        lat = float(data.get("lat", 0) or 0)
+        lon = float(data.get("lon", 0) or 0)
+        tz_offset = float(data.get("timezone", 5.5) or 5.5)
+        lang = data.get("lang", get_current_language())
+
+        if not dob or not tob:
+            return jsonify({"success": False, "error": "জন্ম তাৰিখ আৰু সময় প্ৰয়োজনীয়।"}), 400
+
+        if lat == 0 and lon == 0 and place:
+            coords = get_coordinates(place)
+            if coords:
+                lat, lon = coords
+            else:
+                lat, lon = 26.1445, 91.7362
+
+        ist_time = datetime.strptime(f"{dob} {tob}", "%Y-%m-%d %H:%M")
+        jd = swe.julday(ist_time.year, ist_time.month, ist_time.day,
+                        (ist_time.hour + ist_time.minute / 60.0) - tz_offset)
+        swe.set_sid_mode(swe.SIDM_LAHIRI)
+        ayanamsa = swe.get_ayanamsa(jd)
+
+        planets_dict = {
+            "ৰবি": swe.SUN, "চন্দ্ৰ": swe.MOON, "মংগল": swe.MARS,
+            "বুধ": swe.MERCURY, "বৃহস্পতি": swe.JUPITER, "শুক্ৰ": swe.VENUS,
+            "শনি": swe.SATURN, "ৰাহু": swe.MEAN_NODE
+        }
+
+        p_sidereal_longitudes = {}
+        for p_name, p_id in planets_dict.items():
+            pos, _ = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
+            p_sidereal_longitudes[p_name] = pos[0]
+
+        p_sidereal_longitudes["কেতু"] = (p_sidereal_longitudes["ৰাহু"] + 180) % 360
+
+        cusps, ascmc = swe.houses(jd, lat, lon, b'P')
+        asc_sidereal = (ascmc[0] - ayanamsa) % 360
+        p_sidereal_longitudes["লগ্ন"] = asc_sidereal
+        asc_rasi_idx = int(asc_sidereal / 30) % 12
+
+        # Build dasha hierarchy
+        dasa_hierarchy = get_full_dasa_hierarchy(p_sidereal_longitudes["চন্দ্ৰ"], ist_time)
+        dasa_hierarchy = localize_dasha_hierarchy(dasa_hierarchy, lang=lang)
+
+        # Convert planet degrees for get_planet_details
+        planet_degrees_en = convert_planet_degrees_to_en(p_sidereal_longitudes)
+
+        # Build structured pratyantar data for the editor
+        today = datetime.now()
+        editor_data = []
+        lbl_mahadasha = get_text('mahadasha', lang) or 'Mahadasha'
+        lbl_antardasha = get_text('antardasha', lang) or 'Antardasha'
+        lbl_pratyantar = get_text('pratyantar_dasha', lang) or 'Pratyantar Dasha'
+
+        for md in dasa_hierarchy:
+            maha_name = md.get('md_lord_display') or md.get('md_lord', '')
+            for ad in md.get('sub_dasas', []):
+                try:
+                    ad_end = parse_dasha_date(ad.get('end', ''))
+                except Exception:
+                    ad_end = datetime(1900, 1, 1)
+                if ad_end < today:
+                    continue
+
+                antar_lord = ad.get('ad_lord_display') or ad.get('ad_lord', '')
+                ad_header = f"{maha_name} {lbl_mahadasha} → {antar_lord} {lbl_antardasha}"
+                ad_dates = f"{ad.get('start', '')} — {ad.get('end', '')}"
+
+                pd_entries = []
+                for pd in ad.get('pratyantar', []):
+                    try:
+                        pd_end_dt = parse_dasha_date(pd.get('end', ''))
+                    except Exception:
+                        pd_end_dt = datetime(1900, 1, 1)
+                    if pd_end_dt < today:
+                        continue
+
+                    pd_lord = pd.get('lord_display') or pd.get('lord', '')
+                    pd_lord_en = pd.get('lord_en') or get_eng_planet(pd.get('lord', ''))
+                    pd_start = pd.get('start', '')
+                    pd_end = pd.get('end', '')
+
+                    # Get phala text
+                    pd_detail = get_planet_details(pd_lord_en, planet_degrees_en, asc_rasi_idx)
+                    phala_text = ''
+                    graha_asm = ''
+                    rasi = ''
+                    house = ''
+                    if pd_detail:
+                        graha_asm = pd_detail.get('name_asm', pd.get('lord', ''))
+                        rasi = pd_detail.get('rasi', '')
+                        house = pd_detail.get('house', '')
+                        try:
+                            phala_text = get_antardasha_phala_i18n(graha_asm, rasi, house, lang)
+                        except Exception:
+                            phala_text = ''
+                    if phala_text:
+                        phala_text = apply_gender(phala_text, gender)
+
+                    pd_entries.append({
+                        "lord": pd_lord,
+                        "lord_en": pd_lord_en,
+                        "start": pd_start,
+                        "end": pd_end,
+                        "graha_asm": graha_asm,
+                        "rasi": rasi,
+                        "house": str(house),
+                        "phala_text": phala_text,
+                        "phala_default": phala_text,  # original default for reset
+                    })
+
+                if pd_entries:
+                    editor_data.append({
+                        "header": ad_header,
+                        "dates": ad_dates,
+                        "pratyantar_list": pd_entries
+                    })
+
+        return jsonify({
+            "success": True,
+            "data": editor_data,
+            "lang": lang,
+            "name": name,
+            "dob": dob,
+            "tob": tob,
+            "place": place,
+            "gender": gender,
+            "lat": lat,
+            "lon": lon,
+            "timezone": tz_offset,
+            "asc_rasi_idx": asc_rasi_idx,
+            "planet_degrees": p_sidereal_longitudes,
+        })
+
+    except Exception as e:
+        logger.error(f"Pratyantar editor data error: {e}")
+        logger.error(traceback.format_exc())
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/pratyantar-print", methods=["POST"])
+@login_required
+def api_pratyantar_print():
+    """API: Generate FULL PDF (same as download-pratyantar-pdf) with edited pratyantar phala.
+    Only Pro users can use this; Free users get blocked.
+    Returns base64 PDF for browser download."""
+    user_id = session.get('user_id', 0)
+    if not check_feature_access(user_id, 'pratyantar_dasha_pdf'):
+        return jsonify({"success": False, "error": "Pro version required for printing."}), 403
+
+    try:
+        data = request.get_json(silent=True) or {}
+        name = data.get("name", "")
+        dob = data.get("dob", "")
+        tob = data.get("tob", "")
+        place = data.get("place", "")
+        gender = data.get("gender", "male")
+        lat = float(data.get("lat", 0) or 0)
+        lon = float(data.get("lon", 0) or 0)
+        tz_offset = float(data.get("timezone", 5.5) or 5.5)
+        lang = data.get("lang", get_current_language())
+        edited_phala_map = data.get("edited_phala", {})  # { "lord_en|start": "new text", ... }
+
+        if lat == 0 and lon == 0 and place:
+            coords = get_coordinates(place)
+            if coords:
+                lat, lon = coords
+            else:
+                lat, lon = 26.1445, 91.7362
+
+        ist_time = datetime.strptime(f"{dob} {tob}", "%Y-%m-%d %H:%M")
+        jd = swe.julday(ist_time.year, ist_time.month, ist_time.day,
+                        (ist_time.hour + ist_time.minute / 60.0) - tz_offset)
+        swe.set_sid_mode(swe.SIDM_LAHIRI)
+        ayanamsa = swe.get_ayanamsa(jd)
+
+        planets_dict = {
+            "ৰবি": swe.SUN, "চন্দ্ৰ": swe.MOON, "মংগল": swe.MARS,
+            "বুধ": swe.MERCURY, "বৃহস্পতি": swe.JUPITER, "শুক্ৰ": swe.VENUS,
+            "শনি": swe.SATURN, "ৰাহু": swe.MEAN_NODE
+        }
+
+        planets_data = []
+        p_sidereal_longitudes = {}
+        planet_signs = {}
+        planet_houses = {}
+        pnames = get_planet_names_i18n(lang)
+
+        for p_name, p_id in planets_dict.items():
+            pos, _ = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
+            p_sidereal_longitudes[p_name] = pos[0]
+            is_bakri = check_bakri_by_degree_diff(ist_time, p_id)
+            r_idx, rasi, deg = get_rasi_and_degree(pos[0])
+            nak_idx, nak, lord = get_nakshatra_details(pos[0])
+            display_name = pnames.get(p_name, p_name)
+            state = get_planet_state(p_name, r_idx, is_bakri,
+                                     p_sidereal_longitudes.get("ৰবি", 0), pos[0], lang)
+            planets_data.append({"name": display_name, "name_asm": p_name, "name_en": get_eng_planet(p_name),
+                                 "rasi": rasi, "rasi_idx": r_idx, "degree": deg,
+                                 "nakshatra": nak, "nak_idx": nak_idx, "lord": lord, "state": state})
+            planet_signs[p_name] = r_idx
+
+        p_sidereal_longitudes["কেতু"] = (p_sidereal_longitudes["ৰাহু"] + 180) % 360
+        r_idx_k, ketu_rasi, ketu_deg = get_rasi_and_degree(p_sidereal_longitudes["কেতু"])
+        ketu_idx, ketu_nak, ketu_lord = get_nakshatra_details(p_sidereal_longitudes["কেতু"])
+        ketu_state = get_planet_state("কেতু", r_idx_k, True,
+                                      p_sidereal_longitudes.get("ৰবি", 0), p_sidereal_longitudes["কেতু"], lang)
+        planets_data.append({"name": pnames.get("কেতু", "কেতু"), "name_asm": "কেতু", "name_en": "Ketu",
+                             "rasi": ketu_rasi, "rasi_idx": r_idx_k, "degree": ketu_deg,
+                             "nakshatra": ketu_nak, "nak_idx": ketu_idx, "lord": ketu_lord, "state": ketu_state})
+        planet_signs["কেতু"] = r_idx_k
+
+        cusps, ascmc = swe.houses(jd, lat, lon, b'P')
+        asc_sidereal = (ascmc[0] - ayanamsa) % 360
+        p_sidereal_longitudes["লগ্ন"] = asc_sidereal
+        asc_rasi_idx, asc_rasi, asc_deg = get_rasi_and_degree(asc_sidereal)
+        asc_nak_idx, asc_nak, asc_nak_lord = get_nakshatra_details(asc_sidereal)
+        lagna_state = get_planet_state("লগ্ন", asc_rasi_idx, False,
+                                       p_sidereal_longitudes.get("ৰবি", 0), asc_sidereal, lang)
+        planets_data.append({"name": pnames.get("লগ্ন", "লগ্ন"), "name_asm": "লগ্ন", "name_en": "Lagna",
+                             "rasi": asc_rasi, "rasi_idx": asc_rasi_idx, "degree": asc_deg,
+                             "nakshatra": asc_nak, "nak_idx": asc_nak_idx, "lord": asc_nak_lord, "state": lagna_state})
+        planet_signs["লগ্ন"] = asc_rasi_idx
+
+        for p_name, p_lon in p_sidereal_longitudes.items():
+            house_idx = (int(p_lon / 30) - asc_rasi_idx) % 12
+            planet_houses[p_name] = house_idx
+
+        dasa_hierarchy = get_full_dasa_hierarchy(p_sidereal_longitudes["চন্দ্ৰ"], ist_time)
+        dasa_hierarchy = localize_dasha_hierarchy(dasa_hierarchy, lang=lang)
+        panchanga = get_full_panchanga(ist_time, lat, lon, tz_offset, lang=lang)
+        dosha_results_raw = get_complete_dosha_analysis(planet_houses, p_sidereal_longitudes)
+        dosha_results = translate_dosha_result(dosha_results_raw, lang)
+        yoga_results_raw = get_complete_yoga_analysis(planet_houses, planet_signs, asc_rasi_idx)
+        yoga_results = translate_yoga_result(yoga_results_raw, lang)
+
+        moon_nak_idx = get_nakshatra_details(p_sidereal_longitudes["চন্দ্ৰ"])[0] + 1
+        moon_rasi_idx = get_rasi_and_degree(p_sidereal_longitudes["চন্দ্ৰ"])[0]
+
+        # ─── ALL SECTIONS (same as download-pratyantar-pdf) ───
+
+        # Varga Charts (all 16)
+        vargas = {"D1": 1, "D2": 2, "D3": 3, "D4": 4, "D7": 7, "D9": 9,
+                  "D10": 10, "D12": 12, "D16": 16, "D20": 20, "D24": 24,
+                  "D27": 27, "D30": 30, "D40": 40, "D45": 45, "D60": 60}
+        all_vargas = {}
+        for v_code, v_num in vargas.items():
+            all_vargas[v_code] = {}
+            for p_key, p_lon in p_sidereal_longitudes.items():
+                v_idx = calculate_varga(p_lon, v_num)
+                if v_idx not in all_vargas[v_code]:
+                    all_vargas[v_code][v_idx] = []
+                all_vargas[v_code][v_idx].append(PLANET_SHORT.get(p_key, p_key[:2]))
+
+        # Tripap Rista
+        tripap_data = get_tripap_rista(moon_nak_idx, lang)
+        tripap_ages = TRIPAP_AGES.get(moon_nak_idx, [])
+
+        # Sannari Chakra
+        sannari_html = generate_sannari_html_table(moon_nak_idx, nakshatras[moon_nak_idx - 1], lang=lang)
+
+        # Navatara Chakra
+        navatara_html = generate_navatara_html(moon_nak_idx, lang=lang)
+
+        # Nakshatra Phala
+        nakshatra_phala_html = apply_gender(get_nakshatra_phala_html_i18n(moon_nak_idx, lang), gender)
+
+        # Lagna Phala
+        lagna_phala_html = apply_gender(get_lagna_phala_html_i18n(asc_rasi_idx, lang), gender)
+
+        # Rashi Phala (Moon sign)
+        rashi_phala_html = apply_gender(get_rashi_phala_html_i18n(moon_rasi_idx, lang), gender)
+
+        lagna_lord = get_rashi_lord(asc_rasi_idx, lang)
+        moon_rashi_lord = get_rashi_lord(moon_rasi_idx, lang)
+        moon_rasi = get_rashi_name_i18n(moon_rasi_idx, lang)
+
+        # Graha Bichar
+        graha_bichar_html = get_graha_bichar_html_i18n(planet_houses, lang)
+
+        # Dasha Predictions
+        all_dasha_predictions = get_all_maha_antar_predictions(
+            dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx
+        )
+        for dp in all_dasha_predictions:
+            dp["prediction"] = apply_gender(dp["prediction"], gender)
+        all_dasha_predictions = filter_future_dasha_predictions(all_dasha_predictions)
+
+        # Antardasha Phala
+        antardasha_phala_html = build_important_antardasha_html(
+            dasa_hierarchy, gender=gender, lang=lang
+        )
+
+        # Pratyantar Dasha Phala — with edited text if provided
+        if edited_phala_map:
+            pratyantar_dasha_html = build_pratyantar_dasha_html_editable(
+                dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx,
+                gender=gender, lang=lang, edited_phala_map=edited_phala_map
+            )
+        else:
+            pratyantar_dasha_html = build_pratyantar_dasha_html(
+                dasa_hierarchy, p_sidereal_longitudes, asc_rasi_idx, gender=gender, lang=lang
+            )
+
+        # Dwadash Bhab Phala
+        dwadash_html = get_dwadash_html_i18n(planet_houses=planet_houses, asc_rasi_idx=asc_rasi_idx, lang=lang)
+
+        # Vimsottari Dasha Summary
+        vimsottari_summary = build_vimsottari_summary(dasa_hierarchy, lang=lang)
+
+        # Graha Maitri
+        graha_maitri_html = build_graha_maitri_pdf_html(planet_houses, lang)
+
+        # Kartari Yoga
+        kartari_html = generate_kartari_report(planet_houses, lang)
+
+        # Ratna (Gemstones)
+        ratna_html = build_ratna_html(asc_rasi_idx, lang)
+
+        # Patrika text
+        patrika_text = generate_patrika_text(
+            public_name=name,
+            secret_name='',
+            father_name='',
+            mother_name='',
+            birth_district=place,
+            residence_district='',
+            residence='',
+            gender=gender,
+            dob=dob, tob=tob,
+            asc_rasi=asc_rasi, asc_rasi_idx=asc_rasi_idx, asc_degree=asc_deg,
+            moon_rasi=moon_rasi, moon_rasi_idx=moon_rasi_idx,
+            nakshatra_name=get_nakshatra_name_i18n(moon_nak_idx - 1, lang),
+            nakshatra_idx=moon_nak_idx - 1,
+            nakshatra_pada=panchanga.get('nakshatra', {}).get('pada', 1),
+            panchanga=panchanga,
+            lang=lang,
+        )
+
+        astrologer_profile = get_astrologer_profile(user_id)
+
+        # ─── Generate FULL PDF (all sections, same as download-pratyantar-pdf) ───
+        pdf_bytes = generate_pdf_report(
+            name, dob, tob, place, planets_data, panchanga,
+            dosha_results, yoga_results, dasa_hierarchy, "",
+            all_vargas, tripap_data, tripap_ages, asc_rasi,
+            [], sannari_html, navatara_html,
+            nakshatra_phala_html, lagna_phala_html, rashi_phala_html,
+            graha_bichar_html=graha_bichar_html,
+            antardasha_phala_html=antardasha_phala_html,
+            dwadash_html=dwadash_html,
+            vimsottari_summary=vimsottari_summary,
+            lagna_lord=lagna_lord, moon_rashi_lord=moon_rashi_lord,
+            moon_rasi=moon_rasi, gender=gender,
+            astrologer_profile=astrologer_profile,
+            patrika_text=patrika_text,
+            pratyantar_dasha_html=pratyantar_dasha_html,
+            graha_maitri_html=graha_maitri_html,
+            kartari_html=kartari_html,
+            ratna_html=ratna_html,
+            lang=lang
+        )
+
+        import base64
+        pdf_b64 = base64.b64encode(pdf_bytes).decode('utf-8')
+        return jsonify({
+            "success": True,
+            "pdf_base64": pdf_b64,
+            "filename": f'Dhruvatara_AI_Pratyantar_{name.replace(" ", "_")}.pdf'
+        })
+
+    except Exception as e:
+        logger.error(f"Pratyantar print error: {e}")
+        logger.error(traceback.format_exc())
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+def build_pratyantar_dasha_html_editable(dasa_hierarchy, planet_degrees, lagna_sign_index,
+                                          gender='male', lang=None, edited_phala_map=None):
+    """
+    Build HTML for pratyantar dasha phala with support for edited phala text.
+    Same as build_pratyantar_dasha_html but uses edited_phala_map to override phala text.
+    edited_phala_map: dict with keys like "lord_en|start_date" → "new phala text"
+    """
+    from translations import get_text as _get_text
+    if lang is None:
+        try:
+            lang = get_current_language()
+        except Exception:
+            lang = 'as'
+    if edited_phala_map is None:
+        edited_phala_map = {}
+
+    lbl_mahadasha = _get_text('mahadasha', lang) or 'Mahadasha'
+    lbl_antardasha = _get_text('antardasha', lang) or 'Antardasha'
+    lbl_pratyantar = _get_text('pratyantar_dasha', lang) or 'Pratyantar Dasha'
+    lbl_unavailable = _get_text('pratyantar_unavailable', lang) or ''
+    lbl_no_pratyantar = _get_text('no_pratyantar', lang) or ''
+    today = datetime.now()
+    html = '<div style="font-size:0.85rem;line-height:1.8;">'
+
+    planet_degrees_en = convert_planet_degrees_to_en(planet_degrees)
+
+    for md in dasa_hierarchy:
+        maha_name = md.get('md_lord_display') or md.get('md_lord', '')
+        for ad in md.get('sub_dasas', []):
+            try:
+                ad_end = parse_dasha_date(ad.get('end', ''))
+            except Exception:
+                ad_end = datetime(1900, 1, 1)
+            if ad_end < today:
+                continue
+
+            antar_lord = ad.get('ad_lord_display') or ad.get('ad_lord', '')
+            html += f'<div style="margin-bottom:16px;padding:10px 14px;background:linear-gradient(135deg,#1a237e,#283593);color:white;border-radius:6px;">'
+            html += f'<strong style="font-size:1rem;">{maha_name} {lbl_mahadasha} \u2192 {antar_lord} {lbl_antardasha}</strong> '
+            html += f'<span style="font-size:0.8rem;opacity:0.85;">({ad.get("start","")} \u2014 {ad.get("end","")})</span>'
+            html += '</div>'
+
+            pd_list = ad.get('pratyantar', [])
+            if not pd_list:
+                if lbl_unavailable:
+                    html += f'<div style="padding:8px;color:#888;">{lbl_unavailable}</div>'
+                continue
+
+            has_any_pd = False
+            for pd in pd_list:
+                pd_lord = pd.get('lord_display') or pd.get('lord', '')
+                pd_start = pd.get('start', '')
+                pd_end = pd.get('end', '')
+                pd_lord_en = pd.get('lord_en') or get_eng_planet(pd.get('lord', ''))
+
+                try:
+                    pd_end_dt = parse_dasha_date(pd_end)
+                except Exception:
+                    pd_end_dt = datetime(1900, 1, 1)
+                if pd_end_dt < today:
+                    continue
+
+                has_any_pd = True
+
+                # Check for edited phala text
+                edit_key = f"{pd_lord_en}|{pd_start}"
+                phala_text = edited_phala_map.get(edit_key, '')
+
+                if not phala_text:
+                    # Fall back to default phala lookup
+                    pd_detail = get_planet_details(pd_lord_en, planet_degrees_en, lagna_sign_index)
+                    if pd_detail:
+                        graha_asm = pd_detail.get('name_asm', pd.get('lord', ''))
+                        rasi = pd_detail.get('rasi', '')
+                        house = pd_detail.get('house', '')
+                        try:
+                            phala_text = get_antardasha_phala_i18n(graha_asm, rasi, house, lang)
+                        except Exception:
+                            phala_text = ''
+
+                if phala_text:
+                    phala_text = apply_gender(phala_text, gender)
+
+                html += f'<div style="margin-bottom:10px;padding:8px 12px;background:#f3e5f5;border-left:3px solid #6A1B9A;border-radius:4px;">'
+                html += f'<strong style="color:#6A1B9A;">\u2514 {pd_lord} {lbl_pratyantar}</strong> '
+                html += f'<span style="font-size:0.8rem;color:#888;">({pd_start} \u2014 {pd_end})</span>'
+                if phala_text:
+                    html += f'<div style="margin-top:6px;color:#333;">{phala_text}</div>'
+                html += '</div>'
+
+            if not has_any_pd:
+                if lbl_no_pratyantar:
+                    html += f'<div style="padding:8px;color:#888;">{lbl_no_pratyantar}</div>'
+
+    html += '</div>'
+    return html
+
 
 @app.route("/custom-pdf", methods=["POST"])
 def custom_pdf():
