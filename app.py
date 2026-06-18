@@ -1145,7 +1145,7 @@ def calculate():
         pnames = get_planet_names_i18n(lang)
 
         for p_name, p_id in planets_dict.items():
-            pos = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
+            pos, _ = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
             p_sidereal_longitudes[p_name] = pos[0]
             p_speed = pos[3]  # longitude speed (deg/day) for retrograde detection
             r_idx, rasi, deg = get_rasi_and_degree(pos[0])
@@ -1425,7 +1425,7 @@ def download_pdf():
         pnames = get_planet_names_i18n(_pdf_lang)
 
         for p_name, p_id in planets_dict.items():
-            pos = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
+            pos, _ = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
             p_sidereal_longitudes[p_name] = pos[0]
             p_speed = pos[3]
             r_idx, rasi, deg = get_rasi_and_degree(pos[0])
@@ -1851,7 +1851,7 @@ def download_patrika_pdf():
         pnames = get_planet_names_i18n(_pdf_lang)
         
         for p_name, p_id in planets_dict.items():
-            pos = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
+            pos, _ = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
             p_sidereal_longitudes[p_name] = pos[0]
             p_speed = pos[3]
             r_idx, rasi, deg = get_rasi_and_degree(pos[0])
@@ -2089,7 +2089,7 @@ def download_pratyantar_pdf():
         pnames = get_planet_names_i18n(_pdf_lang)
 
         for p_name, p_id in planets_dict.items():
-            pos = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
+            pos, _ = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
             p_sidereal_longitudes[p_name] = pos[0]
             p_speed = pos[3]
             r_idx, rasi, deg = get_rasi_and_degree(pos[0])
