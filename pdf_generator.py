@@ -475,12 +475,13 @@ def _build_html(
             p_lord = ''
 
         planet_rows += f"""
-        <tr>
+        <tr class="prow-{p_eng.lower()}">
             <td><b>{p_name}</b></td>
             <td>{p_rasi}</td>
             <td>{p['degree']}°</td>
             <td>{p_nak}</td>
             <td>{p_lord}</td>
+            <td class="state-cell">{p.get('state', '—')}</td>
         </tr>"""
 
     # ── Panchanga Items ──
@@ -897,6 +898,19 @@ def _build_html(
     th {{ background: {ORANGE}; color: white; padding: 6px 8px; font-weight: 700; text-align: center; }}
     td {{ padding: 5px 8px; border: 1px solid #e0e0e0; text-align: center; }}
     tr:nth-child(even) {{ background: {LIGHT_BG}; }}
+
+    /* ── ৰঙীন গ্ৰহ ৰো (Colorful Planet Rows) ── */
+    tr.prow-sun td {{ background: #FFF3E0; color: #E65100; font-weight: 700; }}
+    tr.prow-moon td {{ background: #ECEFF1; color: #37474F; font-weight: 700; }}
+    tr.prow-mars td {{ background: #FFEBEE; color: #C62828; font-weight: 700; }}
+    tr.prow-mercury td {{ background: #E8F5E9; color: #1B5E20; font-weight: 700; }}
+    tr.prow-jupiter td {{ background: #FFF8E1; color: #F57F17; font-weight: 700; }}
+    tr.prow-venus td {{ background: #FCE4EC; color: #AD1457; font-weight: 700; }}
+    tr.prow-saturn td {{ background: #ECEFF1; color: #263238; font-weight: 700; }}
+    tr.prow-rahu td {{ background: #EDE7F6; color: #4527A0; font-weight: 700; }}
+    tr.prow-ketu td {{ background: #EFEBE9; color: #4E342E; font-weight: 700; }}
+    tr.prow-lagna td {{ background: #E3F2FD; color: #0D47A1; font-weight: 700; }}
+    td.state-cell {{ font-size: 8pt; font-style: italic; letter-spacing: 0.2px; }}
 
     .dasha-table th {{ background: {DEEP_BLUE}; }}
 
@@ -1630,7 +1644,7 @@ def _build_html(
         html += '<h2 class="section-heading">🕉️ ' + t('pdf_panchanga_section') + '</h2><div class="p-grid">' + panchanga_html + '</div>'
 
     if _include('planets_table'):
-        html += '<h2 class="section-heading">🪐 ' + t('pdf_planets_section') + '</h2><table><thead><tr><th>' + t('pdf_planet_col') + '</th><th>' + t('pdf_rashi_col') + '</th><th>' + t('pdf_degree_col') + '</th><th>' + t('pdf_nakshatra_col') + '</th><th>' + t('pdf_nak_lord_col') + '</th></tr></thead><tbody>' + planet_rows + '</tbody></table>'
+        html += '<h2 class="section-heading">🪐 ' + t('pdf_planets_section') + '</h2><table><thead><tr><th>' + t('pdf_planet_col') + '</th><th>' + t('pdf_rashi_col') + '</th><th>' + t('pdf_degree_col') + '</th><th>' + t('pdf_nakshatra_col') + '</th><th>' + t('pdf_nak_lord_col') + '</th><th>' + t('pdf_state_col') + '</th></tr></thead><tbody>' + planet_rows + '</tbody></table>'
 
     # ═══════════════ PAGE BREAK → ৩য় পৃষ্ঠা (জন্ম কুণ্ডলী) ═══════════════
     if _include('kundli_chart'):
