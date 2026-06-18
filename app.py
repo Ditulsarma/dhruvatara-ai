@@ -56,7 +56,7 @@ from tripap_rista import get_tripap_rista, analyze_tripap_rista, TRIPAP_AGES
 from dasha_engine import (
     get_full_dasha_prediction, get_all_maha_antar_predictions,
     get_eng_planet, get_asm_planet, get_planet_details, convert_planet_degrees_to_en,
-    get_planet_state
+    get_planet_state, check_bakri_by_degree_diff
 )
 from sannari_chakra import get_sannari_data, generate_sannari_svg, generate_sannari_html_table
 from navatara_chakra import get_navatara_data, generate_navatara_html, generate_navatara_svg
@@ -1147,13 +1147,13 @@ def calculate():
         for p_name, p_id in planets_dict.items():
             pos, _ = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
             p_sidereal_longitudes[p_name] = pos[0]
-            p_speed = pos[3]  # longitude speed (deg/day) for retrograde detection
+            is_bakri = check_bakri_by_degree_diff(ist_time, p_id)
             r_idx, rasi, deg = get_rasi_and_degree(pos[0])
             nak_idx, nak, lord = get_nakshatra_details(pos[0])
             # Map Assamese planet name to English for i18n
             asm_to_en = {"ৰবি": "Sun", "চন্দ্ৰ": "Moon", "মংগল": "Mars", "বুধ": "Mercury",
                         "বৃহস্পতি": "Jupiter", "শুক্ৰ": "Venus", "শনি": "Saturn", "ৰাহু": "Rahu"}
-            state = get_planet_state(p_name, r_idx, p_speed,
+            state = get_planet_state(p_name, r_idx, is_bakri,
                                      p_sidereal_longitudes.get("ৰবি", 0), pos[0], lang)
             planets_data.append({"name": pnames.get(p_name, p_name), "name_asm": p_name, "name_en": asm_to_en.get(p_name, ""),
                                  "rasi": rasi, "rasi_idx": r_idx, "degree": deg,
@@ -1166,7 +1166,7 @@ def calculate():
         r_idx_k, ketu_rasi, ketu_deg = get_rasi_and_degree(p_sidereal_longitudes["কেতু"])
         ketu_idx, ketu_nak, ketu_lord = get_nakshatra_details(p_sidereal_longitudes["কেতু"])
         ketu_idx = int(p_sidereal_longitudes["কেতু"] / 13.333333) % 27
-        ketu_state = get_planet_state("কেতু", r_idx_k, -1,
+        ketu_state = get_planet_state("কেতু", r_idx_k, True,
                                       p_sidereal_longitudes.get("ৰবি", 0), p_sidereal_longitudes["কেতু"], lang)
         planets_data.append({"name": pnames.get("কেতু", "কেতু"), "name_asm": "কেতু", "name_en": "Ketu",
                              "rasi": ketu_rasi, "rasi_idx": r_idx_k, "degree": ketu_deg,
@@ -1181,7 +1181,7 @@ def calculate():
         asc_rasi_idx, asc_rasi, asc_deg = get_rasi_and_degree(asc_sidereal)
         asc_nak_idx, asc_nak, asc_nak_lord = get_nakshatra_details(asc_sidereal)
         asc_nak_idx = int(asc_sidereal / 13.333333) % 27
-        lagna_state = get_planet_state("লগ্ন", asc_rasi_idx, 0,
+        lagna_state = get_planet_state("লগ্ন", asc_rasi_idx, False,
                                        p_sidereal_longitudes.get("ৰবি", 0), asc_sidereal, lang)
         planets_data.append({"name": pnames.get("লগ্ন", "লগ্ন"), "name_asm": "লগ্ন", "name_en": "Lagna",
                              "rasi": asc_rasi, "rasi_idx": asc_rasi_idx, "degree": asc_deg,
@@ -1427,12 +1427,12 @@ def download_pdf():
         for p_name, p_id in planets_dict.items():
             pos, _ = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
             p_sidereal_longitudes[p_name] = pos[0]
-            p_speed = pos[3]
+            is_bakri = check_bakri_by_degree_diff(ist_time, p_id)
             r_idx, rasi, deg = get_rasi_and_degree(pos[0])
             nak_idx, nak, lord = get_nakshatra_details(pos[0])
             # Use language-localized planet name to fix the mixing bug
             display_name = pnames.get(p_name, p_name)
-            state = get_planet_state(p_name, r_idx, p_speed,
+            state = get_planet_state(p_name, r_idx, is_bakri,
                                      p_sidereal_longitudes.get("ৰবি", 0), pos[0], _pdf_lang)
             planets_data.append({"name": display_name, "name_asm": p_name, "name_en": get_eng_planet(p_name), "rasi": rasi, "rasi_idx": r_idx, "degree": deg,
                                  "nakshatra": nak, "nak_idx": nak_idx, "lord": lord,
@@ -1442,7 +1442,7 @@ def download_pdf():
         p_sidereal_longitudes["কেতু"] = (p_sidereal_longitudes["ৰাহু"] + 180) % 360
         r_idx_k, ketu_rasi, ketu_deg = get_rasi_and_degree(p_sidereal_longitudes["কেতু"])
         ketu_idx, ketu_nak, ketu_lord = get_nakshatra_details(p_sidereal_longitudes["কেতু"])
-        ketu_state = get_planet_state("কেতু", r_idx_k, -1,
+        ketu_state = get_planet_state("কেতু", r_idx_k, True,
                                       p_sidereal_longitudes.get("ৰবি", 0), p_sidereal_longitudes["কেতু"], _pdf_lang)
         planets_data.append({"name": pnames.get("কেতু", "কেতু"), "name_asm": "কেতু", "name_en": "Ketu", "rasi": ketu_rasi, "rasi_idx": r_idx_k, "degree": ketu_deg,
                              "nakshatra": ketu_nak, "nak_idx": ketu_idx, "lord": ketu_lord,
@@ -1454,7 +1454,7 @@ def download_pdf():
         p_sidereal_longitudes["লগ্ন"] = asc_sidereal
         asc_rasi_idx, asc_rasi, asc_deg = get_rasi_and_degree(asc_sidereal)
         asc_nak_idx, asc_nak, asc_nak_lord = get_nakshatra_details(asc_sidereal)
-        lagna_state = get_planet_state("লগ্ন", asc_rasi_idx, 0,
+        lagna_state = get_planet_state("লগ্ন", asc_rasi_idx, False,
                                        p_sidereal_longitudes.get("ৰবি", 0), asc_sidereal, _pdf_lang)
         planets_data.append({"name": pnames.get("লগ্ন", "লগ্ন"), "name_asm": "লগ্ন", "name_en": "Lagna", "rasi": asc_rasi, "rasi_idx": asc_rasi_idx, "degree": asc_deg,
                              "nakshatra": asc_nak, "nak_idx": asc_nak_idx, "lord": asc_nak_lord,
@@ -1853,10 +1853,10 @@ def download_patrika_pdf():
         for p_name, p_id in planets_dict.items():
             pos, _ = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
             p_sidereal_longitudes[p_name] = pos[0]
-            p_speed = pos[3]
+            is_bakri = check_bakri_by_degree_diff(ist_time, p_id)
             r_idx, rasi, deg = get_rasi_and_degree(pos[0])
             nak_idx, nak, lord = get_nakshatra_details(pos[0])
-            state = get_planet_state(p_name, r_idx, p_speed,
+            state = get_planet_state(p_name, r_idx, is_bakri,
                                      p_sidereal_longitudes.get("ৰবি", 0), pos[0], _pdf_lang)
             planets_data.append({"name": p_name, "name_asm": p_name, "name_en": get_eng_planet(p_name), "rasi": rasi, "rasi_idx": r_idx, "degree": deg,
                                  "nakshatra": nak, "nak_idx": nak_idx, "lord": lord,
@@ -1866,7 +1866,7 @@ def download_patrika_pdf():
         p_sidereal_longitudes["কেতু"] = (p_sidereal_longitudes["ৰাহু"] + 180) % 360
         r_idx_k, ketu_rasi, ketu_deg = get_rasi_and_degree(p_sidereal_longitudes["কেতু"])
         ketu_idx, ketu_nak, ketu_lord = get_nakshatra_details(p_sidereal_longitudes["কেতু"])
-        ketu_state = get_planet_state("কেতু", r_idx_k, -1,
+        ketu_state = get_planet_state("কেতু", r_idx_k, True,
                                       p_sidereal_longitudes.get("ৰবি", 0), p_sidereal_longitudes["কেতু"], _pdf_lang)
         planets_data.append({"name": pnames.get("কেতু", "কেতু"), "name_asm": "কেতু", "name_en": "Ketu", "rasi": ketu_rasi, "rasi_idx": r_idx_k, "degree": ketu_deg,
                              "nakshatra": ketu_nak, "nak_idx": ketu_idx, "lord": ketu_lord,
@@ -1878,7 +1878,7 @@ def download_patrika_pdf():
         p_sidereal_longitudes["লগ্ন"] = asc_sidereal
         asc_rasi_idx, asc_rasi, asc_deg = get_rasi_and_degree(asc_sidereal)
         asc_nak_idx, asc_nak, asc_nak_lord = get_nakshatra_details(asc_sidereal)
-        lagna_state = get_planet_state("লগ্ন", asc_rasi_idx, 0,
+        lagna_state = get_planet_state("লগ্ন", asc_rasi_idx, False,
                                        p_sidereal_longitudes.get("ৰবি", 0), asc_sidereal, _pdf_lang)
         planets_data.append({"name": pnames.get("লগ্ন", "লগ্ন"), "name_asm": "লগ্ন", "name_en": "Lagna", "rasi": asc_rasi, "rasi_idx": asc_rasi_idx, "degree": asc_deg,
                              "nakshatra": asc_nak, "nak_idx": asc_nak_idx, "lord": asc_nak_lord,
@@ -2091,12 +2091,12 @@ def download_pratyantar_pdf():
         for p_name, p_id in planets_dict.items():
             pos, _ = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
             p_sidereal_longitudes[p_name] = pos[0]
-            p_speed = pos[3]
+            is_bakri = check_bakri_by_degree_diff(ist_time, p_id)
             r_idx, rasi, deg = get_rasi_and_degree(pos[0])
             nak_idx, nak, lord = get_nakshatra_details(pos[0])
             # Use language-localized planet name to fix the mixing bug
             display_name = pnames.get(p_name, p_name)
-            state = get_planet_state(p_name, r_idx, p_speed,
+            state = get_planet_state(p_name, r_idx, is_bakri,
                                      p_sidereal_longitudes.get("ৰবি", 0), pos[0], _pdf_lang)
             planets_data.append({"name": display_name, "name_asm": p_name, "name_en": get_eng_planet(p_name), "rasi": rasi, "rasi_idx": r_idx, "degree": deg,
                                  "nakshatra": nak, "nak_idx": nak_idx, "lord": lord,
@@ -2106,7 +2106,7 @@ def download_pratyantar_pdf():
         p_sidereal_longitudes["কেতু"] = (p_sidereal_longitudes["ৰাহু"] + 180) % 360
         r_idx_k, ketu_rasi, ketu_deg = get_rasi_and_degree(p_sidereal_longitudes["কেতু"])
         ketu_idx, ketu_nak, ketu_lord = get_nakshatra_details(p_sidereal_longitudes["কেতু"])
-        ketu_state = get_planet_state("কেতু", r_idx_k, -1,
+        ketu_state = get_planet_state("কেতু", r_idx_k, True,
                                       p_sidereal_longitudes.get("ৰবি", 0), p_sidereal_longitudes["কেতু"], _pdf_lang)
         planets_data.append({"name": pnames.get("কেতু", "কেতু"), "name_asm": "কেতু", "name_en": "Ketu", "rasi": ketu_rasi, "rasi_idx": r_idx_k, "degree": ketu_deg,
                              "nakshatra": ketu_nak, "nak_idx": ketu_idx, "lord": ketu_lord,
@@ -2118,7 +2118,7 @@ def download_pratyantar_pdf():
         p_sidereal_longitudes["লগ্ন"] = asc_sidereal
         asc_rasi_idx, asc_rasi, asc_deg = get_rasi_and_degree(asc_sidereal)
         asc_nak_idx, asc_nak, asc_nak_lord = get_nakshatra_details(asc_sidereal)
-        lagna_state = get_planet_state("লগ্ন", asc_rasi_idx, 0,
+        lagna_state = get_planet_state("লগ্ন", asc_rasi_idx, False,
                                        p_sidereal_longitudes.get("ৰবি", 0), asc_sidereal, _pdf_lang)
         planets_data.append({"name": pnames.get("লগ্ন", "লগ্ন"), "name_asm": "লগ্ন", "name_en": "Lagna", "rasi": asc_rasi, "rasi_idx": asc_rasi_idx, "degree": asc_deg,
                              "nakshatra": asc_nak, "nak_idx": asc_nak_idx, "lord": asc_nak_lord,

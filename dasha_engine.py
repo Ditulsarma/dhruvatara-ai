@@ -10,6 +10,9 @@
 - প্ৰত্যন্তৰ দশাৰ বিশেষ বিশ্লেষণ (বয়স, ৩য়/৬ষ্ঠ/১২শ পতি, তীক্ষ্ণ নক্ষত্ৰ)
 """
 
+import swisseph as swe
+from datetime import datetime, timedelta
+
 # ═══════════════════════════════════════════════════════════════
 # ধ্ৰুৱক (Constants)
 # ═══════════════════════════════════════════════════════════════
@@ -234,12 +237,39 @@ _STATE_LABELS = {
 }
 
 
-def get_planet_state(planet_asm: str, sign_idx: int, speed: float,
+def check_bakri_by_degree_diff(birth_dt, planet_id):
+    """
+    Determine if a planet is Bakri (বক্ৰী/Retrograde) by comparing
+    degree at yesterday 5:30 AM IST vs today 5:30 AM IST.
+    5:30 AM IST = 0:00 UT, so we compare JD at 0:00 UT.
+    If today's degree < yesterday's degree → Bakri (degree decreased).
+    If today's degree > yesterday's degree → Margi (degree increased).
+    """
+    # Today 5:30 AM IST = 0:00 UT
+    today_530 = datetime(birth_dt.year, birth_dt.month, birth_dt.day, 5, 30)
+    yesterday_530 = today_530 - timedelta(days=1)
+
+    jd_today = swe.julday(today_530.year, today_530.month, today_530.day, 0.0)
+    jd_yesterday = swe.julday(yesterday_530.year, yesterday_530.month, yesterday_530.day, 0.0)
+
+    swe.set_sid_mode(swe.SIDM_LAHIRI)
+    pos_today, _ = swe.calc_ut(jd_today, planet_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
+    pos_yesterday, _ = swe.calc_ut(jd_yesterday, planet_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
+
+    degree_today = pos_today[0] % 360
+    degree_yesterday = pos_yesterday[0] % 360
+
+    # If today's degree is less than yesterday's → Bakri (retrograde)
+    return degree_today < degree_yesterday
+
+
+def get_planet_state(planet_asm: str, sign_idx: int, is_bakri: bool,
                      sun_longitude: float, planet_longitude: float,
                      lang: str = 'as') -> str:
     """
     Calculate planet state: Retrograde (বক্ৰী), Direct (মাৰ্গী), Combust (অস্ত),
     Exalted (উচ্চ), Debilitated (নীচ).
+    Bakri/Margi is determined by 24-hour degree difference (yesterday 5:30 AM → today 5:30 AM).
     Returns a localized string with all applicable states.
     """
     def _(key): return _STATE_LABELS.get(key, {}).get(lang, key)
@@ -261,9 +291,8 @@ def get_planet_state(planet_asm: str, sign_idx: int, speed: float,
         elif sign_idx == _DEBILITATION_SIGNS[planet_asm]:
             states.append(_("nich"))
 
-    # Check retrograde / direct
-    is_retro = speed < 0
-    if is_retro:
+    # Check retrograde / direct (based on 24-hour degree difference)
+    if is_bakri:
         states.append(_("vakri"))
     else:
         states.append(_("margi"))
@@ -275,9 +304,9 @@ def get_planet_state(planet_asm: str, sign_idx: int, speed: float,
             angular_distance = 360 - angular_distance
 
         combust_limit = None
-        if planet_asm == "বুধ" and is_retro:
+        if planet_asm == "বুধ" and is_bakri:
             combust_limit = _COMBUST_DEGREES.get("বুধ_বক্ৰি")
-        elif planet_asm == "শুক্ৰ" and is_retro:
+        elif planet_asm == "শুক্ৰ" and is_bakri:
             combust_limit = _COMBUST_DEGREES.get("শুক্ৰ_বক্ৰি")
         else:
             combust_limit = _COMBUST_DEGREES.get(planet_asm)

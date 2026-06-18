@@ -18,6 +18,7 @@ from panchanga import (
     get_julian_day
 )
 from prediction_i18n import get_panchanga_names_i18n, get_panchanga_planet_name_i18n, get_panchanga_rashi_name_i18n, get_panchanga_yogini_direction_i18n
+from dasha_engine import check_bakri_by_degree_diff
 
 # ─── Planet names in Assamese ───────────────────────────────────
 PLANET_NAMES_ASM = {
@@ -333,8 +334,8 @@ def get_all_planet_positions(dt: datetime, lang: str = 'as') -> list:
             minutes = int(min_part)
             seconds = int((min_part - minutes) * 60)
 
-            # Retrograde check
-            retro = pos[3] < 0 if len(pos) > 3 else False
+            # Retrograde check: compare degree yesterday 5:30 AM vs today 5:30 AM
+            retro = check_bakri_by_degree_diff(dt, pid)
 
             planets.append({
                 "name": name,

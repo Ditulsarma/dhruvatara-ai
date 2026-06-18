@@ -39,13 +39,27 @@ MONTHS = {
 
 
 # ─── Ashtottari dasha starting lord by nakshatra (English) ───
+# Based on traditional Ashtottari system (অষ্টোত্তৰী দশা):
+# Nakshatra groups and their starting Mahadasha lord:
+#   Ashwini(0), Bharani(1)              → Venus
+#   Krittika(2), Rohini(3), Mrigashira(4) → Sun
+#   Ardra(5), Punarvasu(6), Pushya(7), Ashlesha(8) → Moon
+#   Magha(9), Purva Phalguni(10), Uttara Phalguni(11) → Mars
+#   Hasta(12), Chitra(13), Swati(14), Vishakha(15) → Mercury
+#   Anuradha(16), Jyeshtha(17), Mula(18) → Saturn
+#   Purva Ashadha(19), Uttara Ashadha(20), Shravana(21) → Jupiter
+#   Dhanishtha(22), Shatabhisha(23), Purva Bhadrapada(24) → Rahu
+#   Uttara Bhadrapada(25), Revati(26) → Venus
 ASHTOTTARI_START_EN = [
-    "Sun", "Sun", "Sun", "Sun", "Sun", "Sun",  # 0-5: Sun
-    "Moon", "Moon", "Moon", "Moon", "Moon", "Moon",  # 6-11: Moon
-    "Mars", "Mars", "Mars", "Mars",  # 12-15: Mars
-    "Mercury", "Mercury", "Mercury", "Mercury", "Mercury",  # 16-20: Mercury
-    "Saturn", "Saturn",  # 21-22: Saturn
-    "Jupiter", "Jupiter", "Jupiter", "Jupiter",  # 23-26: Jupiter
+    "Venus", "Venus",                                    # 0-1: Ashwini, Bharani
+    "Sun", "Sun", "Sun",                                 # 2-4: Krittika, Rohini, Mrigashira
+    "Moon", "Moon", "Moon", "Moon",                      # 5-8: Ardra, Punarvasu, Pushya, Ashlesha
+    "Mars", "Mars", "Mars",                              # 9-11: Magha, Purva Phalguni, Uttara Phalguni
+    "Mercury", "Mercury", "Mercury", "Mercury",          # 12-15: Hasta, Chitra, Swati, Vishakha
+    "Saturn", "Saturn", "Saturn",                        # 16-18: Anuradha, Jyeshtha, Mula
+    "Jupiter", "Jupiter", "Jupiter",                     # 19-21: Purva Ashadha, Uttara Ashadha, Shravana
+    "Rahu", "Rahu", "Rahu",                              # 22-24: Dhanishtha, Shatabhisha, Purva Bhadrapada
+    "Venus", "Venus",                                    # 25-26: Uttara Bhadrapada, Revati
 ]
 
 # ─── Yoni/Animal names by nakshatra (in all 4 languages) ──────
