@@ -633,8 +633,10 @@ def generate_pav_html(pav_data: Dict, lang: str = 'en') -> str:
         }
 
         /* ─── PAV Table ─── */
+        .pav-table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .pav-table {
             width: 100%;
+            min-width: 620px;
             border-collapse: separate;
             border-spacing: 0;
             font-size: 0.82rem;
@@ -837,11 +839,16 @@ def generate_pav_html(pav_data: Dict, lang: str = 'en') -> str:
 
         /* ─── Responsive ─── */
         @media (max-width: 768px) {
-            .pav-table { font-size: 0.7rem; }
+            .pav-table { font-size: 0.68rem; min-width: 520px; }
             .pav-table thead th,
             .pav-table tbody td,
-            .pav-table tfoot td { padding: 8px 4px; }
-            .pav-table tbody td.rashi-label { padding-left: 8px; font-size: 0.72rem; }
+            .pav-table tfoot td { padding: 6px 3px; }
+            .pav-table thead th { font-size: 0.62rem; }
+            .pav-table tbody td.rashi-label { padding-left: 6px; font-size: 0.7rem; }
+            .pav-table tbody td.bindu-cell::after { width: 7px; height: 7px; }
+            .pav-section-header { padding: 10px 14px; }
+            .pav-section-header h3 { font-size: 0.85rem; }
+            .pav-section-header .bindu-badge { font-size: 0.7rem; padding: 3px 8px; }
         }
     </style>
     ''')
@@ -872,7 +879,7 @@ def generate_pav_html(pav_data: Dict, lang: str = 'en') -> str:
 
         # ─── TABLE: Weekday-order column structure ───
         # Columns: Rashi | Sun | Moon | Mars | Mercury | Jupiter | Venus | Saturn | Lagna | Σ
-        html_parts.append('<table class="pav-table">')
+        html_parts.append('<div class="pav-table-wrap"><table class="pav-table">')
 
         # Colgroup for proportional widths
         html_parts.append('<colgroup>')
@@ -932,7 +939,7 @@ def generate_pav_html(pav_data: Dict, lang: str = 'en') -> str:
         html_parts.append('</tr>')
         html_parts.append('</tfoot>')
 
-        html_parts.append('</table>')
+        html_parts.append('</table></div>')
         html_parts.append('</div>')  # end pav-section
 
     html_parts.append('</div>')  # end container

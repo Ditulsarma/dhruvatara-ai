@@ -366,10 +366,11 @@ def generate_ashtakavarga_html(data: dict, lang: str = 'as') -> str:
             padding: 8px 14px; background: linear-gradient(135deg, #E8EAF6, #FFF8E1);
             border-radius: 8px; border-left: 4px solid #FF6600; }
         .ashtak-section h4 { color: #5B3E96; font-size: 0.95rem; margin: 8px 0 6px 0; }
-        .ashtak-table { width: 100%; border-collapse: collapse; font-size: 0.82rem;
+        .ashtak-table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .ashtak-table { width: 100%; min-width: 600px; border-collapse: collapse; font-size: 0.82rem;
             margin: 8px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-radius: 8px; overflow: hidden; }
         .ashtak-table th { background: #1a237e; color: white; padding: 7px 6px; text-align: center;
-            font-weight: 700; font-size: 0.78rem; }
+            font-weight: 700; font-size: 0.78rem; white-space: nowrap; }
         .ashtak-table td { padding: 6px 5px; text-align: center; border: 1px solid #e0e0e0; }
         .ashtak-table tr:nth-child(even) { background: #f5f5f5; }
         .ashtak-table tr:nth-child(odd) { background: #fff; }
@@ -394,6 +395,13 @@ def generate_ashtakavarga_html(data: dict, lang: str = 'as') -> str:
         .ashtak-legend { font-size: 0.78rem; color: #666; margin: 8px 0; }
         .ashtak-valid { color: #2E7D32; font-weight: 700; }
         .ashtak-invalid { color: #C62828; font-weight: 700; }
+        @media (max-width: 768px) {
+            .ashtak-table { font-size: 0.68rem; min-width: 520px; }
+            .ashtak-table th { font-size: 0.65rem; padding: 5px 3px; }
+            .ashtak-table td { padding: 4px 3px; }
+            .ashtak-section h3 { font-size: 0.9rem; }
+            .ashtak-section h4 { font-size: 0.82rem; }
+        }
     </style>
     ''')
     
@@ -414,7 +422,7 @@ def generate_ashtakavarga_html(data: dict, lang: str = 'as') -> str:
         pname = pnames.get(planet, planet)
         
         html_parts.append(f'<h4>🪐 {pname} — {t("ashtak_total_bindu")}: {total} ({t("ashtak_expected")}: {expected})</h4>')
-        html_parts.append('<table class="ashtak-table">')
+        html_parts.append('<div class="ashtak-table-wrap"><table class="ashtak-table">')
         html_parts.append('<tr><th>#</th>')
         for i in range(12):
             html_parts.append(f'<th>{rnames[i]}</th>')
@@ -428,8 +436,7 @@ def generate_ashtakavarga_html(data: dict, lang: str = 'as') -> str:
             html_parts.append(f'<td class="{cls}">{val}</td>')
         html_parts.append(f'<td class="total-col">{total}</td>')
         html_parts.append('</tr>')
-        html_parts.append('</table>')
-    
+        html_parts.append('</table></div>')
     html_parts.append('</div>')  # end BAV section
     
     # ─── 2. Sarvashtakavarga (SAV) Table ───
@@ -440,7 +447,7 @@ def generate_ashtakavarga_html(data: dict, lang: str = 'as') -> str:
     valid = data["sav_valid"]
     yogarekha = data["yogarekha"]
     
-    html_parts.append('<table class="ashtak-table ashtak-sav-table">')
+    html_parts.append('<div class="ashtak-table-wrap"><table class="ashtak-table ashtak-sav-table">')
     html_parts.append('<tr><th>#</th>')
     for i in range(12):
         html_parts.append(f'<th>{rnames[i]}</th>')
@@ -506,7 +513,7 @@ def generate_ashtakavarga_html(data: dict, lang: str = 'as') -> str:
     html_parts.append(f'<p style="font-size:0.9rem;"><strong>{t("ashtak_yogabindu_total")}:</strong> <span style="color:#FF6600;font-size:1.1rem;font-weight:700;">{yb["total_yogabindu"]}</span></p>')
     
     # Per-sign Yogabindu table
-    html_parts.append('<table class="ashtak-table">')
+    html_parts.append('<div class="ashtak-table-wrap"><table class="ashtak-table">')
     html_parts.append('<tr><th>#</th>')
     for i in range(12):
         html_parts.append(f'<th>{rnames[i]}</th>')
@@ -520,7 +527,7 @@ def generate_ashtakavarga_html(data: dict, lang: str = 'as') -> str:
         html_parts.append(f'<td class="{cls}">{val}</td>')
     html_parts.append(f'<td class="total-col">{yb["total_yogabindu"]}</td>')
     html_parts.append('</tr>')
-    html_parts.append('</table>')
+    html_parts.append('</table></div>')
     
     html_parts.append('</div>')
     
