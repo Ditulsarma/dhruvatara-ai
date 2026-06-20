@@ -1014,6 +1014,7 @@
         <button class="btn-sm btn-fill" onclick="toggleBirthDetails()" id="btnBirthDetails" style="background:var(--deep-blue);">{{ _('btn_birth_details') }}</button>
         <button class="btn-sm btn-fill" onclick="togglePatrika()" id="btnPatrika" style="background:var(--green);">{{ _('btn_patrika') }}</button>
         <button class="btn-sm btn-fill" onclick="openKartariModal()" style="background:#5B3E96;">{{ _('btn_kartari') }}</button>
+        <button class="btn-sm btn-fill" onclick="openAshtakavargaModal()" style="background:#E65100;">{{ _('btn_ashtakavarga') }}</button>
         <button class="btn-sm btn-fill" onclick="openGrahaMaitri()" style="background:#00897B;">🤝 {{ _('graha_maitri_title') }}</button>
         <button class="btn-sm btn-fill" onclick="openRatna()" style="background:#E91E63;">{{ _('btn_ratna') }}</button>
         <button class="btn-sm btn-fill" onclick="openChatFromResult()" style="background:var(--purple);">{{ _('btn_ai_chat') }}</button>
@@ -1830,6 +1831,25 @@
     </div>
 </div>
 
+<!-- ─── Ashtakavarga Modal ─── -->
+<div class="modal-overlay" id="ashtakavargaModal">
+    <div class="modal-box" style="max-width:900px;border-radius:16px;overflow:hidden;">
+        <div class="modal-header" style="background:linear-gradient(135deg, #E65100, #FF8F00);padding:18px 24px;">
+            <h3 style="color:white;font-size:1.1rem;display:flex;align-items:center;gap:10px;">{{ _('ashtakavarga_modal_title') }}</h3>
+            <button class="modal-close" onclick="closeAshtakavargaModal()" style="color:white;font-size:1.5rem;">&times;</button>
+        </div>
+        <div class="modal-body" style="padding:24px;background:linear-gradient(180deg, #FFF3E0 0%, #FFF8F0 100%);max-height:70vh;overflow-y:auto;">
+            <div id="ashtakavargaReportContainer" style="font-size:0.9rem;line-height:1.7;color:var(--text);word-break:break-word;"></div>
+            <div id="ashtakavargaReportError" style="display:none;color:#c62828;margin-top:12px;text-align:center;font-weight:600;"></div>
+        </div>
+        <div class="modal-footer" style="background:#FFF3E0;border-top:1px solid #FFCC80;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;">
+            <button class="btn-modal btn-modal-cancel" id="btnPrastaraAshtakavarga" onclick="openPrastaraAshtakavarga()" style="background:linear-gradient(135deg, #7B1FA2, #9C27B0);color:white;border:none;padding:10px 28px;border-radius:25px;font-weight:700;font-size:0.9rem;cursor:pointer;transition:all 0.25s ease;box-shadow:0 4px 12px rgba(123,31,162,0.25);">{{ _('btn_prastara_ashtakavarga') }}</button>
+            <button class="btn-modal btn-modal-cancel" id="btnBackToBAV" onclick="openAshtakavargaModal()" style="display:none;background:linear-gradient(135deg, #E65100, #FF8F00);color:white;border:none;padding:10px 28px;border-radius:25px;font-weight:700;font-size:0.9rem;cursor:pointer;transition:all 0.25s ease;box-shadow:0 4px 12px rgba(230,81,0,0.25);">{{ _('btn_back_to_bav') }}</button>
+            <button class="btn-modal btn-modal-cancel" onclick="closeAshtakavargaModal()" style="background:linear-gradient(135deg, #E65100, #FF8F00);color:white;border:none;padding:10px 28px;border-radius:25px;font-weight:700;font-size:0.9rem;cursor:pointer;transition:all 0.25s ease;box-shadow:0 4px 12px rgba(230,81,0,0.25);">{{ _('ashtakavarga_close') }}</button>
+        </div>
+    </div>
+</div>
+
 <!-- ─── Custom PDF Modal ─── -->
 <div class="modal-overlay" id="customPdfModal">
     <div class="modal-box">
@@ -1890,6 +1910,10 @@
 
                 <h4>🔮 কৰ্তৰী যোগ</h4>
                 <div class="cb-row"><input type="checkbox" name="sections" value="kartari" id="sec_kartari" checked><label for="sec_kartari">কৰ্তৰী যোগ (শুভ কৰ্তৰী / পাপ কৰ্তৰী)</label></div>
+
+                <h4>🔢 অষ্টকবৰ্গ</h4>
+                <div class="cb-row"><input type="checkbox" name="sections" value="ashtakavarga" id="sec_ashtakavarga" checked><label for="sec_ashtakavarga">অষ্টকবৰ্গ (BAV, SAV, যোগৰেখা, যোগবিন্দু)</label></div>
+                <div class="cb-row"><input type="checkbox" name="sections" value="prastara_ashtakavarga" id="sec_prastara_ashtakavarga" checked><label for="sec_prastara_ashtakavarga">📋 প্ৰস্তাৰ অষ্টকবৰ্গ (PAV — ৮ কক্ষ্যা বিশ্লেষণ)</label></div>
 
                 <h4>{{ _('cp_group_nakshatra') }}</h4>
                 <div class="cb-row"><input type="checkbox" name="sections" value="nakshatra_phala" id="sec_nakshatra_phala" checked><label for="sec_nakshatra_phala">{{ _('cp_nakshatra') }}</label></div>
@@ -2825,6 +2849,118 @@
     function closeKartariModal() {
         document.getElementById('kartariModal').classList.remove('show');
         document.body.style.overflow = '';
+    }
+
+    // ─── Ashtakavarga ───
+    const planetSignsRaw = {{ planet_signs_raw | tojson }};
+
+    function openAshtakavargaModal() {
+        const reportContainer = document.getElementById('ashtakavargaReportContainer');
+        const errorContainer = document.getElementById('ashtakavargaReportError');
+        reportContainer.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">⏳ লোড হৈছে... অনুগ্ৰহ কৰি অপেক্ষা কৰক।</div>';
+        errorContainer.style.display = 'none';
+        document.getElementById('ashtakavargaModal').classList.add('show');
+        document.body.style.overflow = 'hidden';
+
+        // Build planet_signs with English keys (1-based) for the API
+        const asmToEn = {"ৰবি": "Sun", "চন্দ্ৰ": "Moon", "মংগল": "Mars", "বুধ": "Mercury",
+                         "বৃহস্পতি": "Jupiter", "শুক্ৰ": "Venus", "শনি": "Saturn"};
+        const apiPlanetSigns = {};
+        for (const [asmKey, enKey] of Object.entries(asmToEn)) {
+            if (planetSignsRaw[asmKey] !== undefined) {
+                apiPlanetSigns[enKey] = planetSignsRaw[asmKey] + 1;  // 0-based → 1-based
+            }
+        }
+
+        fetch('/api/ashtakavarga-report', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                planet_signs: apiPlanetSigns,
+                lagna_sign: ascRasiIndex  // 0-based, API will convert to 1-based
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                reportContainer.innerHTML = data.report;
+            } else {
+                reportContainer.innerHTML = '';
+                errorContainer.textContent = data.message || 'অষ্টকবৰ্গ বিশ্লেষণ লোড কৰিব পৰা নগল।';
+                errorContainer.style.display = 'block';
+            }
+        })
+        .catch(err => {
+            reportContainer.innerHTML = '';
+            errorContainer.textContent = 'অষ্টকবৰ্গ বিশ্লেষণ লোড কৰাত ত্ৰুটি ঘটিল।';
+            errorContainer.style.display = 'block';
+            console.error(err);
+        });
+    }
+
+    function closeAshtakavargaModal() {
+        document.getElementById('ashtakavargaModal').classList.remove('show');
+        document.body.style.overflow = '';
+        // Reset buttons to default state
+        document.getElementById('btnPrastaraAshtakavarga').style.display = '';
+        document.getElementById('btnBackToBAV').style.display = 'none';
+    }
+
+    // ─── Prastara Ashtakavarga (PAV) ───
+    function openPrastaraAshtakavarga() {
+        const reportContainer = document.getElementById('ashtakavargaReportContainer');
+        const errorContainer = document.getElementById('ashtakavargaReportError');
+        reportContainer.innerHTML = '<div style="text-align:center;padding:20px;color:#888;">{{ _('pav_loading') }}</div>';
+        errorContainer.style.display = 'none';
+
+        // Toggle buttons: show Back, hide PAV
+        document.getElementById('btnPrastaraAshtakavarga').style.display = 'none';
+        document.getElementById('btnBackToBAV').style.display = '';
+
+        // Build planet_signs with English keys (1-based) for the API
+        const asmToEn = {"ৰবি": "Sun", "চন্দ্ৰ": "Moon", "মংগল": "Mars", "বুধ": "Mercury",
+                         "বৃহস্পতি": "Jupiter", "শুক্ৰ": "Venus", "শনি": "Saturn"};
+        const apiPlanetSigns = {};
+        for (const [asmKey, enKey] of Object.entries(asmToEn)) {
+            if (planetSignsRaw[asmKey] !== undefined) {
+                apiPlanetSigns[enKey] = planetSignsRaw[asmKey] + 1;  // 0-based -> 1-based
+            }
+        }
+
+        fetch('/api/prastara-ashtakavarga-report', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                planet_signs: apiPlanetSigns,
+                lagna_sign: ascRasiIndex  // 0-based, API will convert to 1-based
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                reportContainer.innerHTML = data.report;
+            } else {
+                reportContainer.innerHTML = '';
+                errorContainer.textContent = data.message || 'প্ৰস্তাৰ অষ্টকবৰ্গ লোড কৰিব পৰা নগল।';
+                errorContainer.style.display = 'block';
+                // Reset buttons on error
+                document.getElementById('btnPrastaraAshtakavarga').style.display = '';
+                document.getElementById('btnBackToBAV').style.display = 'none';
+            }
+        })
+        .catch(err => {
+            reportContainer.innerHTML = '';
+            errorContainer.textContent = 'প্ৰস্তাৰ অষ্টকবৰ্গ লোড কৰাত ত্ৰুটি ঘটিল।';
+            errorContainer.style.display = 'block';
+            console.error(err);
+            // Reset buttons on error
+            document.getElementById('btnPrastaraAshtakavarga').style.display = '';
+            document.getElementById('btnBackToBAV').style.display = 'none';
+        });
     }
 
     // ─── Graha Maitri ───

@@ -67,6 +67,8 @@ from graha_bichar import get_all_graha_bichar, get_graha_bichar_html
 from kundli_chart import draw_kundli_chart, draw_all_styles
 from patrika import generate_patrika_text
 from kartari_dosha import generate_kartari_report
+from ashtakavarga_engine import get_complete_ashtakavarga, generate_ashtakavarga_html, generate_ashtakavarga_pdf_html
+from prastara_ashtakavarga_engine import GeneratePrastaraAshtakavarga, generate_pav_html
 from graha_maitri import get_all_maitri_data, build_graha_maitri_pdf_html
 from ratna_engine import get_ratna_data, build_ratna_html
 from jotok_milan_engine import get_complete_jotok_milan, get_koota_name_asm, get_koota_icon
@@ -1143,6 +1145,9 @@ def calculate():
         planet_houses = {}
         lang = get_current_language()
         pnames = get_planet_names_i18n(lang)
+        # Map Assamese planet name to English for i18n
+        asm_to_en = {"ৰবি": "Sun", "চন্দ্ৰ": "Moon", "মংগল": "Mars", "বুধ": "Mercury",
+                    "বৃহস্পতি": "Jupiter", "শুক্ৰ": "Venus", "শনি": "Saturn", "ৰাহু": "Rahu"}
 
         for p_name, p_id in planets_dict.items():
             pos, _ = swe.calc_ut(jd, p_id, swe.FLG_SIDEREAL | swe.FLG_SWIEPH)
@@ -1150,9 +1155,6 @@ def calculate():
             is_bakri = check_bakri_by_degree_diff(ist_time, p_id)
             r_idx, rasi, deg = get_rasi_and_degree(pos[0])
             nak_idx, nak, lord = get_nakshatra_details(pos[0])
-            # Map Assamese planet name to English for i18n
-            asm_to_en = {"ৰবি": "Sun", "চন্দ্ৰ": "Moon", "মংগল": "Mars", "বুধ": "Mercury",
-                        "বৃহস্পতি": "Jupiter", "শুক্ৰ": "Venus", "শনি": "Saturn", "ৰাহু": "Rahu"}
             state = get_planet_state(p_name, r_idx, is_bakri,
                                      p_sidereal_longitudes.get("ৰবি", 0), pos[0], lang)
             planets_data.append({"name": pnames.get(p_name, p_name), "name_asm": p_name, "name_en": asm_to_en.get(p_name, ""),
@@ -1347,6 +1349,7 @@ def calculate():
                            dwadash_html=dwadash_html,
                            dwadash_json_data=dwadash_json_data,
                            planet_houses=planet_houses,
+                           planet_signs_raw=planet_signs,
                            user_features=get_user_features(session.get('user_id', 0)),
                            user_subscription_name=user_subscription_name,
                            user_subscription_id=user_subscription_id,
@@ -1597,6 +1600,21 @@ def download_pdf():
         # Kartari Yoga for PDF (Subh Kartari / Paap Kartari)
         kartari_html = generate_kartari_report(planet_houses, lang)
 
+        # Ashtakavarga for PDF (BAV, SAV, Yogarekha, Yogabindu)
+        asm_to_en_sign = {"ৰবি": "Sun", "চন্দ্ৰ": "Moon", "মংগল": "Mars", "বুধ": "Mercury",
+                          "বৃহস্পতি": "Jupiter", "শুক্ৰ": "Venus", "শনি": "Saturn"}
+        ashtak_planet_signs = {}
+        for asm_key, en_key in asm_to_en_sign.items():
+            if asm_key in planet_signs:
+                ashtak_planet_signs[en_key] = planet_signs[asm_key] + 1
+        ashtak_lagna_sign = planet_signs.get("লগ্ন", 0) + 1
+        ashtak_data = get_complete_ashtakavarga(ashtak_planet_signs, ashtak_lagna_sign)
+        ashtakavarga_html = generate_ashtakavarga_pdf_html(ashtak_data, lang)
+
+        # Prastara Ashtakavarga (PAV) for PDF
+        pav_data = GeneratePrastaraAshtakavarga(ashtak_planet_signs, ashtak_lagna_sign)
+        prastara_ashtakavarga_html = generate_pav_html(pav_data, lang)
+
         # Ratna (Gemstones) for PDF
         ratna_html = build_ratna_html(asc_rasi_idx, lang)
 
@@ -1617,6 +1635,8 @@ def download_pdf():
             pratyantar_dasha_html=pratyantar_dasha_html,
             graha_maitri_html=graha_maitri_html,
             kartari_html=kartari_html,
+            ashtakavarga_html=ashtakavarga_html,
+            prastara_ashtakavarga_html=prastara_ashtakavarga_html,
             ratna_html=ratna_html,
             lang=lang
         )
@@ -1642,6 +1662,69 @@ def api_kartari_report():
             return jsonify({'success': False, 'message': 'Planet house data missing.'}), 400
         lang = data.get('lang', get_current_language())
         report = generate_kartari_report(planet_houses, lang)
+        return jsonify({'success': True, 'report': report})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route("/api/ashtakavarga-report", methods=["POST"])
+def api_ashtakavarga_report():
+    """API endpoint for Ashtakavarga analysis modal."""
+    try:
+        data = request.get_json(silent=True) or request.form
+        planet_signs_raw = data.get('planet_signs')
+        lagna_sign = data.get('lagna_sign')
+        
+        if isinstance(planet_signs_raw, str):
+            planet_signs_raw = json.loads(planet_signs_raw)
+        if isinstance(lagna_sign, str):
+            lagna_sign = int(lagna_sign)
+        
+        if not planet_signs_raw or lagna_sign is None:
+            return jsonify({'success': False, 'message': 'Planet signs or lagna sign missing.'}), 400
+        
+        # Convert lagna_sign from 0-based to 1-based if needed
+        # The frontend sends 0-based (0-11), engine expects 1-based (1-12)
+        if 0 <= lagna_sign <= 11:
+            lagna_sign = lagna_sign + 1
+        
+        lang = data.get('lang', get_current_language())
+        
+        # Calculate complete Ashtakavarga
+        ashtak_data = get_complete_ashtakavarga(planet_signs_raw, lagna_sign)
+        report = generate_ashtakavarga_html(ashtak_data, lang)
+        
+        return jsonify({'success': True, 'report': report})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route("/api/prastara-ashtakavarga-report", methods=["POST"])
+def api_prastara_ashtakavarga_report():
+    """API endpoint for Prastara Ashtakavarga (PAV) analysis."""
+    try:
+        data = request.get_json(silent=True) or request.form
+        planet_signs_raw = data.get('planet_signs')
+        lagna_sign = data.get('lagna_sign')
+        
+        if isinstance(planet_signs_raw, str):
+            planet_signs_raw = json.loads(planet_signs_raw)
+        if isinstance(lagna_sign, str):
+            lagna_sign = int(lagna_sign)
+        
+        if not planet_signs_raw or lagna_sign is None:
+            return jsonify({'success': False, 'message': 'Planet signs or lagna sign missing.'}), 400
+        
+        # Convert lagna_sign from 0-based to 1-based if needed
+        if 0 <= lagna_sign <= 11:
+            lagna_sign = lagna_sign + 1
+        
+        lang = data.get('lang', get_current_language())
+        
+        # Calculate Prastara Ashtakavarga (PAV)
+        pav_data = GeneratePrastaraAshtakavarga(planet_signs_raw, lagna_sign)
+        report = generate_pav_html(pav_data, lang)
+        
         return jsonify({'success': True, 'report': report})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
@@ -1992,6 +2075,21 @@ def download_patrika_pdf():
         # Kartari Yoga for PDF (Subh Kartari / Paap Kartari)
         kartari_html = generate_kartari_report(planet_houses, lang)
 
+        # Ashtakavarga for PDF (BAV, SAV, Yogarekha, Yogabindu)
+        asm_to_en_sign = {"ৰবি": "Sun", "চন্দ্ৰ": "Moon", "মংগল": "Mars", "বুধ": "Mercury",
+                          "বৃহস্পতি": "Jupiter", "শুক্ৰ": "Venus", "শনি": "Saturn"}
+        ashtak_planet_signs = {}
+        for asm_key, en_key in asm_to_en_sign.items():
+            if asm_key in planet_signs:
+                ashtak_planet_signs[en_key] = planet_signs[asm_key] + 1
+        ashtak_lagna_sign = planet_signs.get("লগ্ন", 0) + 1
+        ashtak_data = get_complete_ashtakavarga(ashtak_planet_signs, ashtak_lagna_sign)
+        ashtakavarga_html = generate_ashtakavarga_pdf_html(ashtak_data, lang)
+
+        # Prastara Ashtakavarga (PAV) for PDF
+        pav_data = GeneratePrastaraAshtakavarga(ashtak_planet_signs, ashtak_lagna_sign)
+        prastara_ashtakavarga_html = generate_pav_html(pav_data, lang)
+
         # Ratna (Gemstones) for PDF
         ratna_html = build_ratna_html(asc_rasi_idx, lang)
 
@@ -1999,7 +2097,7 @@ def download_patrika_pdf():
         patrika_selected_sections = [
             'planets_table', 'kundli_chart', 'varga_charts', 'panchanga',
             'shani_sare_sati', 'dosha', 'yoga', 'sannari', 'navatara', 'tripap',
-            'graha_maitri', 'kartari', 'nakshatra_phala', 'lagna_phala',
+            'graha_maitri', 'kartari', 'ashtakavarga', 'prastara_ashtakavarga', 'nakshatra_phala', 'lagna_phala',
             'rashi_phala', 'graha_bichar', 'dwadash_bhab_phala',
             'dasha_summary', 'dasha_full', 'dasha_predictions', 'antardasha_phala',
             'ratna'
@@ -2022,6 +2120,8 @@ def download_patrika_pdf():
             patrika_text=patrika_text,
             graha_maitri_html=graha_maitri_html,
             kartari_html=kartari_html,
+            ashtakavarga_html=ashtakavarga_html,
+            prastara_ashtakavarga_html=prastara_ashtakavarga_html,
             ratna_html=ratna_html,
             lang=lang
         )
@@ -2250,6 +2350,21 @@ def download_pratyantar_pdf():
         # Kartari Yoga for PDF (Subh Kartari / Paap Kartari)
         kartari_html = generate_kartari_report(planet_houses, lang)
 
+        # Ashtakavarga for PDF (BAV, SAV, Yogarekha, Yogabindu)
+        asm_to_en_sign = {"ৰবি": "Sun", "চন্দ্ৰ": "Moon", "মংগল": "Mars", "বুধ": "Mercury",
+                          "বৃহস্পতি": "Jupiter", "শুক্ৰ": "Venus", "শনি": "Saturn"}
+        ashtak_planet_signs = {}
+        for asm_key, en_key in asm_to_en_sign.items():
+            if asm_key in planet_signs:
+                ashtak_planet_signs[en_key] = planet_signs[asm_key] + 1
+        ashtak_lagna_sign = planet_signs.get("লগ্ন", 0) + 1
+        ashtak_data = get_complete_ashtakavarga(ashtak_planet_signs, ashtak_lagna_sign)
+        ashtakavarga_html = generate_ashtakavarga_pdf_html(ashtak_data, lang)
+
+        # Prastara Ashtakavarga (PAV) for PDF
+        pav_data = GeneratePrastaraAshtakavarga(ashtak_planet_signs, ashtak_lagna_sign)
+        prastara_ashtakavarga_html = generate_pav_html(pav_data, lang)
+
         # Ratna (Gemstones) for PDF
         ratna_html = build_ratna_html(asc_rasi_idx, lang)
 
@@ -2270,6 +2385,8 @@ def download_pratyantar_pdf():
             pratyantar_dasha_html=pratyantar_dasha_html,
             graha_maitri_html=graha_maitri_html,
             kartari_html=kartari_html,
+            ashtakavarga_html=ashtakavarga_html,
+            prastara_ashtakavarga_html=prastara_ashtakavarga_html,
             ratna_html=ratna_html,
             lang=lang
         )
@@ -3087,6 +3204,24 @@ def custom_pdf():
         if 'kartari' in selected_sections:
             kartari_html = generate_kartari_report(planet_houses, lang)
 
+        # Ashtakavarga for PDF (only if selected)
+        ashtakavarga_html = ""
+        prastara_ashtakavarga_html = ""
+        if 'ashtakavarga' in selected_sections or 'prastara_ashtakavarga' in selected_sections:
+            asm_to_en_sign = {"ৰবি": "Sun", "চন্দ্ৰ": "Moon", "মংগল": "Mars", "বুধ": "Mercury",
+                              "বৃহস্পতি": "Jupiter", "শুক্ৰ": "Venus", "শনি": "Saturn"}
+            ashtak_planet_signs = {}
+            for asm_key, en_key in asm_to_en_sign.items():
+                if asm_key in planet_signs:
+                    ashtak_planet_signs[en_key] = planet_signs[asm_key] + 1
+            ashtak_lagna_sign = planet_signs.get("লগ্ন", 0) + 1
+            ashtak_data = get_complete_ashtakavarga(ashtak_planet_signs, ashtak_lagna_sign)
+            if 'ashtakavarga' in selected_sections:
+                ashtakavarga_html = generate_ashtakavarga_pdf_html(ashtak_data, lang)
+            if 'prastara_ashtakavarga' in selected_sections:
+                pav_data = GeneratePrastaraAshtakavarga(ashtak_planet_signs, ashtak_lagna_sign)
+                prastara_ashtakavarga_html = generate_pav_html(pav_data, lang)
+
         # Ratna (Gemstones) for PDF (only if selected)
         ratna_html = ""
         if 'ratna' in selected_sections:
@@ -3110,6 +3245,8 @@ def custom_pdf():
             pratyantar_dasha_html=pratyantar_dasha_html,
             graha_maitri_html=graha_maitri_html,
             kartari_html=kartari_html,
+            ashtakavarga_html=ashtakavarga_html,
+            prastara_ashtakavarga_html=prastara_ashtakavarga_html,
             ratna_html=ratna_html,
             lang=lang
         )

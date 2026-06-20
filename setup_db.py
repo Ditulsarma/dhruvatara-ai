@@ -341,6 +341,7 @@ def setup_database():
         ("numerology_chat", "Numerology AI Chat", "অংক জ্যোতিষ AI চেট", "অংক জ্যোতিষ AI চেট", "numerology", 20),
         ("pratyantar_dasha_pdf", "Pratyantar Dasha PDF", "প্ৰত্যন্তৰ দশা PDF", "প্ৰত্যন্তৰ দশা ফলসহ PDF ডাউনলোড", "export", 21),
         ("graha_maitri", "Graha Maitri", "গ্ৰহ মৈত্ৰী", "গ্ৰহৰ নৈসৰ্গিক, তাৎকালীন আৰু পঞ্চধা মৈত্ৰী চক্ৰ", "analysis", 22),
+        ("ashtakavarga", "Ashtakavarga", "অষ্টকবৰ্গ", "ভিন্ন অষ্টকবৰ্গ, সৰ্বাষ্টকবৰ্গ, যোগৰেখা আৰু যোগবিন্দু", "analysis", 23),
     ]
 
     for f_key, f_name, f_name_asm, f_desc, f_cat, f_order in features:
@@ -369,7 +370,7 @@ def setup_database():
         "kundli_calculate", "varga_charts", "panchanga", "dosha_analysis",
         "yoga_analysis", "dasha", "ai_interpretation", "nakshatra_phala",
         "lagna_phala", "sannari_chakra", "navatara_chakra",
-        "tripap_rista", "graha_maitri"
+        "tripap_rista", "graha_maitri", "ashtakavarga"
     ]
     # rashi_phala is separate: disabled for free, enabled for paid
     rashi_phala_feature = "rashi_phala"

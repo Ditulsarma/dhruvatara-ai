@@ -703,6 +703,12 @@ TRANSLATIONS = {
         "hi": "कर्तरी योग (शुभ कर्तरी / पाप कर्तरी)",
         "en": "Kartari Yoga (Subh Kartari / Paap Kartari)"
     },
+    "pdf_ashtakavarga_section": {
+        "as": "অষ্টকবৰ্গ (ভিন্ন অষ্টকবৰ্গ / সৰ্বাষ্টকবৰ্গ)",
+        "bn": "অষ্টকবর্গ (ভিন্ন অষ্টকবর্গ / সর্বাষ্টকবর্গ)",
+        "hi": "अष्टकवर्ग (भिन्न अष्टकवर्ग / सर्वाष्टकवर्ग)",
+        "en": "Ashtakavarga (Bhinna Ashtakavarga / Sarvashtakavarga)"
+    },
     "pdf_nakshatra_phala_section": {
         "as": "নক্ষত্ৰ ফলাফল",
         "bn": "নক্ষত্র ফলাফল",
@@ -2231,6 +2237,7 @@ TRANSLATIONS = {
     "btn_birth_details": {"as": "📋 জন্মৰ সবিশেষ", "bn": "📋 জন্মের বিবরণ", "hi": "📋 जन्म विवरण", "en": "📋 Birth Details"},
     "btn_patrika": {"as": "📜 জন্মপত্ৰিকা বনাওক", "bn": "📜 জন্মপত্রিকা বানান", "hi": "📜 जन्मपत्रिका बनाएं", "en": "📜 Create Patrika"},
     "btn_kartari": {"as": "🔮 কৰ্তৰী যোগ", "bn": "🔮 কর্তরী যোগ", "hi": "🔮 कर्तरी योग", "en": "🔮 Kartari Yoga"},
+    "btn_ashtakavarga": {"as": "🔢 অষ্টকবৰ্গ", "bn": "🔢 অষ্টকবর্গ", "hi": "🔢 अष्टकवर्ग", "en": "🔢 Ashtakavarga"},
     "btn_ratna": {"as": "💎 ৰত্ন", "bn": "💎 রত্ন", "hi": "💎 रत्न", "en": "💎 Gemstones"},
     "btn_ai_chat": {"as": "💬 AI চেট", "bn": "💬 AI চ্যাট", "hi": "💬 AI चैट", "en": "💬 AI Chat"},
 
@@ -2427,6 +2434,42 @@ TRANSLATIONS = {
     "kartari_summary_pap_zero": {"as": "🔴 পাপ কৰ্তৰী: 0", "bn": "🔴 পাপ কর্তরী: 0", "hi": "🔴 पाप कर्तरी: 0", "en": "🔴 Paap Kartari: 0"},
     "kartari_summary_shubh_zero": {"as": "🟢 শুভ কৰ্তৰী: 0", "bn": "🟢 শুভ কর্তরী: 0", "hi": "🟢 शुभ कर्तरी: 0", "en": "🟢 Subh Kartari: 0"},
 
+    # ─── Ashtakavarga Labels (i18n) ───
+    "ashtakavarga_title": {"as": "🔢 অষ্টকবৰ্গ বিশ্লেষণ", "bn": "🔢 অষ্টকবর্গ বিশ্লেষণ", "hi": "🔢 अष्टकवर्ग विश्लेषण", "en": "🔢 Ashtakavarga Analysis"},
+    "ashtakavarga_subtitle": {"as": "ভিন্ন অষ্টকবৰ্গ, সৰ্বাষ্টকবৰ্গ, যোগৰেখা আৰু যোগবিন্দু", "bn": "ভিন্ন অষ্টকবর্গ, সর্বাষ্টকবর্গ, যোগরেখা এবং যোগবিন্দু", "hi": "भिन्न अष्टकवर्ग, सर्वाष्टकवर्ग, योगरेखा और योगबिंदु", "en": "Bhinna Ashtakavarga, Sarvashtakavarga, Yogarekha & Yogabindu"},
+    "ashtak_bav_heading": {"as": "ভিন্ন অষ্টকবৰ্গ (BAV) — প্ৰতিটো গ্ৰহৰ বিন্দু বিতৰণ", "bn": "ভিন্ন অষ্টকবর্গ (BAV) — প্রতিটি গ্রহের বিন্দু বিতরণ", "hi": "भिन्न अष्टकवर्ग (BAV) — प्रत्येक ग्रह का बिंदु वितरण", "en": "Bhinna Ashtakavarga (BAV) — Bindu Distribution per Planet"},
+    "ashtak_total_bindu": {"as": "মুঠ বিন্দু", "bn": "মোট বিন্দু", "hi": "कुल बिंदु", "en": "Total Bindu"},
+    "ashtak_expected": {"as": "প্ৰত্যাশিত", "bn": "প্রত্যাশিত", "hi": "अपेक्षित", "en": "Expected"},
+    "ashtak_sav_heading": {"as": "সৰ্বাষ্টকবৰ্গ (SAV) — সকলো গ্ৰহৰ বিন্দুৰ যোগফল", "bn": "সর্বাষ্টকবর্গ (SAV) — সকল গ্রহের বিন্দুর যোগফল", "hi": "सर्वाष्टकवर्ग (SAV) — सभी ग्रहों के बिंदुओं का योग", "en": "Sarvashtakavarga (SAV) — Sum of All Planetary Bindus"},
+    "ashtak_sav_label": {"as": "SAV", "bn": "SAV", "hi": "SAV", "en": "SAV"},
+    "ashtak_sav_validation": {"as": "সত্যতা নিৰূপণ", "bn": "সত্যতা নিরূপণ", "hi": "सत्यता निर्धारण", "en": "Validation"},
+    "ashtak_sav_valid": {"as": "✅ সঠিক (৩৩৭)", "bn": "✅ সঠিক (৩৩৭)", "hi": "✅ सही (३३७)", "en": "✅ Valid (337)"},
+    "ashtak_sav_invalid": {"as": "❌ অশুদ্ধ", "bn": "❌ অশুদ্ধ", "hi": "❌ अशुद्ध", "en": "❌ Invalid"},
+    "ashtak_yogarekha_label": {"as": "যোগৰেখা", "bn": "যোগরেখা", "hi": "योगरेखा", "en": "Yogarekha"},
+    "ashtak_yes": {"as": "হয়", "bn": "হ্যাঁ", "hi": "हाँ", "en": "Yes"},
+    "ashtak_no": {"as": "নহয়", "bn": "না", "hi": "नहीं", "en": "No"},
+    "ashtak_yogarekha_heading": {"as": "✨ যোগৰেখা — শুভ ৰেখা বিশ্লেষণ", "bn": "✨ যোগরেখা — শুভ রেখা বিশ্লেষণ", "hi": "✨ योगरेखा — शुभ रेखा विश्लेषण", "en": "✨ Yogarekha — Benefic Line Analysis"},
+    "ashtak_yogarekha_desc": {"as": "যিবোৰ ৰাশিত SAV বিন্দু ২৮ বা তাতোধিক, সেই ৰাশিত যোগৰেখা থাকে। যোগৰেখা থকা ৰাশি অতি শুভ আৰু বলৱান।", "bn": "যে সকল রাশিতে SAV বিন্দু ২৮ বা তার বেশি, সেই রাশিতে যোগরেখা থাকে। যোগরেখা থাকা রাশি অতি শুভ এবং বলবান।", "hi": "जिन राशियों में SAV बिंदु २८ या अधिक होते हैं, उन राशियों में योगरेखा होती है। योगरेखा वाली राशियाँ अति शुभ और बलवान होती हैं।", "en": "Signs with SAV points >= 28 have Yogarekha. Signs with Yogarekha are highly benefic and powerful."},
+    "ashtak_yogarekha_count": {"as": "যোগৰেখা থকা ৰাশিৰ সংখ্যা", "bn": "যোগরেখা থাকা রাশির সংখ্যা", "hi": "योगरेखा वाली राशियों की संख्या", "en": "Number of Signs with Yogarekha"},
+    "ashtak_yogabindu_heading": {"as": "💎 যোগবিন্দু — শুভ গ্ৰহৰ বিন্দু বিশ্লেষণ", "bn": "💎 যোগবিন্দু — শুভ গ্রহের বিন্দু বিশ্লেষণ", "hi": "💎 योगबिंदु — शुभ ग्रहों का बिंदु विश्लेषण", "en": "💎 Yogabindu — Benefic Planet Bindu Analysis"},
+    "ashtak_yogabindu_desc": {"as": "শুভ গ্ৰহ (বৃহস্পতি, শুক্ৰ, বুধ, চন্দ্ৰ)ৰ SAV বিন্দুৰ যোগফলক যোগবিন্দু বোলে।", "bn": "শুভ গ্রহ (বৃহস্পতি, শুক্র, বুধ, চন্দ্র)র SAV বিন্দুর যোগফলকে যোগবিন্দু বলে।", "hi": "शुभ ग्रहों (बृहस्पति, शुक्र, बुध, चंद्र) के SAV बिंदुओं के योग को योगबिंदु कहते हैं।", "en": "Sum of SAV bindus from benefic planets (Jupiter, Venus, Mercury, Moon) is called Yogabindu."},
+    "ashtak_yogabindu_total": {"as": "মুঠ যোগবিন্দু", "bn": "মোট যোগবিন্দু", "hi": "कुल योगबिंदु", "en": "Total Yogabindu"},
+    "ashtak_yogabindu_label": {"as": "যোগবিন্দু", "bn": "যোগবিন্দু", "hi": "योगबिंदु", "en": "Yogabindu"},
+    "ashtak_summary_heading": {"as": "📋 অষ্টকবৰ্গ সাৰাংশ", "bn": "📋 অষ্টকবর্গ সারাংশ", "hi": "📋 अष्टकवर्ग सारांश", "en": "📋 Ashtakavarga Summary"},
+    "ashtak_sav_total_label": {"as": "মুঠ SAV বিন্দু", "bn": "মোট SAV বিন্দু", "hi": "कुल SAV बिंदु", "en": "Total SAV Bindus"},
+    "ashtak_yogarekha_signs": {"as": "যোগৰেখা থকা ৰাশি", "bn": "যোগরেখা থাকা রাশি", "hi": "योगरेखा वाली राशियाँ", "en": "Signs with Yogarekha"},
+    "ashtak_signs": {"as": "টা ৰাশি", "bn": "টি রাশি", "hi": "राशियाँ", "en": "signs"},
+    "ashtak_none": {"as": "কোনো নাই", "bn": "কোনো নেই", "hi": "कोई नहीं", "en": "None"},
+    "ashtak_overall_strength": {"as": "সামগ্ৰিক শক্তি", "bn": "সামগ্রিক শক্তি", "hi": "समग्र शक्ति", "en": "Overall Strength"},
+    "ashtak_strength_strong": {"as": "🟢 অতি বলৱান (৫+ যোগৰেখা)", "bn": "🟢 অতি বলবান (৫+ যোগরেখা)", "hi": "🟢 अति बलवान (५+ योगरेखा)", "en": "🟢 Very Strong (5+ Yogarekha)"},
+    "ashtak_strength_moderate": {"as": "🟡 মধ্যম (৩-৪ যোগৰেখা)", "bn": "🟡 মধ্যম (৩-৪ যোগরেখা)", "hi": "🟡 मध्यम (३-४ योगरेखा)", "en": "🟡 Moderate (3-4 Yogarekha)"},
+    "ashtak_strength_weak": {"as": "🔴 দুৰ্বল (০-২ যোগৰেখা)", "bn": "🔴 দুর্বল (০-২ যোগরেখা)", "hi": "🔴 दुर्बल (०-२ योगरेखा)", "en": "🔴 Weak (0-2 Yogarekha)"},
+    "ashtakavarga_modal_title": {"as": "🔢 অষ্টকবৰ্গ বিশ্লেষণ", "bn": "🔢 অষ্টকবর্গ বিশ্লেষণ", "hi": "🔢 अष्टकवर्ग विश्लेषण", "en": "🔢 Ashtakavarga Analysis"},
+    "ashtakavarga_close": {"as": "বন্ধ কৰক", "bn": "বন্ধ করুন", "hi": "बंद करें", "en": "Close"},
+    "btn_prastara_ashtakavarga": {"as": "📋 প্ৰস্তাৰ অষ্টকবৰ্গ", "bn": "📋 প্রস্তার অষ্টকবর্গ", "hi": "📋 प्रस्तार अष्टकवर्ग", "en": "📋 Prastara Ashtakavarga"},
+    "btn_back_to_bav": {"as": "◀ অষ্টকবৰ্গলৈ ঘূৰক", "bn": "◀ অষ্টকবর্গে ফিরুন", "hi": "◀ अष्टकवर्ग पर लौटें", "en": "◀ Back to Ashtakavarga"},
+    "pav_loading": {"as": "⏳ প্ৰস্তাৰ অষ্টকবৰ্গ লোড হৈছে...", "bn": "⏳ প্রস্তার অষ্টকবর্গ লোড হচ্ছে...", "hi": "⏳ प्रस्तार अष्टकवर्ग लोड हो रहा है...", "en": "⏳ Loading Prastara Ashtakavarga..."},
+
     # ─── Result Page: Custom PDF Modal ───
     "custom_pdf_modal_title": {"as": "⚙️ নিজৰ মতে PDF সৃষ্টি কৰক", "bn": "⚙️ নিজের মতো PDF তৈরি করুন", "hi": "⚙️ अपनी पसंद का PDF बनाएं", "en": "⚙️ Create Custom PDF"},
     "cp_select_all": {"as": "সকলো বাছক", "bn": "সকল বাছুন", "hi": "सभी चुनें", "en": "Select All"},
@@ -2453,6 +2496,9 @@ TRANSLATIONS = {
     "cp_lagna": {"as": "লগ্ন ফলাফল", "bn": "লগ্ন ফলাফল", "hi": "लग्न फल", "en": "Lagna Phala"},
     "cp_group_rashi": {"as": "🌙 ৰাশিফল", "bn": "🌙 রাশিফল", "hi": "🌙 राशिफल", "en": "🌙 Rashifal"},
     "cp_rashi": {"as": "ৰাশিফল (চন্দ্ৰ ৰাশি)", "bn": "রাশিফল (চন্দ্র রাশি)", "hi": "राशिफल (चंद्र राशि)", "en": "Rashifal (Moon Sign)"},
+
+    # ─── PDF Section Headings ───
+    "pdf_prastara_ashtakavarga_section": {"as": "প্ৰস্তাৰ অষ্টকবৰ্গ (PAV)", "bn": "প্রস্তার অষ্টকবর্গ (PAV)", "hi": "प्रस्तार अष्टकवर्ग (PAV)", "en": "Prastara Ashtakavarga (PAV)"},
 
     # ─── Result Page: Chart Options ───
     "chart_loading": {"as": "চাৰ্ট ল'ড কৰিবলে ওপৰৰ পৰা বাছনি কৰক...", "bn": "চার্ট লোড করতে উপরের থেকে নির্বাচন করুন...", "hi": "चार्ट लोड करने के लिए ऊपर से चुनें...", "en": "Select options above to load chart..."},
